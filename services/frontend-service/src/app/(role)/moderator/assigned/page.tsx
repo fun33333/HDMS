@@ -1,35 +1,52 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { PriorityBadge } from '../../../components/common/PriorityBadge';
-import { StatusBadge } from '../../../components/common/StatusBadge';
-import { ViewButton, ReassignButton } from '../../../components/common/ActionButtons';
-import { SearchFilters } from '../../../components/common/SearchFilters';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
+import { PriorityBadge } from '../../../../components/common/PriorityBadge';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
+import { ViewButton, ReassignButton } from '../../../../components/common/ActionButtons';
 import { 
   UserPlus,
   FileText,
   ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
-import DataTable, { Column } from '../../../components/ui/DataTable';
-import PageSkeleton from '../../../components/ui/PageSkeleton';
-import ErrorBanner from '../../../components/ui/ErrorBanner';
-import ConfirmModal from '../../../components/ui/ConfirmModal';
+import DataTable, { Column } from '../../../../components/ui/DataTable';
+import PageSkeleton from '../../../../components/ui/PageSkeleton';
+import ErrorBanner from '../../../../components/ui/ErrorBanner';
+import ConfirmModal from '../../../../components/modals/ConfirmModal';
+import ticketService from '../../../../services/api/ticketService';
+import { Ticket } from '../../../../types';
 
 const AssignedTicketsPage: React.FC = () => {
-  const { tickets } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<{ open: boolean; ticketId?: string }>( { open: false } );
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await ticketService.getTickets({ status: 'assigned' });
+        const ticketsList = Array.isArray(response) ? response : (response?.results || []);
+        setTickets(ticketsList);
+      } catch (error: any) {
+        console.error('Error fetching tickets:', error);
+        setError('Failed to load tickets');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTickets();
+  }, []);
 
   const assignedTickets = tickets.filter(t => t.status === 'assigned');
 
@@ -90,16 +107,35 @@ const AssignedTicketsPage: React.FC = () => {
       </div>
 
       {/* Search and Filter */}
-      <SearchFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        priorityFilter={priorityFilter}
-        onPriorityChange={setPriorityFilter}
-        departmentFilter={departmentFilter}
-        onDepartmentChange={setDepartmentFilter}
-      />
+      <div className="mb-4 flex items-center space-x-4">
+        <input
+          type="text"
+          placeholder="Search tickets..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-4 py-2 border rounded-lg flex-1"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 border rounded-lg"
+        >
+          <option value="all">All Status</option>
+          <option value="assigned">Assigned</option>
+          <option value="in_progress">In Progress</option>
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value)}
+          className="px-4 py-2 border rounded-lg"
+        >
+          <option value="all">All Priority</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
 
       {/* Tickets Table */}
       <Card className="bg-white shadow-lg">
@@ -114,10 +150,10 @@ const AssignedTicketsPage: React.FC = () => {
       </Card>
 
       <ConfirmModal
-        open={confirm.open}
+        isOpen={confirm.open}
         title={'Reassign this ticket?'}
         description="You can proceed to the relevant page after confirmation."
-        onCancel={() => setConfirm({ open: false })}
+        onClose={() => setConfirm({ open: false })}
         onConfirm={() => {
           const id = confirm.ticketId;
           setConfirm({ open: false });

@@ -28,10 +28,18 @@ export const useNotifications = (autoFetch: boolean = true) => {
   const fetchNotifications = useCallback(async (filters?: { read?: boolean }) => {
     try {
       const response = await notificationService.getNotifications(filters);
-      setNotifications(response.results);
-      updateUnreadCount(response.unreadCount);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+      setNotifications(response.results || []);
+      updateUnreadCount(response.unreadCount || 0);
+    } catch (error: any) {
+      // Handle network errors gracefully - API might not be available
+      const isNetworkError = error?.isNetworkError || !error?.response;
+      if (isNetworkError) {
+        console.warn('API not available, using empty notifications list');
+        setNotifications([]);
+        updateUnreadCount(0);
+      } else {
+        console.error('Error fetching notifications:', error?.message || error);
+      }
     }
   }, [setNotifications, updateUnreadCount]);
 
@@ -40,8 +48,14 @@ export const useNotifications = (autoFetch: boolean = true) => {
     try {
       await notificationService.markAsRead(id);
       storeMarkAsRead(id);
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+    } catch (error: any) {
+      // If network error, still update local state
+      const isNetworkError = error?.isNetworkError || !error?.response;
+      if (isNetworkError) {
+        storeMarkAsRead(id);
+      } else {
+        console.error('Error marking notification as read:', error?.message || error);
+      }
     }
   }, [storeMarkAsRead]);
 
@@ -50,8 +64,14 @@ export const useNotifications = (autoFetch: boolean = true) => {
     try {
       await notificationService.markAllAsRead();
       storeMarkAllAsRead();
-    } catch (error) {
-      console.error('Error marking all as read:', error);
+    } catch (error: any) {
+      // If network error, still update local state
+      const isNetworkError = error?.isNetworkError || !error?.response;
+      if (isNetworkError) {
+        storeMarkAllAsRead();
+      } else {
+        console.error('Error marking all as read:', error?.message || error);
+      }
     }
   }, [storeMarkAllAsRead]);
 
@@ -60,8 +80,14 @@ export const useNotifications = (autoFetch: boolean = true) => {
     try {
       await notificationService.deleteNotification(id);
       removeNotification(id);
-    } catch (error) {
-      console.error('Error deleting notification:', error);
+    } catch (error: any) {
+      // If network error, still update local state
+      const isNetworkError = error?.isNetworkError || !error?.response;
+      if (isNetworkError) {
+        removeNotification(id);
+      } else {
+        console.error('Error deleting notification:', error?.message || error);
+      }
     }
   }, [removeNotification]);
 
@@ -69,11 +95,19 @@ export const useNotifications = (autoFetch: boolean = true) => {
   const refreshUnreadCount = useCallback(async () => {
     try {
       const count = await notificationService.getUnreadCount();
-      updateUnreadCount(count);
-    } catch (error) {
-      console.error('Error refreshing unread count:', error);
+      updateUnreadCount(count || 0);
+    } catch (error: any) {
+      // Handle network errors gracefully
+      const isNetworkError = error?.isNetworkError || !error?.response;
+      if (isNetworkError) {
+        // Calculate unread count from local notifications if API unavailable
+        const localUnread = notifications.filter(n => !n.read).length;
+        updateUnreadCount(localUnread);
+      } else {
+        console.error('Error refreshing unread count:', error?.message || error);
+      }
     }
-  }, [updateUnreadCount]);
+  }, [updateUnreadCount, notifications]);
 
   // Subscribe to real-time notifications
   useEffect(() => {

@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../lib/auth';
 import { User as UserType } from '../../types';
-import { User as UserIcon, Mail, Phone, Building, Shield, Settings, Wrench, FileText, Calendar, Edit3, Save, X, Camera } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, Settings, Wrench, FileText, Calendar, Edit3, Save, X, Camera } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import { Button } from '../ui/Button';
 import { THEME } from '../../lib/theme';
 
 const DynamicProfile: React.FC = () => {
@@ -17,9 +16,24 @@ const DynamicProfile: React.FC = () => {
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' });
   const [pwErr, setPwErr] = useState<string>('');
   const [pwSuccess, setPwSuccess] = useState<string>('');
-  const [contactForm, setContactForm] = useState({ phone: localStorage.getItem('user_phone') || '', altEmail: localStorage.getItem('user_alt_email') || '' });
+  const [contactForm, setContactForm] = useState({ phone: '', altEmail: '' });
   const [contactErr, setContactErr] = useState<string>('');
   const [contactSuccess, setContactSuccess] = useState<string>('');
+
+  // Initialize contact form from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setContactForm({
+        phone: localStorage.getItem('user_phone') || '',
+        altEmail: localStorage.getItem('user_alt_email') || ''
+      });
+    }
+  }, []);
+
+  // Update editedUser when user changes
+  useEffect(() => {
+    setEditedUser(user);
+  }, [user]);
 
   if (!user) {
     return (
@@ -44,12 +58,14 @@ const DynamicProfile: React.FC = () => {
     setIsEditing(false);
     
     // Update localStorage
-    localStorage.setItem('user', JSON.stringify(editedUser));
-    
-    // Dispatch avatar update event
-    if (editedUser.avatar !== user?.avatar) {
-      const event = new CustomEvent('avatarUpdated', { detail: editedUser.avatar });
-      window.dispatchEvent(event);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(editedUser));
+      
+      // Dispatch avatar update event
+      if (editedUser.avatar !== user?.avatar) {
+        const event = new CustomEvent('avatarUpdated', { detail: editedUser.avatar });
+        window.dispatchEvent(event);
+      }
     }
   };
 
@@ -89,11 +105,13 @@ const DynamicProfile: React.FC = () => {
       };
       
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // Dispatch avatar update event to update navbar
-      const event = new CustomEvent('avatarUpdated', { detail: base64String });
-      window.dispatchEvent(event);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Dispatch avatar update event to update navbar
+        const event = new CustomEvent('avatarUpdated', { detail: base64String });
+        window.dispatchEvent(event);
+      }
       
       // Update editedUser if in edit mode
       if (editedUser) {
@@ -189,7 +207,7 @@ const DynamicProfile: React.FC = () => {
                         }}
                       />
                     ) : null}
-                    {(!user.avatar || !user.avatar.startsWith('data:image') && !user.avatar.startsWith('http') && !user.avatar.startsWith('/')) && (
+                    {(!user.avatar || (!user.avatar.startsWith('data:image') && !user.avatar.startsWith('http') && !user.avatar.startsWith('/'))) && (
                       <span style={{ color: THEME.colors.primary }}>
                         {user.avatar && user.avatar.length <= 3 ? user.avatar : (user.name?.charAt(0) || 'U')}
                       </span>
@@ -372,7 +390,7 @@ const DynamicProfile: React.FC = () => {
                               }}
                             />
                           ) : null}
-                          {(!user.avatar || !user.avatar.startsWith('data:image') && !user.avatar.startsWith('http') && !user.avatar.startsWith('/')) && (
+                          {(!user.avatar || (!user.avatar.startsWith('data:image') && !user.avatar.startsWith('http') && !user.avatar.startsWith('/'))) && (
                             <span style={{ color: THEME.colors.primary }}>
                               {user.avatar && user.avatar.length <= 3 ? user.avatar : (user.name?.charAt(0) || 'U')}
                             </span>
@@ -451,8 +469,10 @@ const DynamicProfile: React.FC = () => {
                           setTimeout(() => setContactErr(''), 2000);
                           return;
                         }
-                        localStorage.setItem('user_phone', contactForm.phone);
-                        localStorage.setItem('user_alt_email', contactForm.altEmail);
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('user_phone', contactForm.phone);
+                          localStorage.setItem('user_alt_email', contactForm.altEmail);
+                        }
                         setContactSuccess('Contact details updated');
                         setTimeout(() => setContactSuccess(''), 2000);
                       }}

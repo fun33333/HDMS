@@ -11,7 +11,7 @@ interface EmptyStateProps {
   action?: React.ReactNode;
 }
 
-export default function EmptyState({
+export function EmptyState({
   title = 'No data found',
   description = 'There are no items to display at this time.',
   icon,
@@ -34,4 +34,6 @@ export default function EmptyState({
     </div>
   );
 }
+
+export default EmptyState;
 

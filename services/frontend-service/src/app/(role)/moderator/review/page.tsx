@@ -1,275 +1,242 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../lib/auth';
 import { Card, CardContent } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/button';
+import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { 
-  ArrowLeft,
   CheckCircle,
   XCircle,
   User,
   Calendar,
   FileText,
-  AlertCircle
+  Eye,
+  Search,
+  Filter
 } from 'lucide-react';
 import { THEME } from '../../../../lib/theme';
+import ticketService from '../../../../services/api/ticketService';
+import { Ticket } from '../../../../types';
+import Link from 'next/link';
 
-const ReviewTicketPage: React.FC = () => {
-  const params = useParams();
+const ReviewPage: React.FC = () => {
   const router = useRouter();
-  const { tickets, updateTicket, user } = useAuth();
-  const ticketId = params.id as string;
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const ticket = tickets.find(t => t.id === ticketId);
-  
-  if (!ticket) {
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        // Fetch tickets that are completed and need review
+        const response = await ticketService.getTickets();
+        // Filter tickets that are completed (status: 'completed' or have completionNote/completionImage)
+        const completedTickets = response.results.filter(ticket => 
+          ticket.status === 'completed' || 
+          ticket.status === 'in_progress' ||
+          (ticket.completionNote || ticket.completionImage)
+        );
+        setTickets(completedTickets);
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+        setTickets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, []);
+
+  const filteredTickets = tickets.filter(ticket => {
+    const matchesSearch = 
+      ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterStatus === 'all' || ticket.status === filterStatus;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  if (loading) {
     return (
       <div className="p-6">
-        <h1>Ticket not found</h1>
-        <button onClick={() => router.back()}>Go Back</button>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
       </div>
     );
   }
-
-  const handleApprove = () => {
-    updateTicket(ticketId, {
-      isApproved: true,
-      status: 'resolved',
-      moderatorId: user?.id,
-      moderatorName: user?.name
-    });
-    
-    alert('Assignee ka kaam approve ho gaya hai!');
-    router.push('/moderator/total-requests');
-  };
-
-  const handleReject = () => {
-    if (!rejectionReason.trim()) {
-      alert('Please provide a reason for rejection');
-      return;
-    }
-    
-    updateTicket(ticketId, {
-      isApproved: false,
-      status: 'rejected',
-      rejectionReason: rejectionReason,
-      moderatorId: user?.id,
-      moderatorName: user?.name
-    });
-    
-    alert('Assignee ka kaam reject ho gaya hai!');
-    setShowRejectModal(false);
-    router.push('/moderator/total-requests');
-  };
-
 
   return (
     <div className="p-6">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Go Back</span>
-        </button>
-        <h1 className="text-3xl font-bold" style={{ color: THEME.colors.primary }}>
+        <h1 className="text-3xl font-bold mb-2" style={{ color: THEME.colors.primary }}>
           Review Completed Work
         </h1>
+        <p className="text-gray-600">Review and approve completed tickets from assignees</p>
       </div>
 
-      <div className="max-w-4xl mx-auto">
-        <Card className="shadow-lg">
-          <CardContent className="p-6">
-            {/* Ticket Information */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold mb-4" style={{ color: THEME.colors.primary }}>
-                Request Details
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Ticket ID:</p>
-                  <p className="font-semibold text-gray-900">{ticket.ticketId}</p>
-                </div>
+      {/* Search and Filter */}
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search tickets..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
+            style={{ 
+              borderColor: THEME.colors.gray
+            }}
+            onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
+            onBlur={(e) => e.target.style.borderColor = THEME.colors.gray}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="w-5 h-5 text-gray-400" />
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
+            style={{ 
+              borderColor: THEME.colors.gray
+            }}
+            onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
+            onBlur={(e) => e.target.style.borderColor = THEME.colors.gray}
+          >
+            <option value="all">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="in_progress">In Progress</option>
+          </select>
+        </div>
+      </div>
 
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Subject:</p>
-                  <p className="font-semibold text-gray-900">{ticket.subject}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Description:</p>
-                  <p className="text-gray-700 leading-relaxed">{ticket.description}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Priority:</p>
-                    <PriorityBadge priority={ticket.priority} />
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Department:</p>
-                    <p className="font-medium text-gray-800">{ticket.department}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Requester:</p>
-                    <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      <p className="font-medium text-gray-800">{ticket.requesterName}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Request Date:</p>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <p className="font-medium text-gray-800">
-                        {new Date(ticket.submittedDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {ticket.assignedDate && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Assigned Date:</p>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <p className="font-medium text-gray-800">
-                        {new Date(ticket.assignedDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {ticket.completedDate && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Completed Date:</p>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-green-500" />
-                      <p className="font-medium text-green-600">
-                        {new Date(ticket.completedDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Assignee Completion Details */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold mb-4" style={{ color: THEME.colors.primary }}>
-                Assignee Completion Details
-              </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Assignee Name:</p>
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4 text-blue-600" />
-                    <p className="font-semibold text-gray-900">{ticket.assigneeName || 'Not assigned'}</p>
-                  </div>
-                </div>
-
-                {ticket.completionNote && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Completion Note:</p>
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-gray-800">{ticket.completionNote}</p>
-                    </div>
-                  </div>
-                )}
-
-                {ticket.completionImage && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Completion Image:</p>
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
-                      <img 
-                        src={ticket.completionImage} 
-                        alt="Completion" 
-                        className="w-full max-w-md h-auto"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-4 justify-center">
-              <Button
-                variant="danger"
-                leftIcon={<XCircle className="w-5 h-5" />}
-                onClick={() => setShowRejectModal(true)}
-              >
-                Reject
-              </Button>
-              <Button
-                variant="success"
-                leftIcon={<CheckCircle className="w-5 h-5" />}
-                onClick={handleApprove}
-              >
-                Approve
-              </Button>
-            </div>
+      {/* Tickets List */}
+      {filteredTickets.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No tickets found</h3>
+            <p className="text-gray-500">
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Try adjusting your search or filter criteria'
+                : 'No completed tickets available for review'}
+            </p>
           </CardContent>
         </Card>
-      </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredTickets.map((ticket) => (
+            <Card key={ticket.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-lg font-bold" style={{ color: THEME.colors.primary }}>
+                        {ticket.subject}
+                      </h3>
+                      <PriorityBadge priority={ticket.priority} />
+                      <StatusBadge status={ticket.status} />
+                    </div>
 
-      {/* Reject Modal */}
-      {showRejectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4 shadow-2xl">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4 text-red-600">Reject Work</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Please provide a reason for rejecting assignee ka kaam:
-              </p>
-              
-              <textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Enter rejection reason..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 h-32 resize-none mb-4 text-gray-900"
-                required
-              />
-              
-              <div className="flex space-x-3">
-                <Button
-                  onClick={() => setShowRejectModal(false)}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleReject}
-                  disabled={!rejectionReason.trim()}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                    rejectionReason.trim()
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  Done
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                    <p className="text-gray-700 mb-4 line-clamp-2">{ticket.description}</p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <p className="text-gray-500 text-xs">Requester</p>
+                          <p className="font-medium text-gray-800">{ticket.requesterName || 'N/A'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-blue-500" />
+                        <div>
+                          <p className="text-gray-500 text-xs">Assignee</p>
+                          <p className="font-medium text-gray-800">{ticket.assigneeName || 'Not assigned'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <div>
+                          <p className="text-gray-500 text-xs">Submitted</p>
+                          <p className="font-medium text-gray-800">
+                            {new Date(ticket.submittedDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {ticket.completedDate && (
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <div>
+                            <p className="text-gray-500 text-xs">Completed</p>
+                            <p className="font-medium text-green-600">
+                              {new Date(ticket.completedDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Completion Indicators */}
+                    {(ticket.completionNote || ticket.completionImage) && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-green-700 font-medium">
+                            {ticket.completionNote ? 'Has completion note' : ''}
+                            {ticket.completionNote && ticket.completionImage ? ' & ' : ''}
+                            {ticket.completionImage ? 'Has completion image' : ''}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="ml-4">
+                    <Link href={`/moderator/review/${ticket.id}`}>
+                      <Button
+                        variant="primary"
+                        leftIcon={<Eye className="w-4 h-4" />}
+                      >
+                        Review
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Stats */}
+      {filteredTickets.length > 0 && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-semibold">{filteredTickets.length}</span> of{' '}
+            <span className="font-semibold">{tickets.length}</span> completed tickets
+          </p>
         </div>
       )}
     </div>
   );
 };
 
-export default ReviewTicketPage;
+export default ReviewPage;

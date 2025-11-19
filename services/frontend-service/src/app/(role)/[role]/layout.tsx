@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { usePathname, useRouter } from 'next/navigation';
 import RoleGuard from '../../../components/layout/RoleGuard';
@@ -18,6 +18,24 @@ export default function RoleLayout({
   const roleFromPath = pathname?.split('/')[1];
   const allowedRoles = ['requester', 'moderator', 'assignee', 'admin'];
 
+  // Handle navigation in useEffect to avoid setState during render
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    // Check if user has access to this role section
+    if (roleFromPath && allowedRoles.includes(roleFromPath)) {
+      if (user.role !== roleFromPath && user.role !== 'admin') {
+        router.push(`/${user.role}/dashboard`);
+        return;
+      }
+    }
+  }, [user, loading, roleFromPath, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -30,14 +48,12 @@ export default function RoleLayout({
   }
 
   if (!user) {
-    router.push('/login');
     return null;
   }
 
   // Check if user has access to this role section
   if (roleFromPath && allowedRoles.includes(roleFromPath)) {
     if (user.role !== roleFromPath && user.role !== 'admin') {
-      router.push(`/${user.role}/dashboard`);
       return null;
     }
   }

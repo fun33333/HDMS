@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
 import { Upload, XCircle, UserPlus } from 'lucide-react';
-import { DEPARTMENTS } from '../../../lib/mockData';
-import { THEME } from '../../../lib/theme';
+import { DEPARTMENTS } from '../../../../lib/constants';
+import { THEME } from '../../../../lib/theme';
+import ticketService from '../../../../services/api/ticketService';
+import userService from '../../../../services/api/userService';
 
 interface FormData {
   subject: string;
@@ -25,9 +27,107 @@ const CreateSubticketsPage: React.FC = () => {
   const countParam = search.get('count');
   const count = Math.max(1, Math.min(50, parseInt(countParam || '1', 10)));
 
-  const { tickets, createSubticket, getAssignees, updateTicket, refreshData, user } = useAuth();
+  const { user } = useAuth();
+  const [parentTicket, setParentTicket] = useState<any>(null);
+  const [assignees, setAssignees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const parentTicket = tickets.find(t => t.id === parent);
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchData = async () => {
+      try {
+        if (!isMounted) return;
+        setLoading(true);
+        setError(null);
+        
+        // Fetch parent ticket if parent ID is provided
+        if (parent) {
+          try {
+            const ticket = await ticketService.getTicketById(parent);
+            if (!isMounted) return;
+            setParentTicket(ticket);
+          } catch (ticketError: any) {
+            console.error('Error fetching parent ticket:', ticketError);
+            if (!isMounted) return;
+            // Don't fail completely if parent ticket fetch fails
+            if (ticketError?.isNetworkError) {
+              setError('Network error. Please check your connection and try again.');
+            } else {
+              setError('Failed to load parent ticket. Please try again.');
+            }
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Fetch assignees - this is required for the form
+        // Wrap in try-catch to prevent React error boundary from catching
+        let usersResult: any;
+        try {
+          usersResult = await userService.getUsers({ role: 'assignee' });
+          if (!isMounted) return;
+          // Success - process users
+          const usersList = Array.isArray(usersResult) ? usersResult : (usersResult?.results || []);
+          setAssignees(usersList);
+        } catch (userError: any) {
+          // Error caught - handle gracefully
+          console.error('Error fetching assignees:', userError);
+          if (!isMounted) return;
+          // Handle network errors gracefully
+          if (userError?.isNetworkError) {
+            setError('Network error. Please check your connection and try again.');
+          } else {
+            setError(userError?.message || 'Failed to load assignees. Please try again.');
+          }
+          // Set empty array on error to prevent crashes
+          setAssignees([]);
+        }
+      } catch (error: any) {
+        console.error('Unexpected error:', error);
+        if (!isMounted) return;
+        setError('An unexpected error occurred. Please try again.');
+        setAssignees([]);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    // Wrap fetchData to catch any errors that might escape
+    // Ensure promise rejection is handled to prevent Next.js error boundary from catching
+    const safeFetchData = async () => {
+      try {
+        await fetchData();
+      } catch (error: any) {
+        console.error('Error in fetchData wrapper:', error);
+        if (isMounted) {
+          setError('An error occurred while loading data. Please try again.');
+          setLoading(false);
+          setAssignees([]);
+        }
+      }
+    };
+    
+    // Call and ensure promise is handled to prevent unhandled rejection
+    const promise = safeFetchData();
+    // Explicitly handle promise rejection to prevent Next.js error boundary
+    promise.catch((error: any) => {
+      console.error('Unhandled promise rejection caught:', error);
+      if (isMounted) {
+        setError('An error occurred while loading data. Please try again.');
+        setLoading(false);
+        setAssignees([]);
+      }
+    });
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [parent]);
+
   const defaultDepartment = parentTicket?.department || DEPARTMENTS[0];
 
   const [index, setIndex] = useState(0);
@@ -38,21 +138,23 @@ const CreateSubticketsPage: React.FC = () => {
       description: '',
       priority: 'medium',
       attachments: [],
-      department: defaultDepartment,
+      department: DEPARTMENTS[0],
       assigneeId: ''
     }))
   );
+
+  // Update forms when parentTicket department is loaded
+  useEffect(() => {
+    if (parentTicket?.department) {
+      setForms(prev => prev.map(form => ({
+        ...form,
+        department: form.department === DEPARTMENTS[0] ? parentTicket.department : form.department
+      })));
+    }
+  }, [parentTicket?.department]);
   const [fileInputs, setFileInputs] = useState<{ [k: number]: File[] }>({});
   const [cancelConfirm, setCancelConfirm] = useState<{ open: boolean, index: number | null }>({ open: false, index: null });
   const [assignConfirm, setAssignConfirm] = useState<{ open: boolean, index: number | null }>({ open: false, index: null });
-
-  useEffect(() => {
-    // if no parent provided, go back
-    if (!parent) {
-      router.push('/moderator/new-requests');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parent]);
 
   const updateForm = (i: number, field: keyof FormData, value: any) => {
     setForms(prev => {
@@ -111,40 +213,35 @@ const CreateSubticketsPage: React.FC = () => {
         department: form.department
       } as any;
 
-      const newId = createSubticket(parent!, payload);
+      const newTicket = await ticketService.createTicket({
+        subject: payload.subject,
+        description: payload.description,
+        priority: payload.priority,
+        department: payload.department,
+        attachments: fileInputs[idx] || []
+      });
 
       if (form.assigneeId) {
-        const assignee = getAssignees().find(a => a.id === form.assigneeId);
+        const assignee = assignees.find(a => a.id === form.assigneeId);
         if (assignee) {
-          updateTicket(newId, {
+          await ticketService.updateTicket(newTicket.id, {
             assigneeId: form.assigneeId,
-            assigneeName: assignee.name,
-            status: 'assigned',
-            assignedDate: new Date().toISOString(),
-            moderatorId: user?.id,
-            moderatorName: user?.name
+            status: 'assigned'
           });
           // Also mark parent ticket assigned when a subticket is assigned
           try {
-            updateTicket(parent!, {
-              status: 'assigned',
-              assignedDate: new Date().toISOString(),
-              moderatorId: user?.id,
-              moderatorName: user?.name
+            await ticketService.updateTicket(parent!, {
+              status: 'assigned'
             });
           } catch (err) {
             console.error('Failed to update parent ticket status', err);
           }
         }
       } else {
-        updateTicket(newId, {
-          status: 'pending',
-          moderatorId: user?.id,
-          moderatorName: user?.name
+        await ticketService.updateTicket(newTicket.id, {
+          status: 'pending'
         });
       }
-
-      await refreshData();
 
       const updatedForms = forms.filter((_, i) => i !== idx);
       if (updatedForms.length === 0) {
@@ -176,7 +273,82 @@ const CreateSubticketsPage: React.FC = () => {
     setIndex(prev => Math.min(prev, updatedForms.length - 1));
   };
 
-  const goBackToParent = () => router.push(`/moderator/request-detail/${parent}`);
+  const goBackToParent = () => {
+    if (parent) {
+      router.push(`/moderator/request-detail/${parent}`);
+    } else {
+      router.push('/moderator/ticket-pool');
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="p-6" style={{ backgroundColor: THEME.colors.white, minHeight: '100vh' }}>
+        <Card className="max-w-3xl mx-auto" style={{ backgroundColor: THEME.colors.white }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
+                <p style={{ color: THEME.colors.gray }}>Loading...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-6" style={{ backgroundColor: THEME.colors.white, minHeight: '100vh' }}>
+        <Card className="max-w-3xl mx-auto" style={{ backgroundColor: THEME.colors.white }}>
+          <CardContent className="p-6">
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <XCircle className="w-16 h-16 mx-auto" style={{ color: '#ef4444' }} />
+              </div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: THEME.colors.primary }}>Error Loading Page</h3>
+              <p className="mb-6" style={{ color: THEME.colors.gray }}>{error}</p>
+              <div className="space-x-3">
+                <Button onClick={() => window.location.reload()} variant="primary">
+                  Retry
+                </Button>
+                <Button onClick={() => router.push('/moderator/ticket-pool')} variant="secondary">
+                  Go to Ticket Pool
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show message if no parent ticket selected
+  if (!parent) {
+    return (
+      <div className="p-6" style={{ backgroundColor: THEME.colors.white, minHeight: '100vh' }}>
+        <Card className="max-w-3xl mx-auto" style={{ backgroundColor: THEME.colors.white }}>
+          <CardContent className="p-6">
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <UserPlus className="w-16 h-16 mx-auto" style={{ color: THEME.colors.primary }} />
+              </div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: THEME.colors.primary }}>Select Parent Ticket</h3>
+              <p className="mb-6" style={{ color: THEME.colors.gray }}>
+                To create subtickets, please select a parent ticket from the Ticket Pool first.
+              </p>
+              <Button onClick={() => router.push('/moderator/ticket-pool')} variant="primary">
+                Go to Ticket Pool
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     // 전체 오른쪽 컨텐츠(폼 배경)를 흰색으로 설정
@@ -216,7 +388,7 @@ const CreateSubticketsPage: React.FC = () => {
               <label className="block text-sm font-medium mb-1" style={{ color: THEME.colors.gray }}>Assignee</label>
               <select value={forms[index].assigneeId} onChange={(e) => updateForm(index, 'assigneeId', e.target.value)} className="w-full px-4 py-2 border rounded" style={{ borderColor: THEME.colors.medium, color: THEME.colors.black, backgroundColor: THEME.colors.white }}>
                 <option value="">Select assignee</option>
-                {getAssignees().filter(a => !forms[index].department || a.department === forms[index].department).map(a => (
+                {assignees.filter(a => !forms[index].department || a.department === forms[index].department).map(a => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </select>

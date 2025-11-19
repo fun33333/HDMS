@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { X, UserPlus, Check } from 'lucide-react';
-import { Button } from '../ui/button';
-import { DEPARTMENTS } from '../../lib/mockData';
+import { Button } from '../ui/Button';
+import { DEPARTMENTS } from '../../lib/constants';
 
 interface User {
   id: string;

@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../lib/auth';
+import { useNotifications } from '../../hooks/useNotifications';
 import { useRouter } from 'next/navigation';
 import { Bell, Check, CheckCheck, Search, AlertCircle, Info, CheckCircle, AlertTriangle, X, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import { THEME } from '../../lib/theme';
 import DataTable, { Column } from '../ui/DataTable';
-import ConfirmModal from '../ui/ConfirmModal';
+import ConfirmModal from '../modals/ConfirmModal';
 
 const DynamicNotifications: React.FC = () => {
-  const { user, notifications, refreshData } = useAuth();
+  const { user } = useAuth();
+  const { notifications, fetchNotifications } = useNotifications(true);
   const router = useRouter();
   const [tab, setTab] = useState<'all'|'unread'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,13 +29,13 @@ const DynamicNotifications: React.FC = () => {
   const markAsRead = (notificationId: string) => {
     try {
       const raw = localStorage.getItem('helpdesk_notifications');
-      if (!raw) return refreshData();
+      if (!raw) return fetchNotifications();
       const all = JSON.parse(raw);
       const idx = all.findIndex((n: any) => n.id === notificationId);
       if (idx !== -1) all[idx].read = true;
       localStorage.setItem('helpdesk_notifications', JSON.stringify(all));
     } finally {
-      refreshData();
+      fetchNotifications();
     }
   };
 
@@ -44,12 +46,12 @@ const DynamicNotifications: React.FC = () => {
   const deleteNotification = (notificationId: string) => {
     try {
       const raw = localStorage.getItem('helpdesk_notifications');
-      if (!raw) return refreshData();
+      if (!raw) return fetchNotifications();
       const all = JSON.parse(raw);
       const remaining = all.filter((n: any) => n.id !== notificationId);
       localStorage.setItem('helpdesk_notifications', JSON.stringify(remaining));
     } finally {
-      refreshData();
+      fetchNotifications();
     }
   };
 
@@ -290,11 +292,11 @@ const DynamicNotifications: React.FC = () => {
         </Card>
 
         <ConfirmModal
-          open={confirm.open}
+          isOpen={confirm.open}
           title={'Mark all notifications as read?'}
           description={'This will mark all unseen notifications as read.'}
           loading={processing}
-          onCancel={() => setConfirm({ open: false })}
+          onClose={() => setConfirm({ open: false })}
           onConfirm={async () => {
             try {
               setProcessing(true);
@@ -306,7 +308,7 @@ const DynamicNotifications: React.FC = () => {
             } finally {
               setProcessing(false);
               setConfirm({ open: false });
-              refreshData();
+              fetchNotifications();
             }
           }}
         />

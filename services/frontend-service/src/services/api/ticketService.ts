@@ -20,6 +20,7 @@ export interface UpdateTicketData {
   department?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   status?: string;
+  assigneeId?: string;
 }
 
 export interface TicketFilters {

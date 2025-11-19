@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { THEME } from '../../../lib/theme';
-import { Ticket } from '../../../types';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
+import { THEME } from '../../../../lib/theme';
+import { Ticket } from '../../../../types';
+import ticketService from '../../../../services/api/ticketService';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -47,9 +48,25 @@ const AnalyticsCard: React.FC<{
 };
 
 const AssigneeReportsPage: React.FC = () => {
-  const { user, tickets } = useAuth();
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = useState('30');
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await ticketService.getTickets({ assigneeId: user?.id });
+        const ticketsList = Array.isArray(response) ? response : (response?.results || []);
+        setTickets(ticketsList);
+      } catch (error: any) {
+        console.error('Error fetching tickets:', error);
+      }
+    };
+    if (user?.id) {
+      fetchTickets();
+    }
+  }, [user?.id]);
 
   // Filter tickets assigned to current user
   const myTasks: Ticket[] = tickets.filter((t: Ticket) => t.assigneeName === user?.name || t.assigneeId === user?.id);

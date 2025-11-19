@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { PriorityBadge } from '../../../components/common/PriorityBadge';
-import { StatusBadge } from '../../../components/common/StatusBadge';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
+import { PriorityBadge } from '../../../../components/common/PriorityBadge';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { 
   FileText, 
   Clock, 
@@ -25,23 +25,45 @@ import {
   X
 } from 'lucide-react';
 import Link from 'next/link';
-import { THEME } from '../../../lib/theme';
-import { AnalyticsCard } from '../../../components/common/AnalyticsCard';
-import DataTable, { Column } from '../../../components/ui/DataTable';
-import PageSkeleton from '../../../components/ui/PageSkeleton';
-import ErrorBanner from '../../../components/ui/ErrorBanner';
-import ConfirmModal from '../../../components/ui/ConfirmModal';
+import { THEME } from '../../../../lib/theme';
+import { AnalyticsCard } from '../../../../components/common/AnalyticsCard';
+import DataTable, { Column } from '../../../../components/ui/DataTable';
+import PageSkeleton from '../../../../components/ui/PageSkeleton';
+import ErrorBanner from '../../../../components/ui/ErrorBanner';
+import ConfirmModal from '../../../../components/modals/ConfirmModal';
+import ticketService from '../../../../services/api/ticketService';
+import { Ticket } from '../../../../types';
+import { useEffect } from 'react';
 
 const MyTasksPage: React.FC = () => {
   const router = useRouter();
-  const { user, tickets, updateTicket } = useAuth();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [confirm, setConfirm] = useState<{ open: boolean; ticketId?: string; action?: 'start' | 'complete' }>({ open: false });
   const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await ticketService.getTickets({ assigneeId: user?.id });
+        const ticketsList = Array.isArray(response) ? response : (response?.results || []);
+        setTickets(ticketsList);
+      } catch (error: any) {
+        console.error('Error fetching tickets:', error);
+        setError('Failed to load tasks');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user?.id) {
+      fetchTickets();
+    }
+  }, [user?.id]);
 
   // Filter tickets assigned to current assignee
   const myTasks = tickets.filter(t => t.assigneeId === user?.id);
@@ -223,18 +245,26 @@ const MyTasksPage: React.FC = () => {
       </Card>
 
       <ConfirmModal
-        open={confirm.open}
+        isOpen={confirm.open}
         title={confirm.action === 'start' ? 'Start this task?' : 'Complete this task?'}
         description="This will update the task status."
         loading={processing}
-        onCancel={() => setConfirm({ open: false })}
+        onClose={() => setConfirm({ open: false })}
         onConfirm={async () => {
           const { ticketId, action } = confirm;
           if (!ticketId || !action) return;
           try {
             setProcessing(true);
-            if (action === 'start') updateTicket(ticketId, { status: 'in_progress' });
-            if (action === 'complete') updateTicket(ticketId, { status: 'resolved', completedDate: new Date().toISOString() });
+            if (action === 'start') {
+              await ticketService.updateTicket(ticketId, { status: 'in_progress' });
+            }
+            if (action === 'complete') {
+              await ticketService.updateTicket(ticketId, { status: 'resolved' });
+            }
+            // Refresh tickets
+            const response = await ticketService.getTickets({ assigneeId: user?.id });
+            const ticketsList = Array.isArray(response) ? response : (response?.results || []);
+            setTickets(ticketsList);
           } finally {
             setProcessing(false);
             setConfirm({ open: false });

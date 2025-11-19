@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import DataTable, { Column } from '../../../components/ui/DataTable';
-import DebouncedInput from '../../../components/ui/DebouncedInput';
-import PageSkeleton from '../../../components/ui/PageSkeleton';
-import ErrorBanner from '../../../components/ui/ErrorBanner';
-import EmptyState from '../../../components/ui/EmptyState';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
+import DataTable, { Column } from '../../../../components/ui/DataTable';
+import DebouncedInput from '../../../../components/ui/DebouncedInput';
+import PageSkeleton from '../../../../components/ui/PageSkeleton';
+import ErrorBanner from '../../../../components/ui/ErrorBanner';
+import EmptyState from '../../../../components/ui/EmptyState';
 import { 
   Settings, 
   Save, 

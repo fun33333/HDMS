@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { StatusBadge } from '../../../components/common/StatusBadge';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { 
   Users, 
   UserPlus, 
@@ -27,10 +27,10 @@ import {
   Upload,
   RefreshCw
 } from 'lucide-react';
-import DataTable, { Column } from '../../../components/ui/DataTable';
-import PageSkeleton from '../../../components/ui/PageSkeleton';
-import ErrorBanner from '../../../components/ui/ErrorBanner';
-import ConfirmModal from '../../../components/ui/ConfirmModal';
+import DataTable, { Column } from '../../../../components/ui/DataTable';
+import PageSkeleton from '../../../../components/ui/PageSkeleton';
+import ErrorBanner from '../../../../components/ui/ErrorBanner';
+import ConfirmModal from '../../../../components/modals/ConfirmModal';
 
 const AdminUsersPage: React.FC = () => {
   const { user } = useAuth();

@@ -10,14 +10,27 @@ interface AuthContextType {
   login: (email: string, password: string, role: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Wrapper function to update both state and localStorage
+  const setUser = (newUser: User | null) => {
+    setUserState(newUser);
+    if (typeof window !== 'undefined') {
+      if (newUser) {
+        localStorage.setItem('user', JSON.stringify(newUser));
+      } else {
+        localStorage.removeItem('user');
+      }
+    }
+  };
 
   // Check for stored auth on mount
   useEffect(() => {
@@ -27,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const storedToken = localStorage.getItem('token');
         
         if (storedUser && storedToken) {
-          setUser(JSON.parse(storedUser));
+          setUserState(JSON.parse(storedUser));
         }
       } catch (error) {
         console.error('Error loading auth state:', error);
@@ -89,7 +102,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const userData = mockUsers[role] || mockUsers.admin;
         const mockToken = `mock_token_${Date.now()}_${role}`;
 
-        localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', mockToken);
         setUser(userData);
 
@@ -124,7 +136,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           employeeCode: data.user.employee_code,
         };
 
-        localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', data.token || data.access);
         setUser(userData);
 
@@ -171,7 +182,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const userData = mockUsers[role] || mockUsers.admin;
           const mockToken = `mock_token_${Date.now()}_${role}`;
 
-          localStorage.setItem('user', JSON.stringify(userData));
           localStorage.setItem('token', mockToken);
           setUser(userData);
 
@@ -188,7 +198,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    setUser(null);
+    setUserState(null);
     router.push('/login');
   };
 
@@ -200,6 +210,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         logout,
         isAuthenticated: !!user,
+        setUser,
       }}
     >
       {children}

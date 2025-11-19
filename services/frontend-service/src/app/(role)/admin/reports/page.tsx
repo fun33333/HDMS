@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useAuth } from '../../../lib/auth';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../../lib/auth';
+import { Card, CardContent } from '../../../../components/ui/card';
+import { Button } from '../../../../components/ui/Button';
+import ticketService from '../../../../services/api/ticketService';
+import { Ticket } from '../../../../types';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -26,9 +28,78 @@ import {
 } from 'lucide-react';
 
 const AdminReportsPage: React.FC = () => {
-  const { user, tickets } = useAuth();
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [reportType, setReportType] = useState('overview');
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchTickets = async () => {
+      try {
+        if (!isMounted) return;
+        
+        // Wrap ticketService call in Promise to handle errors more safely
+        const ticketsResult = await Promise.resolve(
+          ticketService.getTickets()
+        ).catch((ticketError: any) => {
+          // Return error object instead of throwing
+          return { error: ticketError };
+        });
+        
+        if (!isMounted) return;
+        
+        // Check if result is an error
+        if ('error' in ticketsResult) {
+          const ticketError = ticketsResult.error;
+          console.error('Error fetching tickets:', ticketError);
+          // Handle network errors gracefully
+          if (ticketError?.isNetworkError) {
+            console.warn('Network error, using empty tickets list');
+          } else {
+            console.warn('API error, using empty tickets list');
+          }
+          // Set empty array on error to prevent crashes
+          setTickets([]);
+        } else {
+          // Success - process tickets
+          const ticketsList = Array.isArray(ticketsResult) ? ticketsResult : (ticketsResult?.results || []);
+          setTickets(ticketsList);
+        }
+      } catch (error: any) {
+        console.error('Unexpected error:', error);
+        if (!isMounted) return;
+        // Set empty array on error to prevent crashes
+        setTickets([]);
+      }
+    };
+    
+    // Wrap fetchTickets to catch any errors that might escape
+    const safeFetchTickets = async () => {
+      try {
+        await fetchTickets();
+      } catch (error: any) {
+        console.error('Error in fetchTickets wrapper:', error);
+        if (isMounted) {
+          setTickets([]);
+        }
+      }
+    };
+    
+    // Call and ensure promise is handled to prevent unhandled rejection
+    const promise = safeFetchTickets();
+    promise.catch((error: any) => {
+      console.error('Unhandled promise rejection caught:', error);
+      if (isMounted) {
+        setTickets([]);
+      }
+    });
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Calculate analytics data
   const totalTickets = tickets.length;

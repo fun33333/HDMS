@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { DataTable } from '../../../../components/ui/DataTable';
+import DataTable from '../../../../components/ui/DataTable';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { Button } from '../../../../components/ui/Button';
+import { Card, CardContent } from '../../../../components/ui/card';
 import { SkeletonLoader, SkeletonTable } from '../../../../components/ui/SkeletonLoader';
-import { Eye, UserPlus } from 'lucide-react';
+import { Eye, UserPlus, FileText } from 'lucide-react';
 import { THEME } from '../../../../lib/theme';
 import { Ticket } from '../../../../types';
 import { formatDate } from '../../../../lib/helpers';
 import { useRouter } from 'next/navigation';
+import ticketService from '../../../../services/api/ticketService';
 
 export default function TicketPoolPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -21,49 +23,20 @@ export default function TicketPoolPage() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/tickets/pool/`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setTickets(data.results || data);
+        // Try to fetch tickets from pool endpoint, fallback to regular tickets
+        const response = await ticketService.getTickets({ status: 'pending' });
+        const ticketsList = Array.isArray(response) ? response : (response?.results || []);
+        setTickets(ticketsList);
+      } catch (error: any) {
+        // Handle network errors gracefully - API might not be available
+        const isNetworkError = error?.isNetworkError || !error?.response;
+        if (isNetworkError) {
+          console.warn('API not available, using empty tickets list');
+          setTickets([]);
         } else {
-          // Mock data for development
-          setTickets([
-            {
-              id: '1',
-              ticketId: 'TKT-001',
-              subject: 'Network connectivity issue',
-              description: 'Unable to connect to office network',
-              department: 'IT',
-              priority: 'high',
-              status: 'pending',
-              requesterId: '1',
-              requesterName: 'John Doe',
-              submittedDate: new Date().toISOString(),
-            },
-            {
-              id: '2',
-              ticketId: 'TKT-002',
-              subject: 'Software license renewal',
-              description: 'Need to renew Microsoft Office licenses',
-              department: 'IT',
-              priority: 'medium',
-              status: 'pending',
-              requesterId: '2',
-              requesterName: 'Jane Smith',
-              submittedDate: new Date().toISOString(),
-            },
-          ]);
+          console.error('Error fetching tickets:', error?.message || error);
+          setTickets([]);
         }
-      } catch (error) {
-        console.error('Error fetching tickets:', error);
       } finally {
         setLoading(false);
       }
@@ -156,6 +129,14 @@ export default function TicketPoolPage() {
             onClick={() => router.push(`/moderator/assign/${ticket.id}`)}
           >
             Assign
+          </Button>
+          <Button
+            variant="success"
+            size="sm"
+            leftIcon={<FileText className="w-4 h-4" />}
+            onClick={() => router.push(`/moderator/create-subtickets?parent=${ticket.id}`)}
+          >
+            Create Subtickets
           </Button>
         </div>
       ),
