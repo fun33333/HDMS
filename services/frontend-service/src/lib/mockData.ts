@@ -616,8 +616,6 @@ export const generateMockReassignableTickets = (): Ticket[] => {
       assigneeName: assignee,
       submittedDate: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
       assignedDate: status !== 'pending' ? new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString() : undefined,
-      createdAt: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
     });
   }
 
