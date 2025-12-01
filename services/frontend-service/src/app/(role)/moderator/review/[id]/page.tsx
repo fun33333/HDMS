@@ -65,6 +65,63 @@ interface DepartmentWorkload {
 // Mock Department Workload Data (Replace with API call)
 const getDepartmentWorkload = (department: string): DepartmentWorkload => {
   const mockData: Record<string, DepartmentWorkload> = {
+    'Development': { 
+      department: 'Development', 
+      activeTickets: 8, 
+      capacity: 20, 
+      loadPercentage: 40, 
+      availableMembers: 4, 
+      totalMembers: 5,
+      members: [
+        { id: '1', name: 'Ahmed Khan', available: true, currentTickets: 2 },
+        { id: '2', name: 'Fatima Ali', available: true, currentTickets: 1 },
+        { id: '3', name: 'Hassan Raza', available: true, currentTickets: 2 },
+        { id: '4', name: 'Sara Ahmed', available: true, currentTickets: 1 },
+        { id: '5', name: 'Ali Hassan', available: false, currentTickets: 4 },
+      ]
+    },
+    'Finance & Accounts': { 
+      department: 'Finance & Accounts', 
+      activeTickets: 6, 
+      capacity: 15, 
+      loadPercentage: 40, 
+      availableMembers: 3, 
+      totalMembers: 4,
+      members: [
+        { id: '1', name: 'Zainab Malik', available: true, currentTickets: 1 },
+        { id: '2', name: 'Bilal Khan', available: true, currentTickets: 2 },
+        { id: '3', name: 'Nadia Sheikh', available: true, currentTickets: 1 },
+        { id: '4', name: 'Omar Ali', available: false, currentTickets: 4 },
+      ]
+    },
+    'Procurement': { 
+      department: 'Procurement', 
+      activeTickets: 5, 
+      capacity: 15, 
+      loadPercentage: 33, 
+      availableMembers: 3, 
+      totalMembers: 3,
+      members: [
+        { id: '1', name: 'Kamran Malik', available: true, currentTickets: 1 },
+        { id: '2', name: 'Ayesha Raza', available: true, currentTickets: 2 },
+        { id: '3', name: 'Tariq Hussain', available: true, currentTickets: 1 },
+      ]
+    },
+    'Basic Maintenance': { 
+      department: 'Basic Maintenance', 
+      activeTickets: 10, 
+      capacity: 20, 
+      loadPercentage: 50, 
+      availableMembers: 4, 
+      totalMembers: 5,
+      members: [
+        { id: '1', name: 'Saima Khan', available: true, currentTickets: 2 },
+        { id: '2', name: 'Usman Ali', available: true, currentTickets: 1 },
+        { id: '3', name: 'Hina Sheikh', available: true, currentTickets: 2 },
+        { id: '4', name: 'Bilal Ahmed', available: true, currentTickets: 1 },
+        { id: '5', name: 'Nida Raza', available: false, currentTickets: 5 },
+      ]
+    },
     'IT': { 
       department: 'IT', 
       activeTickets: 12, 
@@ -80,21 +137,33 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '5', name: 'Ali Hassan', available: false, currentTickets: 4 },
       ]
     },
-    'HR': { 
-      department: 'HR', 
-      activeTickets: 5, 
+    'Architecture': { 
+      department: 'Architecture', 
+      activeTickets: 4, 
       capacity: 15, 
-      loadPercentage: 33, 
+      loadPercentage: 27, 
+      availableMembers: 3, 
+      totalMembers: 3,
+      members: [
+        { id: '1', name: 'Zara Khan', available: true, currentTickets: 1 },
+        { id: '2', name: 'Faisal Ali', available: true, currentTickets: 1 },
+        { id: '3', name: 'Mehreen Sheikh', available: true, currentTickets: 1 },
+      ]
+    },
+    'Administration': { 
+      department: 'Administration', 
+      activeTickets: 3, 
+      capacity: 15, 
+      loadPercentage: 20, 
       availableMembers: 4, 
       totalMembers: 4,
       members: [
-        { id: '1', name: 'Zainab Malik', available: true, currentTickets: 1 },
-        { id: '2', name: 'Bilal Khan', available: true, currentTickets: 2 },
-        { id: '3', name: 'Nadia Sheikh', available: true, currentTickets: 1 },
-        { id: '4', name: 'Omar Ali', available: true, currentTickets: 1 },
+        { id: '1', name: 'Rashid Malik', available: true, currentTickets: 0 },
+        { id: '2', name: 'Sana Ahmed', available: true, currentTickets: 1 },
+        { id: '3', name: 'Imran Khan', available: true, currentTickets: 1 },
+        { id: '4', name: 'Amina Ali', available: true, currentTickets: 0 },
       ]
     },
-    // Add more departments...
   };
   
   return mockData[department] || { 
@@ -218,14 +287,13 @@ export default function ReviewTicketPage() {
 
   // Department options
   const departmentOptions: SelectOption[] = [
-    { value: 'IT', label: 'IT' },
-    { value: 'HR', label: 'HR' },
+    { value: 'Development', label: 'Development' },
+    { value: 'Finance & Accounts', label: 'Finance & Accounts' },
     { value: 'Procurement', label: 'Procurement' },
-    { value: 'Electrical', label: 'Electrical' },
-    { value: 'Plumbers', label: 'Plumbers' },
-    { value: 'Furniture Maintenance', label: 'Furniture Maintenance' },
-    { value: 'Accounts', label: 'Accounts' },
-    { value: 'IT Maintenance', label: 'IT Maintenance' },
+    { value: 'Basic Maintenance', label: 'Basic Maintenance' },
+    { value: 'IT', label: 'IT' },
+    { value: 'Architecture', label: 'Architecture' },
+    { value: 'Administration', label: 'Administration' },
   ];
 
   // Priority options

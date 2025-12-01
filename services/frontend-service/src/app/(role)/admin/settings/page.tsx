@@ -77,10 +77,13 @@ const AdminSettingsPage: React.FC = () => {
 
   // Departments
   const [departments, setDepartments] = useState<Department[]>([
-    { id: '1', name: 'IT', categories: ['Hardware', 'Software', 'Network'] },
-    { id: '2', name: 'HR', categories: ['Recruitment', 'Payroll', 'Benefits'] },
-    { id: '3', name: 'Finance', categories: ['Budget', 'Expenses', 'Reports'] },
-    { id: '4', name: 'Operations', categories: ['Maintenance', 'Logistics', 'Safety'] },
+    { id: '1', name: 'Development', categories: ['Feature Request', 'Bug Fix', 'Enhancement', 'Code Review', 'Deployment', 'Other'] },
+    { id: '2', name: 'Finance & Accounts', categories: ['Payment Issue', 'Invoice', 'Expense', 'Budget', 'Financial Reports', 'Other'] },
+    { id: '3', name: 'Procurement', categories: ['Purchase Request', 'Approval', 'Vendor Management', 'Contract', 'Other'] },
+    { id: '4', name: 'Basic Maintenance', categories: ['Repair', 'Installation', 'General Maintenance', 'Urgent Repair', 'Inspection', 'Other'] },
+    { id: '5', name: 'IT', categories: ['Hardware Issue', 'Software Issue', 'Network Issue', 'Email Issue', 'Access Request', 'Security', 'Other'] },
+    { id: '6', name: 'Architecture', categories: ['Design Request', 'Design Review', 'Planning', 'Consultation', 'Other'] },
+    { id: '7', name: 'Administration', categories: ['Documentation', 'Policy Query', 'Compliance', 'General Inquiry', 'Other'] },
   ]);
   const [showDeptModal, setShowDeptModal] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
@@ -88,10 +91,16 @@ const AdminSettingsPage: React.FC = () => {
 
   // Categories
   const [categories, setCategories] = useState<Category[]>([
-    { id: '1', name: 'Hardware', department: 'IT', defaultPriority: 'medium' },
-    { id: '2', name: 'Software', department: 'IT', defaultPriority: 'high' },
-    { id: '3', name: 'Network', department: 'IT', defaultPriority: 'urgent' },
-    { id: '4', name: 'Recruitment', department: 'HR', defaultPriority: 'low' },
+    { id: '1', name: 'Feature Request', department: 'Development', defaultPriority: 'medium' },
+    { id: '2', name: 'Bug Fix', department: 'Development', defaultPriority: 'high' },
+    { id: '3', name: 'Hardware Issue', department: 'IT', defaultPriority: 'medium' },
+    { id: '4', name: 'Software Issue', department: 'IT', defaultPriority: 'high' },
+    { id: '5', name: 'Payment Issue', department: 'Finance & Accounts', defaultPriority: 'medium' },
+    { id: '6', name: 'Purchase Request', department: 'Procurement', defaultPriority: 'medium' },
+    { id: '7', name: 'Repair', department: 'Basic Maintenance', defaultPriority: 'high' },
+    { id: '8', name: 'Design Request', department: 'Architecture', defaultPriority: 'medium' },
+    { id: '9', name: 'Documentation', department: 'Administration', defaultPriority: 'low' },
+    { id: '10', name: 'Other', department: 'Development', defaultPriority: 'medium' },
   ]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);

@@ -36,7 +36,7 @@ import {
 // Generate demo users
 const generateDemoUsers = (): User[] => {
   const roles: Array<'requester' | 'moderator' | 'assignee' | 'admin'> = ['requester', 'moderator', 'assignee', 'admin'];
-  const departments = ['IT', 'HR', 'Finance', 'Operations', 'Electrical', 'Mechanical'];
+  const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const statuses: Array<'active' | 'inactive' | 'pending'> = ['active', 'inactive', 'pending'];
   
   return Array.from({ length: 50 }, (_, i) => ({

@@ -59,31 +59,36 @@ const generateMockParentTicket = (ticketId: string): Ticket => {
 // Mock assignees by department
 const getMockAssignees = (department: string): Array<{ id: string; name: string; department: string }> => {
   const mockAssignees: Record<string, Array<{ id: string; name: string; department: string }>> = {
-    'IT': [
-      { id: 'assignee-it-1', name: 'Ahmed Khan', department: 'IT' },
-      { id: 'assignee-it-2', name: 'Fatima Ali', department: 'IT' },
+    'Development': [
+      { id: 'assignee-dev-1', name: 'Ahmed Khan', department: 'Development' },
+      { id: 'assignee-dev-2', name: 'Fatima Ali', department: 'Development' },
+      { id: 'assignee-dev-3', name: 'Hassan Raza', department: 'Development' },
     ],
-    'HR': [
-      { id: 'assignee-hr-1', name: 'Zainab Malik', department: 'HR' },
-      { id: 'assignee-hr-2', name: 'Bilal Khan', department: 'HR' },
+    'Finance & Accounts': [
+      { id: 'assignee-fin-1', name: 'Zainab Malik', department: 'Finance & Accounts' },
+      { id: 'assignee-fin-2', name: 'Bilal Khan', department: 'Finance & Accounts' },
     ],
     'Procurement': [
       { id: 'assignee-proc-1', name: 'Nadia Sheikh', department: 'Procurement' },
+      { id: 'assignee-proc-2', name: 'Kamran Malik', department: 'Procurement' },
     ],
-    'Electrical': [
-      { id: 'assignee-elec-1', name: 'Omar Ali', department: 'Electrical' },
+    'Basic Maintenance': [
+      { id: 'assignee-maint-1', name: 'Omar Ali', department: 'Basic Maintenance' },
+      { id: 'assignee-maint-2', name: 'Ayesha Raza', department: 'Basic Maintenance' },
+      { id: 'assignee-maint-3', name: 'Saima Khan', department: 'Basic Maintenance' },
     ],
-    'Plumbers': [
-      { id: 'assignee-plumb-1', name: 'Ayesha Raza', department: 'Plumbers' },
+    'IT': [
+      { id: 'assignee-it-1', name: 'Ahmed Khan', department: 'IT' },
+      { id: 'assignee-it-2', name: 'Fatima Ali', department: 'IT' },
+      { id: 'assignee-it-3', name: 'Hassan Raza', department: 'IT' },
     ],
-    'Furniture Maintenance': [
-      { id: 'assignee-furn-1', name: 'Kamran Malik', department: 'Furniture Maintenance' },
+    'Architecture': [
+      { id: 'assignee-arch-1', name: 'Zara Khan', department: 'Architecture' },
+      { id: 'assignee-arch-2', name: 'Faisal Ali', department: 'Architecture' },
     ],
-    'Accounts': [
-      { id: 'assignee-acc-1', name: 'Saima Khan', department: 'Accounts' },
-    ],
-    'IT Maintenance': [
-      { id: 'assignee-itm-1', name: 'Tariq Hussain', department: 'IT Maintenance' },
+    'Administration': [
+      { id: 'assignee-admin-1', name: 'Rashid Malik', department: 'Administration' },
+      { id: 'assignee-admin-2', name: 'Sana Ahmed', department: 'Administration' },
     ],
   };
   

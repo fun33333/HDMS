@@ -30,6 +30,7 @@ interface Message {
 
 interface TicketChatProps {
   ticketId: string;
+  allowSubTicketRequest?: boolean;
 }
 
 const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
@@ -108,7 +109,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
 
     setSelectedFiles(prev => [...prev, ...newAttachments]);
     setShowFileMenu(false);
-    
+
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -141,12 +142,12 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
 
   // Check if file is document
   const isDocument = (type: string) => {
-    return type.includes('pdf') || 
-           type.includes('document') || 
-           type.includes('word') || 
-           type.includes('excel') ||
-           type.includes('text') ||
-           type.includes('sheet');
+    return type.includes('pdf') ||
+      type.includes('document') ||
+      type.includes('word') ||
+      type.includes('excel') ||
+      type.includes('text') ||
+      type.includes('sheet');
   };
 
   // Download file
@@ -297,7 +298,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
               const getInitials = (name: string) => {
                 return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
               };
-              
+
               const getAvatarColor = (name: string) => {
                 const colors = [
                   THEME.colors.primary,
@@ -334,20 +335,20 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                         {getInitials(msg.userName)}
                       </div>
                     )}
-                    
+
                     {/* Message Container */}
                     <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                       {/* Employee Code at the top with hover name */}
                       <div className={`mb-0.5 px-1 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
-                        <span 
-                          className="text-xs font-semibold cursor-pointer" 
+                        <span
+                          className="text-xs font-semibold cursor-pointer"
                           style={{ color: '#128C7E' }}
                           title={msg.userName}
                         >
                           {msg.employeeCode || msg.userRole.charAt(0).toUpperCase() + msg.userRole.slice(1)}
                         </span>
                       </div>
-                      
+
                       {/* Message Bubble */}
                       <div
                         className={`rounded-lg px-3 py-2 ${isOwnMessage ? 'rounded-tr-none' : 'rounded-tl-none'}`}
@@ -361,13 +362,13 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                         {msg.message && (
                           <p className="text-sm whitespace-pre-wrap break-words mb-1.5 leading-relaxed">{msg.message}</p>
                         )}
-                        
+
                         {/* File Attachments */}
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className="space-y-2 mb-1.5">
                             {msg.attachments.map((attachment) => {
                               const FileIcon = getFileIcon(attachment.type);
-                              
+
                               return (
                                 <div
                                   key={attachment.id}
@@ -384,7 +385,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                                       />
                                     </div>
                                   )}
-                                  
+
                                   {/* File Info */}
                                   <div className="flex items-center gap-2">
                                     <div className="flex-shrink-0">
@@ -420,7 +421,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                             })}
                           </div>
                         )}
-                        
+
                         {/* Timestamp at bottom */}
                         <div className={`flex items-center ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                           <p
@@ -434,7 +435,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Avatar - Right for own messages */}
                     {isOwnMessage && (
                       <div
@@ -473,7 +474,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
               {/* Preview Content */}
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-4">{previewFile.name}</h3>
-                
+
                 {isImage(previewFile.type) ? (
                   <img
                     src={previewFile.data}
@@ -564,7 +565,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                 accept="*/*"
               />
             </div>
-            
+
             {/* Text Input */}
             <div className="flex-1 bg-white rounded-full px-4 py-2 flex items-center" style={{ border: `1px solid ${THEME.colors.light}` }}>
               <textarea
@@ -587,7 +588,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                 onClick={handleSendMessage}
                 disabled={loading || !user}
                 className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50"
-                style={{ 
+                style={{
                   backgroundColor: loading || !user ? '#8696A0' : '#25D366',
                   color: '#FFFFFF'
                 }}

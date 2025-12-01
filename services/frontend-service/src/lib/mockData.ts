@@ -70,7 +70,7 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       ticketId: 'HD-005',
       subject: 'Light bulb replacement needed',
       description: 'Light in room 205 is not working',
-      department: 'Maintenance',
+      department: 'Basic Maintenance',
       priority: 'medium',
       status: 'resolved',
       requesterId: requesterId,
@@ -85,7 +85,7 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       ticketId: 'HD-006',
       subject: 'Office chair repair',
       description: 'Chair wheel is broken',
-      department: 'Maintenance',
+      department: 'Basic Maintenance',
       priority: 'low',
       status: 'in_progress',
       requesterId: requesterId,
@@ -100,7 +100,7 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       ticketId: 'HD-007',
       subject: 'Request for leave approval',
       description: 'Need approval for 3 days leave',
-      department: 'HR',
+      department: 'Administration',
       priority: 'medium',
       status: 'pending',
       requesterId: requesterId,
@@ -160,8 +160,8 @@ export const calculateTicketStats = (tickets: Ticket[]) => {
     const days = (resolved.getTime() - submitted.getTime()) / (1000 * 60 * 60 * 24);
     return sum + days;
   }, 0);
-  const avgResolutionTime = resolvedTickets.length > 0 
-    ? totalResolutionDays / resolvedTickets.length 
+  const avgResolutionTime = resolvedTickets.length > 0
+    ? totalResolutionDays / resolvedTickets.length
     : 0;
 
   // Calculate previous month average
@@ -171,11 +171,11 @@ export const calculateTicketStats = (tickets: Ticket[]) => {
   });
   const lastMonthAvg = lastMonthResolved.length > 0
     ? lastMonthResolved.reduce((sum, ticket) => {
-        const submitted = new Date(ticket.submittedDate);
-        const resolved = new Date(ticket.resolvedDate!);
-        const days = (resolved.getTime() - submitted.getTime()) / (1000 * 60 * 60 * 24);
-        return sum + days;
-      }, 0) / lastMonthResolved.length
+      const submitted = new Date(ticket.submittedDate);
+      const resolved = new Date(ticket.resolvedDate!);
+      const days = (resolved.getTime() - submitted.getTime()) / (1000 * 60 * 60 * 24);
+      return sum + days;
+    }, 0) / lastMonthResolved.length
     : avgResolutionTime;
 
   const resolutionTimeTrend = lastMonthAvg > 0
@@ -183,7 +183,7 @@ export const calculateTicketStats = (tickets: Ticket[]) => {
     : 0;
 
   // Open tickets (pending + in_progress)
-  const openTickets = tickets.filter(t => 
+  const openTickets = tickets.filter(t =>
     t.status === 'pending' || t.status === 'assigned' || t.status === 'in_progress'
   );
 
@@ -223,7 +223,7 @@ export const getPriorityDistribution = (tickets: Ticket[]) => {
 // Get status distribution
 export const getStatusDistribution = (tickets: Ticket[]) => {
   const statusCounts: Record<string, number> = {};
-  
+
   tickets.forEach(ticket => {
     const status = ticket.status;
     statusCounts[status] = (statusCounts[status] || 0) + 1;
@@ -256,4 +256,370 @@ export const getStatusDistribution = (tickets: Ticket[]) => {
     count,
     color: STATUS_COLORS[status] || '#6b7280',
   }));
+};
+
+// Generate mock tickets for Moderator/Admin views (more comprehensive data)
+export const generateMockTickets = (): Ticket[] => {
+  const now = new Date();
+
+  const mockTickets: Ticket[] = [
+    // Pending Review > 24 hours
+    {
+      id: '1',
+      ticketId: 'HD-2024-001',
+      subject: 'Server downtime in Building A',
+      description: 'Server has been down for 2 days, affecting multiple departments',
+      department: 'IT',
+      priority: 'urgent',
+      status: 'pending',
+      requesterId: 'req-1',
+      requesterName: 'Ahmed Khan',
+      submittedDate: new Date(now.getTime() - 30 * 60 * 60 * 1000).toISOString(), // 30 hours ago
+    },
+    {
+      id: '2',
+      ticketId: 'HD-2024-002',
+      subject: 'AC not working in Conference Room',
+      description: 'Air conditioning unit stopped working, room temperature is very high',
+      department: 'Basic Maintenance',
+      priority: 'high',
+      status: 'submitted',
+      requesterId: 'req-2',
+      requesterName: 'Fatima Ali',
+      submittedDate: new Date(now.getTime() - 28 * 60 * 60 * 1000).toISOString(), // 28 hours ago
+    },
+    {
+      id: '3',
+      ticketId: 'HD-2024-003',
+      subject: 'Leakage in washroom',
+      description: 'Water leakage from ceiling in 2nd floor washroom',
+      department: 'Basic Maintenance',
+      priority: 'high',
+      status: 'pending',
+      requesterId: 'req-3',
+      requesterName: 'Hassan Raza',
+      submittedDate: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString(), // 50 hours ago
+    },
+
+    // SLA Breached Tickets
+    {
+      id: '4',
+      ticketId: 'HD-2024-004',
+      subject: 'Network connectivity issues',
+      description: 'WiFi keeps disconnecting in entire floor',
+      department: 'IT',
+      priority: 'urgent',
+      status: 'assigned',
+      requesterId: 'req-4',
+      requesterName: 'Sara Ahmed',
+      assigneeId: 'assignee-1',
+      assigneeName: 'IT Support Team',
+      moderatorId: 'mod-1',
+      moderatorName: 'Moderator User',
+      submittedDate: new Date(now.getTime() - 80 * 60 * 60 * 1000).toISOString(), // 80 hours ago (breached)
+      assignedDate: new Date(now.getTime() - 75 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '5',
+      ticketId: 'HD-2024-005',
+      subject: 'Printer not working',
+      description: 'Main office printer is showing error and not printing',
+      department: 'IT',
+      priority: 'high',
+      status: 'in_progress',
+      requesterId: 'req-5',
+      requesterName: 'Ali Hassan',
+      assigneeId: 'assignee-2',
+      assigneeName: 'IT Technician',
+      submittedDate: new Date(now.getTime() - 90 * 60 * 60 * 1000).toISOString(), // 90 hours ago (breached)
+      assignedDate: new Date(now.getTime() - 85 * 60 * 60 * 1000).toISOString(),
+    },
+
+    // SLA Approaching Tickets
+    {
+      id: '6',
+      ticketId: 'HD-2024-006',
+      subject: 'New employee onboarding',
+      description: 'Need to set up workstation for new employee',
+      department: 'Finance & Accounts',
+      priority: 'medium',
+      status: 'assigned',
+      requesterId: 'req-6',
+      requesterName: 'Zainab Malik',
+      assigneeId: 'assignee-3',
+      assigneeName: 'Finance & Accounts Team',
+      submittedDate: new Date(now.getTime() - 65 * 60 * 60 * 1000).toISOString(), // 65 hours ago (approaching)
+      assignedDate: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '7',
+      ticketId: 'HD-2024-007',
+      subject: 'Purchase request for office supplies',
+      description: 'Need to order stationery items for Q1',
+      department: 'Procurement',
+      priority: 'medium',
+      status: 'in_progress',
+      requesterId: 'req-7',
+      requesterName: 'Bilal Khan',
+      assigneeId: 'assignee-4',
+      assigneeName: 'Procurement Officer',
+      submittedDate: new Date(now.getTime() - 68 * 60 * 60 * 1000).toISOString(), // 68 hours ago (approaching)
+      assignedDate: new Date(now.getTime() - 65 * 60 * 60 * 1000).toISOString(),
+    },
+
+    // Tickets Assigned Today
+    {
+      id: '8',
+      ticketId: 'HD-2024-008',
+      subject: 'Light bulb replacement',
+      description: 'Multiple bulbs need replacement in corridor',
+      department: 'Basic Maintenance',
+      priority: 'medium',
+      status: 'assigned',
+      requesterId: 'req-8',
+      requesterName: 'Nadia Sheikh',
+      assigneeId: 'assignee-5',
+      assigneeName: 'Electrician',
+      moderatorId: 'mod-1',
+      moderatorName: 'Moderator User',
+      submittedDate: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago (today)
+    },
+    {
+      id: '9',
+      ticketId: 'HD-2024-009',
+      subject: 'Chair repair needed',
+      description: 'Office chair wheel is broken',
+      department: 'Basic Maintenance',
+      priority: 'low',
+      status: 'assigned',
+      requesterId: 'req-9',
+      requesterName: 'Omar Ali',
+      assigneeId: 'assignee-6',
+      assigneeName: 'Maintenance Team',
+      submittedDate: new Date(now.getTime() - 10 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago (today)
+    },
+    {
+      id: '10',
+      ticketId: 'HD-2024-010',
+      subject: 'Salary query',
+      description: 'Need clarification on salary deduction',
+      department: 'Finance & Accounts',
+      priority: 'high',
+      status: 'assigned',
+      requesterId: 'req-10',
+      requesterName: 'Ayesha Raza',
+      assigneeId: 'assignee-7',
+      assigneeName: 'Finance & Accounts Team',
+      submittedDate: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago (today)
+    },
+
+    // Active Tickets (various departments)
+    {
+      id: '11',
+      ticketId: 'HD-2024-011',
+      subject: 'Software license renewal',
+      description: 'Microsoft Office license expiring soon',
+      department: 'IT',
+      priority: 'high',
+      status: 'in_progress',
+      requesterId: 'req-11',
+      requesterName: 'Kamran Malik',
+      assigneeId: 'assignee-1',
+      assigneeName: 'IT Support Team',
+      submittedDate: new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '12',
+      ticketId: 'HD-2024-012',
+      subject: 'Water cooler not working',
+      description: 'Water dispenser stopped working',
+      department: 'Basic Maintenance',
+      priority: 'medium',
+      status: 'assigned',
+      requesterId: 'req-12',
+      requesterName: 'Saima Khan',
+      assigneeId: 'assignee-8',
+      assigneeName: 'Plumber',
+      submittedDate: new Date(now.getTime() - 15 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '13',
+      ticketId: 'HD-2024-013',
+      subject: 'Desk drawer stuck',
+      description: 'Desk drawer in room 301 is stuck',
+      department: 'Basic Maintenance',
+      priority: 'low',
+      status: 'in_progress',
+      requesterId: 'req-13',
+      requesterName: 'Tariq Hussain',
+      assigneeId: 'assignee-6',
+      assigneeName: 'Maintenance Team',
+      submittedDate: new Date(now.getTime() - 25 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 22 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '14',
+      ticketId: 'HD-2024-014',
+      subject: 'Leave approval request',
+      description: 'Need approval for 5 days leave',
+      department: 'Finance & Accounts',
+      priority: 'medium',
+      status: 'pending',
+      requesterId: 'req-14',
+      requesterName: 'Farhan Ali',
+      submittedDate: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '15',
+      ticketId: 'HD-2024-015',
+      subject: 'Invoice processing',
+      description: 'Urgent invoice needs processing',
+      department: 'Finance & Accounts',
+      priority: 'high',
+      status: 'in_progress',
+      requesterId: 'req-15',
+      requesterName: 'Hina Sheikh',
+      assigneeId: 'assignee-7',
+      assigneeName: 'Finance & Accounts Team',
+      submittedDate: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 16 * 60 * 60 * 1000).toISOString(),
+    },
+
+    // Resolved Tickets (for average calculation)
+    {
+      id: '16',
+      ticketId: 'HD-2024-016',
+      subject: 'Email configuration',
+      description: 'Need help setting up email client',
+      department: 'IT',
+      priority: 'medium',
+      status: 'resolved',
+      requesterId: 'req-16',
+      requesterName: 'Usman Khan',
+      assigneeId: 'assignee-1',
+      assigneeName: 'IT Support Team',
+      submittedDate: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 98 * 60 * 60 * 1000).toISOString(),
+      completedDate: new Date(now.getTime() - 95 * 60 * 60 * 1000).toISOString(),
+      resolvedDate: new Date(now.getTime() - 92 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '17',
+      ticketId: 'HD-2024-017',
+      subject: 'Phone extension setup',
+      description: 'Need new phone extension',
+      department: 'IT',
+      priority: 'low',
+      status: 'resolved',
+      requesterId: 'req-17',
+      requesterName: 'Amina Raza',
+      assigneeId: 'assignee-1',
+      assigneeName: 'IT Support Team',
+      submittedDate: new Date(now.getTime() - 120 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 118 * 60 * 60 * 1000).toISOString(),
+      completedDate: new Date(now.getTime() - 110 * 60 * 60 * 1000).toISOString(),
+      resolvedDate: new Date(now.getTime() - 108 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '18',
+      ticketId: 'HD-2024-018',
+      subject: 'Door lock repair',
+      description: 'Main entrance door lock is not working',
+      department: 'Basic Maintenance',
+      priority: 'high',
+      status: 'resolved',
+      requesterId: 'req-18',
+      requesterName: 'Zubair Ahmed',
+      assigneeId: 'assignee-6',
+      assigneeName: 'Maintenance Team',
+      submittedDate: new Date(now.getTime() - 150 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 148 * 60 * 60 * 1000).toISOString(),
+      completedDate: new Date(now.getTime() - 140 * 60 * 60 * 1000).toISOString(),
+      resolvedDate: new Date(now.getTime() - 138 * 60 * 60 * 1000).toISOString(),
+    },
+
+    // More active tickets for department distribution
+    {
+      id: '19',
+      ticketId: 'HD-2024-019',
+      subject: 'Cable management',
+      description: 'Cables need proper organization',
+      department: 'IT',
+      priority: 'low',
+      status: 'assigned',
+      requesterId: 'req-19',
+      requesterName: 'Rashid Ali',
+      assigneeId: 'assignee-1',
+      assigneeName: 'IT Support Team',
+      submittedDate: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: '20',
+      ticketId: 'HD-2024-020',
+      subject: 'Power socket installation',
+      description: 'Need additional power socket in meeting room',
+      department: 'Basic Maintenance',
+      priority: 'medium',
+      status: 'in_progress',
+      requesterId: 'req-20',
+      requesterName: 'Nida Malik',
+      assigneeId: 'assignee-5',
+      assigneeName: 'Electrician',
+      submittedDate: new Date(now.getTime() - 14 * 60 * 60 * 1000).toISOString(),
+      assignedDate: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+    },
+  ];
+
+  return mockTickets;
+};
+
+// Generate mock tickets for reassignable tickets
+export const generateMockReassignableTickets = (): Ticket[] => {
+  const now = new Date();
+  const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
+  const assignees = ['Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan', 'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh'];
+  const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
+  const requesterNames = [
+    'Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan',
+    'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh', 'Omar Ali', 'Ayesha Raza',
+    'Kamran Malik', 'Saima Khan', 'Tariq Hussain', 'Farhan Ali', 'Hina Sheikh'
+  ];
+  const statuses: Ticket['status'][] = ['assigned', 'in_progress', 'pending'];
+
+  const mockTickets: Ticket[] = [];
+
+  for (let i = 1; i <= 15; i++) {
+    const dept = departments[Math.floor(Math.random() * departments.length)];
+    const assignee = assignees[Math.floor(Math.random() * assignees.length)];
+    const priority = priorities[Math.floor(Math.random() * priorities.length)];
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const hoursAgo = Math.floor(Math.random() * 72);
+    const requesterIndex = (i - 1) % requesterNames.length;
+
+    mockTickets.push({
+      id: `reassign-ticket-${i}`,
+      ticketId: `HD-2024-${String(i).padStart(3, '0')}`,
+      subject: `Reassignable Ticket ${i}: ${['Server Issue', 'Network Problem', 'Hardware Request', 'Software License', 'Maintenance Request'][Math.floor(Math.random() * 5)]}`,
+      description: `This is a reassignable ticket description for ticket ${i}. It can be reassigned to a different department or assignee.`,
+      department: dept,
+      priority,
+      status,
+      requesterId: `req-${i}`,
+      requesterName: requesterNames[requesterIndex],
+      assigneeId: `assignee-${i}`,
+      assigneeName: assignee,
+      submittedDate: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
+      assignedDate: status !== 'pending' ? new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString() : undefined,
+      createdAt: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
+    });
+  }
+
+  return mockTickets;
 };

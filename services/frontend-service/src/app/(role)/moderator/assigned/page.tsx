@@ -32,7 +32,7 @@ import { formatDate, formatRelativeTime } from '../../../../lib/helpers';
 // Mock data generator for assigned tickets
 const generateMockAssignedTickets = (): Ticket[] => {
   const now = new Date();
-  const departments = ['IT', 'HR', 'Procurement', 'Electrical', 'Plumbers', 'Furniture Maintenance', 'Accounts', 'IT Maintenance'];
+  const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const assignees = ['Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan', 'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh'];
   const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
   const requesterNames = [

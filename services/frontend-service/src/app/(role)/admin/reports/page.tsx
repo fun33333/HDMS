@@ -33,7 +33,7 @@ const generateDemoTickets = (): Ticket[] => {
     ticketId: `TKT-${String(i + 1).padStart(3, '0')}`,
     subject: `Sample Ticket ${i + 1}`,
     description: `Description for ticket ${i + 1}`,
-    department: ['IT', 'HR', 'Finance', 'Operations'][i % 4],
+    department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     priority: ['low', 'medium', 'high', 'urgent'][i % 4] as any,
     status: ['assigned', 'in_progress', 'resolved', 'completed', 'pending'][i % 5] as any,
     requesterId: `req-${i + 1}`,
@@ -53,7 +53,7 @@ const generateDemoUsers = (): User[] => {
     name: `User ${i + 1}`,
     email: `user${i + 1}@example.com`,
     role: ['requester', 'assignee', 'moderator', 'admin'][i % 4] as any,
-    department: ['IT', 'HR', 'Finance', 'Operations'][i % 4],
+    department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     status: 'active',
   }));
 };
@@ -332,6 +332,7 @@ const AdminReportsPage: React.FC = () => {
                 <h3 className="text-sm font-semibold" style={{ color: THEME.colors.primary }}>
                   Filters
                 </h3>
+                
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>

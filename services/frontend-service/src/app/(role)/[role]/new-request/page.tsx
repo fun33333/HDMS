@@ -23,45 +23,59 @@ import { AlertCircle, Save } from 'lucide-react';
 
 // Department categories mapping
 const DEPARTMENT_CATEGORIES: Record<string, SelectOption[]> = {
+  'Development': [
+    { value: 'feature', label: 'Feature Request' },
+    { value: 'bug', label: 'Bug Fix' },
+    { value: 'enhancement', label: 'Enhancement' },
+    { value: 'code_review', label: 'Code Review' },
+    { value: 'deployment', label: 'Deployment' },
+    { value: 'other', label: 'Other' },
+  ],
+  'Finance & Accounts': [
+    { value: 'payment', label: 'Payment Issue' },
+    { value: 'invoice', label: 'Invoice' },
+    { value: 'expense', label: 'Expense' },
+    { value: 'budget', label: 'Budget' },
+    { value: 'reports', label: 'Financial Reports' },
+    { value: 'other', label: 'Other' },
+  ],
+  'Procurement': [
+    { value: 'purchase', label: 'Purchase Request' },
+    { value: 'approval', label: 'Approval' },
+    { value: 'vendor', label: 'Vendor Management' },
+    { value: 'contract', label: 'Contract' },
+    { value: 'other', label: 'Other' },
+  ],
+  'Basic Maintenance': [
+    { value: 'repair', label: 'Repair' },
+    { value: 'installation', label: 'Installation' },
+    { value: 'general', label: 'General Maintenance' },
+    { value: 'urgent', label: 'Urgent Repair' },
+    { value: 'inspection', label: 'Inspection' },
+    { value: 'other', label: 'Other' },
+  ],
   'IT': [
     { value: 'hardware', label: 'Hardware Issue' },
     { value: 'software', label: 'Software Issue' },
     { value: 'network', label: 'Network Issue' },
     { value: 'email', label: 'Email Issue' },
     { value: 'access', label: 'Access Request' },
+    { value: 'security', label: 'Security' },
+    { value: 'other', label: 'Other' },
   ],
-  'HR': [
-    { value: 'leave', label: 'Leave Request' },
-    { value: 'payroll', label: 'Payroll Issue' },
-    { value: 'benefits', label: 'Benefits' },
+  'Architecture': [
+    { value: 'design', label: 'Design Request' },
+    { value: 'review', label: 'Design Review' },
+    { value: 'planning', label: 'Planning' },
+    { value: 'consultation', label: 'Consultation' },
+    { value: 'other', label: 'Other' },
+  ],
+  'Administration': [
+    { value: 'documentation', label: 'Documentation' },
     { value: 'policy', label: 'Policy Query' },
-  ],
-  'Electrical': [
-    { value: 'repair', label: 'Repair' },
-    { value: 'installation', label: 'Installation' },
-    { value: 'maintenance', label: 'Maintenance' },
-  ],
-  'Procurement': [
-    { value: 'purchase', label: 'Purchase Request' },
-    { value: 'approval', label: 'Approval' },
-  ],
-  'Accounts': [
-    { value: 'payment', label: 'Payment Issue' },
-    { value: 'invoice', label: 'Invoice' },
-    { value: 'expense', label: 'Expense' },
-  ],
-  'Furniture': [
-    { value: 'repair', label: 'Repair' },
-    { value: 'replacement', label: 'Replacement' },
-    { value: 'new', label: 'New Request' },
-  ],
-  'Plumbing': [
-    { value: 'repair', label: 'Repair' },
-    { value: 'installation', label: 'Installation' },
-  ],
-  'Maintenance': [
-    { value: 'general', label: 'General Maintenance' },
-    { value: 'urgent', label: 'Urgent Repair' },
+    { value: 'compliance', label: 'Compliance' },
+    { value: 'general', label: 'General Inquiry' },
+    { value: 'other', label: 'Other' },
   ],
 };
 
@@ -139,6 +153,18 @@ export default function NewRequestPage() {
     setFormError(null);
   };
 
+  const handleAttachmentsChange = (newAttachments: FileWithStatus[]) => {
+    setAttachments(newAttachments);
+    // Clear attachment error when files are added
+    if (newAttachments.length > 0 && errors.attachments) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.attachments;
+        return newErrors;
+      });
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -158,6 +184,12 @@ export default function NewRequestPage() {
 
     if (!validateRequired(formData.priority)) {
       newErrors.priority = 'Priority is required';
+    }
+
+    // Validate attachments - at least one file is required
+    const readyAttachments = attachments.filter(f => f.status === 'ready' || f.status === 'pending');
+    if (readyAttachments.length === 0) {
+      newErrors.attachments = 'At least one file attachment is required';
     }
 
     setErrors(newErrors);
@@ -375,17 +407,23 @@ export default function NewRequestPage() {
               <div className="space-y-4 pt-6 border-t" style={{ borderColor: THEME.colors.light + '40' }}>
                 <div>
                   <h2 className="text-lg font-semibold mb-2" style={{ color: THEME.colors.primary }}>
-                    Attachments
+                    Attachments <span className="text-red-500">*</span>
                   </h2>
                   <p className="text-sm text-gray-600 mb-4">
-                    Upload files to support your request. Max 250MB per file, 100MB total.
+                    Upload files to support your request. Max 250MB per file, 100MB total. <span className="text-red-500 font-medium">At least one file is required.</span>
                   </p>
                 </div>
                 <FileUpload
                   files={attachments}
-                  onFilesChange={setAttachments}
+                  onFilesChange={handleAttachmentsChange}
                   disabled={loading || savingDraft}
                 />
+                {errors.attachments && (
+                  <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.attachments}
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}

@@ -11,20 +11,22 @@ import { StatusBadge } from '../common/StatusBadge';
 import { PriorityDistributionChart } from '../charts/PriorityDistributionChart';
 import { StatusDistributionChart } from '../charts/StatusDistributionChart';
 import { ResolutionTimeTrendChart } from '../charts/ResolutionTimeTrendChart';
-import { 
-  FileText, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock, 
+import { DashboardHeader } from './DashboardHeader';
+import DataTable, { Column } from '../ui/DataTable';
+import {
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  Clock,
   Plus,
-  ArrowRight 
+  ArrowRight
 } from 'lucide-react';
 import { Ticket } from '../../types';
-import { 
-  getMockTickets, 
-  calculateTicketStats, 
-  getPriorityDistribution, 
-  getStatusDistribution 
+import {
+  getMockTickets,
+  calculateTicketStats,
+  getPriorityDistribution,
+  getStatusDistribution
 } from '../../lib/mockData';
 
 const RequesterDashboard: React.FC = () => {
@@ -41,13 +43,13 @@ const RequesterDashboard: React.FC = () => {
       try {
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // Use hard-coded data
         const mockTickets = getMockTickets(user?.id || '1');
         setTickets(mockTickets);
       } catch (error) {
         console.error('Error fetching tickets:', error);
-          setTickets([]);
+        setTickets([]);
       } finally {
         setLoading(false);
       }
@@ -73,18 +75,18 @@ const RequesterDashboard: React.FC = () => {
 
     // Apply filter
     if (activeFilter === 'open') {
-      return sorted.filter(t => 
+      return sorted.filter(t =>
         t.status === 'pending' || t.status === 'assigned' || t.status === 'in_progress'
       ).slice(0, 10);
     } else if (activeFilter === 'resolved') {
-      return sorted.filter(t => 
+      return sorted.filter(t =>
         t.status === 'resolved' || t.status === 'completed'
       ).slice(0, 10);
     } else if (activeFilter === 'drafts') {
       // Drafts are not tickets, so return empty array
       return [];
     }
-    
+
     return sorted.slice(0, 10);
   }, [tickets, activeFilter]);
 
@@ -98,13 +100,94 @@ const RequesterDashboard: React.FC = () => {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
+
+  // Define columns for DataTable
+  const columns: Column<Ticket>[] = [
+    {
+      key: 'ticketId',
+      header: 'ID',
+      accessor: (ticket) => (
+        <span className="font-medium" style={{ color: '#274c77' }}>
+          {ticket.ticketId}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'subject',
+      header: 'Title',
+      accessor: (ticket) => (
+        <div className="max-w-xs">
+          <p className="font-medium text-sm truncate" style={{ color: '#111827' }}>
+            {ticket.subject}
+          </p>
+          {ticket.description && (
+            <p className="text-xs truncate mt-1" style={{ color: '#8b8c89' }}>
+              {ticket.description}
+            </p>
+          )}
+        </div>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      accessor: (ticket) => <StatusBadge status={ticket.status} />,
+      sortable: true,
+    },
+    {
+      key: 'priority',
+      header: 'Priority',
+      accessor: (ticket) => <PriorityBadge priority={ticket.priority} />,
+      sortable: true,
+    },
+    {
+      key: 'department',
+      header: 'Department',
+      accessor: (ticket) => (
+        <span className="text-sm" style={{ color: '#6b7280' }}>
+          {ticket.department}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'submittedDate',
+      header: 'Created',
+      accessor: (ticket) => (
+        <span className="text-sm" style={{ color: '#6b7280' }}>
+          {formatDate(ticket.submittedDate)}
+        </span>
+      ),
+      sortable: true,
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      accessor: (ticket) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/requester/request-detail/${ticket.id}`);
+          }}
+          rightIcon={<ArrowRight className="w-3 h-3" />}
+          className="text-xs"
+        >
+          View
+        </Button>
+      ),
+    },
+  ];
 
   if (loading) {
     return (
@@ -123,53 +206,20 @@ const RequesterDashboard: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6" style={{ backgroundColor: '#e7ecef', minHeight: '100vh' }}>
-      {/* Header Card with Gradient Background */}
-      <Card 
-        className="rounded-xl shadow-2xl border-0"
-        style={{ 
-          background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%)',
-          backgroundColor: '#ffffff'
+      {/* Shared Dashboard Header */}
+      <DashboardHeader
+        title={`Welcome, ${user?.name || 'User'}! 👋`}
+        subtitle="Here's an overview of your help desk requests"
+        stats={[
+          { label: 'Total Requests', value: stats.totalRequests },
+          { label: 'Open Tickets', value: stats.openTickets, isWarning: stats.openTickets > 5 }
+        ]}
+        actionButton={{
+          label: 'New Request',
+          onClick: () => router.push('/requester/new-request'),
+          icon: <Plus className="w-4 h-4" style={{ color: 'white' }} />
         }}
-      >
-        <CardContent className="p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 
-                className="text-3xl sm:text-4xl font-bold mb-2"
-                style={{ color: '#274c77' }}
-              >
-                Welcome, {user?.name || 'User'}! 👋
-        </h1>
-              <p style={{ color: '#8b8c89' }} className="text-base sm:text-lg">
-                Here's an overview of your help desk requests
-              </p>
-              <div className="mt-4 flex flex-wrap gap-4 text-sm">
-                <div>
-                  <span style={{ color: '#8b8c89' }}>Total Requests: </span>
-                  <span className="font-semibold" style={{ color: '#274c77' }}>{stats.totalRequests}</span>
-      </div>
-                <div>
-                  <span style={{ color: '#8b8c89' }}>Open Tickets: </span>
-                  <span className={`font-semibold ${stats.openTickets > 5 ? 'text-yellow-600' : ''}`} style={{ color: stats.openTickets > 5 ? '#fbbf24' : '#274c77' }}>
-                    {stats.openTickets}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex-shrink-0">
-              <Button
-                onClick={() => router.push('/requester/new-request')}
-                variant="primary"
-                size="md"
-                leftIcon={<Plus className="w-4 h-4" style={{ color: 'white' }} />}
-                className="w-full sm:w-auto"
-              >
-                New Request
-              </Button>
-                  </div>
-              </div>
-            </CardContent>
-          </Card>
+      />
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -182,7 +232,7 @@ const RequesterDashboard: React.FC = () => {
           description="All tickets you've created"
           onClick={() => router.push('/requester/requests')}
         />
-        
+
         <KpiCard
           title="Open Tickets"
           value={stats.openTickets}
@@ -199,7 +249,7 @@ const RequesterDashboard: React.FC = () => {
             router.push('/requester/requests?filter=open');
           }}
         />
-        
+
         <KpiCard
           title="Resolved This Month"
           value={stats.resolvedThisMonth}
@@ -216,7 +266,7 @@ const RequesterDashboard: React.FC = () => {
             router.push('/requester/requests?filter=resolved');
           }}
         />
-        
+
         <KpiCard
           title="Average Resolution Time"
           value={`${stats.avgResolutionTime} days`}
@@ -229,7 +279,7 @@ const RequesterDashboard: React.FC = () => {
             label: 'vs last month'
           }}
         />
-         </div>
+      </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -250,7 +300,7 @@ const RequesterDashboard: React.FC = () => {
             <h2 className="text-xl font-bold" style={{ color: '#274c77' }}>
               My Recent Requests
             </h2>
-            
+
             {/* Quick Filters */}
             <div className="flex flex-wrap gap-2">
               {(['all', 'open', 'resolved', 'drafts'] as const).map((filter) => {
@@ -290,99 +340,18 @@ const RequesterDashboard: React.FC = () => {
               >
                 View All
               </Button>
-                </div>
-              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {recentTickets.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-16 h-16 mx-auto mb-4" style={{ color: '#9ca3af' }} />
-              <p className="text-gray-600">No requests found</p>
-              <Button
-                onClick={() => router.push('/requester/new-request')}
-                variant="primary"
-                size="md"
-                leftIcon={<Plus className="w-4 h-4" style={{ color: 'white' }} />}
-                className="mt-4"
-              >
-                Create Your First Request
-              </Button>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr 
-                    className="border-b"
-                    style={{ backgroundColor: '#274c77' }}
-                  >
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">Title</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">Priority</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">Department</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">Created</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-white">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/requester/request-detail/${ticket.id}`)}
-                    >
-                      <td className="py-3 px-4">
-                        <span className="font-medium" style={{ color: '#274c77' }}>
-                          {ticket.ticketId}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="max-w-xs">
-                          <p className="font-medium text-sm truncate" style={{ color: '#111827' }}>
-                            {ticket.subject}
-                          </p>
-                          {ticket.description && (
-                            <p className="text-xs truncate mt-1" style={{ color: '#8b8c89' }}>
-                              {ticket.description}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <StatusBadge status={ticket.status} />
-                      </td>
-                      <td className="py-3 px-4">
-                        <PriorityBadge priority={ticket.priority} />
-                      </td>
-                      <td className="py-3 px-4 text-sm" style={{ color: '#6b7280' }}>
-                        {ticket.department}
-                      </td>
-                      <td className="py-3 px-4 text-sm" style={{ color: '#6b7280' }}>
-                        {formatDate(ticket.submittedDate)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/requester/request-detail/${ticket.id}`);
-                          }}
-                          rightIcon={<ArrowRight className="w-3 h-3" />}
-                          className="text-xs"
-                        >
-                          View
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-                </div>
-          )}
-            </CardContent>
-          </Card>
+          <DataTable
+            data={recentTickets}
+            columns={columns}
+            showSearch={false}
+            pageSize={10}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

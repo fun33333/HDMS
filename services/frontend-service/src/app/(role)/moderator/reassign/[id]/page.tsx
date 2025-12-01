@@ -144,10 +144,10 @@ const ReassignTicketDetailPage: React.FC = () => {
             const mockAssignees: UserType[] = [
               { id: '1', name: 'Ahmed Khan', email: 'ahmed@example.com', role: 'assignee', department: 'IT' },
               { id: '2', name: 'Fatima Ali', email: 'fatima@example.com', role: 'assignee', department: 'IT' },
-              { id: '3', name: 'Hassan Raza', email: 'hassan@example.com', role: 'assignee', department: 'HR' },
-              { id: '4', name: 'Sara Ahmed', email: 'sara@example.com', role: 'assignee', department: 'HR' },
+              { id: '3', name: 'Hassan Raza', email: 'hassan@example.com', role: 'assignee', department: 'Development' },
+              { id: '4', name: 'Sara Ahmed', email: 'sara@example.com', role: 'assignee', department: 'Finance & Accounts' },
               { id: '5', name: 'Ali Hassan', email: 'ali@example.com', role: 'assignee', department: 'Procurement' },
-              { id: '6', name: 'Zainab Malik', email: 'zainab@example.com', role: 'assignee', department: 'Electrical' },
+              { id: '6', name: 'Zainab Malik', email: 'zainab@example.com', role: 'assignee', department: 'Basic Maintenance' },
             ];
             setAssignees(mockAssignees);
           } else {
@@ -181,8 +181,8 @@ const ReassignTicketDetailPage: React.FC = () => {
         const mockAssignees: UserType[] = [
           { id: '1', name: 'Ahmed Khan', email: 'ahmed@example.com', role: 'assignee', department: 'IT' },
           { id: '2', name: 'Fatima Ali', email: 'fatima@example.com', role: 'assignee', department: 'IT' },
-          { id: '3', name: 'Hassan Raza', email: 'hassan@example.com', role: 'assignee', department: 'HR' },
-          { id: '4', name: 'Sara Ahmed', email: 'sara@example.com', role: 'assignee', department: 'HR' },
+          { id: '3', name: 'Hassan Raza', email: 'hassan@example.com', role: 'assignee', department: 'Development' },
+          { id: '4', name: 'Sara Ahmed', email: 'sara@example.com', role: 'assignee', department: 'Finance & Accounts' },
         ];
         setAssignees(mockAssignees);
       } finally {

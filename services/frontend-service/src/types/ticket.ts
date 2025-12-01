@@ -4,16 +4,17 @@
 
 import { Comment } from './chat';
 
-export type TicketStatus = 
+export type TicketStatus =
   | 'draft'
-  | 'pending' 
+  | 'pending'
   | 'submitted'
-  | 'assigned' 
-  | 'in_progress' 
-  | 'completed' 
-  | 'rejected' 
+  | 'assigned'
+  | 'in_progress'
+  | 'completed'
+  | 'rejected'
   | 'resolved'
-  | 'closed';
+  | 'closed'
+  | 'waiting_approval';
 
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 

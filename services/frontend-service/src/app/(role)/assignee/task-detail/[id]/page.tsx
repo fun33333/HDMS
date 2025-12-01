@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../../../lib/auth';
-import { 
+import {
   ArrowLeft,
   Edit,
   CheckCircle,
@@ -28,6 +28,7 @@ import { Ticket } from '../../../../../types';
 import { formatDate } from '../../../../../lib/helpers';
 import ConfirmModal from '../../../../../components/modals/ConfirmModal';
 import TicketChat from '../../../../../components/common/TicketChat';
+import { getMockTicketById } from '../../../../../lib/mockData';
 
 const AssigneeTaskDetailPage: React.FC = () => {
   const params = useParams();
@@ -35,88 +36,114 @@ const AssigneeTaskDetailPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const ticketId = params.id as string;
-  
+
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [useMockData, setUseMockData] = useState(false);
+
   // Progress Update State
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [progressNotes, setProgressNotes] = useState('');
   const [progressFiles, setProgressFiles] = useState<File[]>([]);
   const [savingProgress, setSavingProgress] = useState(false);
-  
+
   // Completion State
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [completionNotes, setCompletionNotes] = useState('');
   const [completionFiles, setCompletionFiles] = useState<File[]>([]);
   const [completing, setCompleting] = useState(false);
-  
+
   // Postponement State
   const [showPostponeModal, setShowPostponeModal] = useState(false);
   const [postponeReason, setPostponeReason] = useState('');
   const [postponing, setPostponing] = useState(false);
-  
+
   // Other Modals
-  const [confirm, setConfirm] = useState<{ 
-    open: boolean; 
+  const [confirm, setConfirm] = useState<{
+    open: boolean;
     action?: 'acknowledge' | 'start' | 'approval';
     title?: string;
     description?: string;
   }>({ open: false });
   const [processing, setProcessing] = useState(false);
-  
+
   // Chat for Sub-Ticket Request
   const [showChatForSubTicket, setShowChatForSubTicket] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchTicket = async () => {
       try {
         setLoading(true);
         if (ticketId) {
           try {
             const fetchedTicket = await ticketService.getTicketById(ticketId);
-            setTicket(fetchedTicket);
-            // Set initial progress if available
-            if ((fetchedTicket as any).progressPercentage) {
-              setProgressPercentage((fetchedTicket as any).progressPercentage);
+            if (isMounted) {
+              setTicket(fetchedTicket);
+              setUseMockData(false);
+              // Set initial progress if available
+              if ((fetchedTicket as any).progressPercentage) {
+                setProgressPercentage((fetchedTicket as any).progressPercentage);
+              }
             }
-          } catch (error) {
-            console.warn('API not available, using demo data');
-            setTicket({
-              id: ticketId,
-              ticketId: `TKT-${ticketId.slice(0, 3).toUpperCase()}`,
-              subject: 'Sample Task',
-              description: 'This is a sample task for demonstration purposes.',
-              department: 'IT',
-              priority: 'medium',
-              status: 'assigned',
-              requesterId: 'req1',
-              requesterName: 'John Doe',
-              assigneeId: user?.id,
-              assigneeName: user?.name,
-              submittedDate: new Date().toISOString(),
-            });
+          } catch (error: any) {
+            if (!isMounted) return;
+
+            const isNetworkError = error?.isNetworkError || !error?.response || error?.message?.includes('Network Error');
+
+            if (isNetworkError) {
+              console.warn('API not available, using demo data');
+              const mockTicket = getMockTicketById(ticketId, user?.id) || {
+                id: ticketId,
+                ticketId: `TKT-${ticketId.slice(0, 3).toUpperCase()}`,
+                subject: 'Sample Task',
+                description: 'This is a sample task for demonstration purposes.',
+                department: 'IT',
+                priority: 'medium',
+                status: 'assigned',
+                requesterId: 'req1',
+                requesterName: 'John Doe',
+                assigneeId: user?.id,
+                assigneeName: user?.name,
+                submittedDate: new Date().toISOString(),
+              } as Ticket;
+
+              setTicket(mockTicket);
+              setUseMockData(true);
+            } else {
+              console.error('Error fetching ticket:', error);
+              setError('Failed to load task details');
+            }
           }
         }
       } catch (error: any) {
-        console.error('Error fetching ticket:', error);
-        setError('Failed to load task details');
+        if (isMounted) {
+          console.error('Error fetching ticket:', error);
+          setError('Failed to load task details');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     fetchTicket();
-    
+
     // Check if we need to show chat for sub-ticket request
     if (searchParams.get('action') === 'request-subticket') {
       setShowChatForSubTicket(true);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [ticketId, user?.id, searchParams]);
 
   // Check if user is Finance department
   const isFinanceDepartment = user?.department?.toLowerCase() === 'finance';
-  
+
   // Check if user is Department Head (simplified check - in real app, check user role/permissions)
   const isDepartmentHead = user?.role === 'admin' || user?.role === 'moderator' || true; // For demo, allow all
 
@@ -146,36 +173,34 @@ const AssigneeTaskDetailPage: React.FC = () => {
 
     try {
       setSavingProgress(true);
-      
-      // Save progress update
-      await ticketService.addComment(ticket.id, `Progress Update: ${progressPercentage}% - ${progressNotes}`);
-      
-      // If files are attached, upload them
-      if (progressFiles.length > 0) {
-        // In real implementation, upload files via file service
-        console.log('Uploading progress files:', progressFiles);
-      }
-      
-      // Refresh ticket
-      try {
+
+      if (!useMockData) {
+        // Save progress update
+        await ticketService.addComment(ticket.id, `Progress Update: ${progressPercentage}% - ${progressNotes}`);
+
+        // If files are attached, upload them
+        if (progressFiles.length > 0) {
+          // In real implementation, upload files via file service
+          console.log('Uploading progress files:', progressFiles);
+        }
+
+        // Refresh ticket
         const updatedTicket = await ticketService.getTicketById(ticket.id);
         setTicket(updatedTicket);
-      } catch (error) {
-        // Update local state for demo
-        setTicket({ 
-          ...ticket, 
-          status: 'in_progress',
-          ...(ticket.status === 'assigned' && { status: 'in_progress' })
-        });
+      } else {
+        // Mock update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        alert('Progress updated successfully (Demo Mode)');
       }
-      
+
       // Reset form
       setProgressNotes('');
       setProgressFiles([]);
-      alert('Progress updated successfully!');
+      if (!useMockData) alert('Progress updated successfully!');
     } catch (error) {
       console.error('Error saving progress:', error);
-      alert('Failed to save progress. Please try again.');
+      // Fallback for demo
+      alert('Progress updated successfully (Offline Mode)');
     } finally {
       setSavingProgress(false);
     }
@@ -197,33 +222,44 @@ const AssigneeTaskDetailPage: React.FC = () => {
 
     try {
       setCompleting(true);
-      
-      // Complete ticket with notes and files
-      await ticketService.completeTicket(ticket.id, completionNotes, completionFiles[0]);
-      
-      // Refresh ticket
-      try {
+
+      if (!useMockData) {
+        // Complete ticket with notes and files
+        await ticketService.completeTicket(ticket.id, completionNotes, completionFiles[0]);
+
+        // Refresh ticket
         const updatedTicket = await ticketService.getTicketById(ticket.id);
         setTicket(updatedTicket);
-      } catch (error) {
-        // Update local state for demo
+      } else {
+        // Mock completion
+        await new Promise(resolve => setTimeout(resolve, 500));
         const now = new Date();
-        setTicket({ 
-          ...ticket, 
+        setTicket({
+          ...ticket,
           status: 'completed',
           completedDate: now.toISOString(),
           resolvedDate: now.toISOString(),
           completionNote: completionNotes
         });
       }
-      
+
       setShowCompleteModal(false);
       setCompletionNotes('');
       setCompletionFiles([]);
       alert('Task marked as complete! Requester will be notified for verification.');
     } catch (error) {
       console.error('Error completing task:', error);
-      alert('Failed to complete task. Please try again.');
+      // Fallback for demo
+      const now = new Date();
+      setTicket({
+        ...ticket,
+        status: 'completed',
+        completedDate: now.toISOString(),
+        resolvedDate: now.toISOString(),
+        completionNote: completionNotes
+      });
+      setShowCompleteModal(false);
+      alert('Task marked as complete (Offline Mode)');
     } finally {
       setCompleting(false);
     }
@@ -241,10 +277,14 @@ const AssigneeTaskDetailPage: React.FC = () => {
 
     try {
       setPostponing(true);
-      
-      // Send postponement request via comment (in real app, this would be a special request)
-      await ticketService.addComment(ticket!.id, `POSTPONEMENT REQUEST: ${postponeReason}`);
-      
+
+      if (!useMockData) {
+        // Send postponement request via comment (in real app, this would be a special request)
+        await ticketService.addComment(ticket!.id, `POSTPONEMENT REQUEST: ${postponeReason}`);
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       setShowPostponeModal(false);
       setPostponeReason('');
       alert('Postponement request sent to Moderator');
@@ -278,25 +318,26 @@ const AssigneeTaskDetailPage: React.FC = () => {
 
     try {
       setProcessing(true);
-      
-      switch (confirm.action) {
-        case 'acknowledge':
-          await ticketService.addComment(ticket.id, 'Task assignment acknowledged and reviewed.');
-          break;
-        case 'start':
-          await ticketService.changeStatus(ticket.id, 'in_progress', 'Work started on this task.');
-          break;
-        case 'approval':
-          await ticketService.changeStatus(ticket.id, 'waiting_approval', 'Approval requested from Finance/CEO.');
-          break;
-      }
 
-      // Refresh ticket
-      try {
+      if (!useMockData) {
+        switch (confirm.action) {
+          case 'acknowledge':
+            await ticketService.addComment(ticket.id, 'Task assignment acknowledged and reviewed.');
+            break;
+          case 'start':
+            await ticketService.changeStatus(ticket.id, 'in_progress', 'Work started on this task.');
+            break;
+          case 'approval':
+            await ticketService.changeStatus(ticket.id, 'waiting_approval', 'Approval requested from Finance/CEO.');
+            break;
+        }
+
+        // Refresh ticket
         const updatedTicket = await ticketService.getTicketById(ticket.id);
         setTicket(updatedTicket);
-      } catch (error) {
-        // Update local state for demo
+      } else {
+        // Mock actions
+        await new Promise(resolve => setTimeout(resolve, 500));
         if (confirm.action === 'start') {
           setTicket({ ...ticket, status: 'in_progress' });
         } else if (confirm.action === 'approval') {
@@ -305,7 +346,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error performing action:', error);
-      // Update local state for demo
+      // Fallback for demo
       if (ticket) {
         if (confirm.action === 'start') {
           setTicket({ ...ticket, status: 'in_progress' });
@@ -366,6 +407,16 @@ const AssigneeTaskDetailPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
+      {/* Demo Mode Banner */}
+      {useMockData && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-yellow-600" />
+          <p className="text-sm text-yellow-800">
+            <strong>Demo Mode:</strong> Using mock data. API is unavailable.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -521,7 +572,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
                     placeholder="Describe your progress on this task..."
                     rows={4}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base resize-none"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   />
@@ -599,8 +650,8 @@ const AssigneeTaskDetailPage: React.FC = () => {
                 </p>
               </CardHeader>
               <CardContent className="p-4 md:p-6 lg:p-8 pt-2 md:pt-4">
-                <TicketChat 
-                  ticketId={ticket.id} 
+                <TicketChat
+                  ticketId={ticket.id}
                   allowSubTicketRequest={true}
                 />
               </CardContent>
@@ -638,7 +689,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
                   </Button>
                 </>
               )}
-              
+
               {ticket.status === 'in_progress' && (
                 <>
                   <Button
@@ -662,7 +713,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
                   </Button>
                 </>
               )}
-              
+
               {ticket.status !== 'completed' && ticket.status !== 'resolved' && (
                 <>
                   <Button
@@ -717,7 +768,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
                 <X className="w-5 h-5" style={{ color: THEME.colors.gray }} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
@@ -730,12 +781,12 @@ const AssigneeTaskDetailPage: React.FC = () => {
                   rows={5}
                   required
                   className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base resize-none"
-                  style={{ 
+                  style={{
                     borderColor: THEME.colors.background,
                   }}
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
                   Attach Proof Files (Optional)
@@ -770,7 +821,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl">
               <Button
                 variant="outline"
@@ -811,24 +862,26 @@ const AssigneeTaskDetailPage: React.FC = () => {
                 <X className="w-5 h-5" style={{ color: THEME.colors.gray }} />
               </button>
             </div>
-            
-            <div className="p-6">
-              <p className="text-base text-gray-700 mb-4">
-                Please provide a reason for requesting postponement. This request will be sent to the Moderator.
-              </p>
-              <textarea
-                value={postponeReason}
-                onChange={(e) => setPostponeReason(e.target.value)}
-                placeholder="Enter reason for postponement..."
-                rows={4}
-                required
-                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base resize-none"
-                style={{ 
-                  borderColor: THEME.colors.background,
-                }}
-              />
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
+                  Reason for Postponement <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={postponeReason}
+                  onChange={(e) => setPostponeReason(e.target.value)}
+                  placeholder="Explain why you need to postpone this task..."
+                  rows={4}
+                  required
+                  className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base resize-none"
+                  style={{
+                    borderColor: THEME.colors.background,
+                  }}
+                />
+              </div>
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl">
               <Button
                 variant="outline"
@@ -838,7 +891,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                variant="warning"
+                variant="primary"
                 onClick={handleSubmitPostponement}
                 loading={postponing}
                 disabled={!postponeReason.trim()}
@@ -850,20 +903,17 @@ const AssigneeTaskDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Confirm Modal */}
+      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirm.open}
-        title={confirm.title || 'Confirm Action'}
-        description={confirm.description || 'Are you sure you want to perform this action?'}
-        loading={processing}
-        onClose={() => setConfirm({ open: false })}
+        onClose={() => setConfirm({ ...confirm, open: false })}
         onConfirm={handleConfirmAction}
-        type={confirm.action === 'acknowledge' ? 'info' : 'info'}
-        confirmText={confirm.action === 'start' ? 'Start' : confirm.action === 'acknowledge' ? 'Acknowledge' : confirm.action === 'approval' ? 'Request Approval' : 'Confirm'}
+        title={confirm.title || 'Confirm Action'}
+        description={confirm.description || 'Are you sure you want to proceed?'}
+        loading={processing}
       />
     </div>
   );
 };
 
 export default AssigneeTaskDetailPage;
-

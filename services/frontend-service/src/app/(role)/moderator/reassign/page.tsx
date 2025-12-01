@@ -7,7 +7,7 @@ import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
-import { 
+import {
   User,
   Calendar,
   FileText,
@@ -20,51 +20,7 @@ import { THEME } from '../../../../lib/theme';
 import ticketService from '../../../../services/api/ticketService';
 import { Ticket } from '../../../../types';
 import Link from 'next/link';
-
-// Mock data generator for reassignable tickets
-const generateMockReassignableTickets = (): Ticket[] => {
-  const now = new Date();
-  const departments = ['IT', 'HR', 'Procurement', 'Electrical', 'Plumbers', 'Furniture Maintenance', 'Accounts', 'IT Maintenance'];
-  const assignees = ['Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan', 'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh'];
-  const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
-  const requesterNames = [
-    'Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan',
-    'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh', 'Omar Ali', 'Ayesha Raza',
-    'Kamran Malik', 'Saima Khan', 'Tariq Hussain', 'Farhan Ali', 'Hina Sheikh'
-  ];
-  const statuses: Ticket['status'][] = ['assigned', 'in_progress', 'pending'];
-  
-  const mockTickets: Ticket[] = [];
-  
-  for (let i = 1; i <= 15; i++) {
-    const dept = departments[Math.floor(Math.random() * departments.length)];
-    const assignee = assignees[Math.floor(Math.random() * assignees.length)];
-    const priority = priorities[Math.floor(Math.random() * priorities.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const hoursAgo = Math.floor(Math.random() * 72);
-    const requesterIndex = (i - 1) % requesterNames.length;
-    
-    mockTickets.push({
-      id: `reassign-ticket-${i}`,
-      ticketId: `HD-2024-${String(i).padStart(3, '0')}`,
-      subject: `Reassignable Ticket ${i}: ${['Server Issue', 'Network Problem', 'Hardware Request', 'Software License', 'Maintenance Request'][Math.floor(Math.random() * 5)]}`,
-      description: `This is a reassignable ticket description for ticket ${i}. It can be reassigned to a different department or assignee.`,
-      department: dept,
-      priority,
-      status,
-      requesterId: `req-${i}`,
-      requesterName: requesterNames[requesterIndex],
-      assigneeId: `assignee-${i}`,
-      assigneeName: assignee,
-      submittedDate: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
-      assignedDate: status !== 'pending' ? new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString() : undefined,
-      createdAt: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
-    });
-  }
-  
-  return mockTickets;
-};
+import { generateMockReassignableTickets } from '../../../../lib/mockData';
 
 const ReassignPage: React.FC = () => {
   const router = useRouter();
@@ -77,23 +33,27 @@ const ReassignPage: React.FC = () => {
   const [filterDepartment, setFilterDepartment] = useState('all');
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchTickets = async () => {
       try {
         setLoading(true);
         // Fetch tickets that can be reassigned (assigned or in_progress tickets)
         const response = await ticketService.getTickets();
-        
+
+        if (!isMounted) return;
+
         // Check if response exists and has results
         if (response && (Array.isArray(response) || response.results)) {
           const ticketsList = Array.isArray(response) ? response : (response.results || []);
-          
+
           // Filter tickets that are assigned or in progress (can be reassigned)
-          const reassignableTickets = ticketsList.filter(ticket => 
-            ticket.status === 'assigned' || 
+          const reassignableTickets = ticketsList.filter(ticket =>
+            ticket.status === 'assigned' ||
             ticket.status === 'in_progress' ||
             ticket.status === 'pending'
           );
-          
+
           setTickets(reassignableTickets);
           setUseMockData(false);
         } else {
@@ -103,38 +63,45 @@ const ReassignPage: React.FC = () => {
           setUseMockData(true);
         }
       } catch (error: any) {
-        console.error('Error fetching tickets:', error);
-        
+        if (!isMounted) return;
+
         // Handle network errors gracefully
-        const isNetworkError = error?.isNetworkError || !error?.response;
-        
+        const isNetworkError = error?.isNetworkError || !error?.response || error?.message?.includes('Network Error');
+
         if (isNetworkError) {
           console.warn('API not available, using mock data');
           const mockTickets = generateMockReassignableTickets();
           setTickets(mockTickets);
           setUseMockData(true);
         } else {
+          console.error('Error fetching tickets:', error);
           setTickets([]);
           setUseMockData(false);
         }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchTickets();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = 
+    const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = filterStatus === 'all' || ticket.status === filterStatus;
     const matchesDepartment = filterDepartment === 'all' || ticket.department === filterDepartment;
-    
+
     return matchesSearch && matchesStatus && matchesDepartment;
   });
 
@@ -181,7 +148,7 @@ const ReassignPage: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
@@ -194,7 +161,7 @@ const ReassignPage: React.FC = () => {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
@@ -209,21 +176,20 @@ const ReassignPage: React.FC = () => {
             value={filterDepartment}
             onChange={(e) => setFilterDepartment(e.target.value)}
             className="px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
             onBlur={(e) => e.target.style.borderColor = THEME.colors.gray}
           >
             <option value="all">All Departments</option>
+            <option value="Development">Development</option>
+            <option value="Finance & Accounts">Finance & Accounts</option>
             <option value="Procurement">Procurement</option>
-            <option value="Electrical">Electrical</option>
-            <option value="IT Mainten">IT Maintenance</option>
-            <option value="IT procurement">IT Procurement</option>
-            <option value="Plumbers">Plumbers</option>
-            <option value="Furniture Mainten">Furniture Maintenance</option>
-            <option value="HR">HR</option>
-            <option value="Accounts">Accounts</option>
+            <option value="Basic Maintenance">Basic Maintenance</option>
+            <option value="IT">IT</option>
+            <option value="Architecture">Architecture</option>
+            <option value="Administration">Administration</option>
           </select>
         </div>
       </div>

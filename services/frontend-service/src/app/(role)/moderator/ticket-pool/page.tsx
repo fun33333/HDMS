@@ -33,7 +33,7 @@ import {
 // Mock data generator
 const generateMockTickets = (): Ticket[] => {
   const now = new Date();
-  const departments = ['IT', 'HR', 'Procurement', 'Electrical', 'Plumbers', 'Furniture Maintenance', 'Accounts', 'IT Maintenance'];
+  const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const statuses: Ticket['status'][] = ['pending', 'submitted', 'assigned', 'in_progress'];
   const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
   

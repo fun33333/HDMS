@@ -123,7 +123,7 @@ const AdminAnalyticsPage: React.FC = () => {
       ticketId: `TKT-${String(i + 1).padStart(3, '0')}`,
       subject: `Sample Ticket ${i + 1}`,
       description: `Description for ticket ${i + 1}`,
-      department: ['IT', 'HR', 'Finance', 'Operations'][i % 4],
+      department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
       priority: ['low', 'medium', 'high', 'urgent'][i % 4] as any,
       status: ['assigned', 'in_progress', 'resolved', 'completed', 'pending'][i % 5] as any,
       requesterId: `req-${i + 1}`,

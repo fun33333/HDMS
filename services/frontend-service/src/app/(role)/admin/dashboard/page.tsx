@@ -38,7 +38,7 @@ const generateDemoTickets = (): Ticket[] => {
     ticketId: `TKT-${String(i + 1).padStart(3, '0')}`,
     subject: `Sample Ticket ${i + 1}`,
     description: `Description for ticket ${i + 1}`,
-    department: ['IT', 'HR', 'Finance', 'Operations'][i % 4],
+    department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     priority: ['low', 'medium', 'high', 'urgent'][i % 4] as any,
     status: ['assigned', 'in_progress', 'resolved', 'completed', 'pending'][i % 5] as any,
     requesterId: `req-${i + 1}`,
@@ -58,7 +58,7 @@ const generateDemoUsers = (): User[] => {
     name: `User ${i + 1}`,
     email: `user${i + 1}@example.com`,
     role: ['requester', 'assignee', 'moderator', 'admin'][i % 4] as any,
-    department: ['IT', 'HR', 'Finance', 'Operations'][i % 4],
+    department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     status: i < 142 ? 'active' : 'inactive',
     lastLogin: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
   }));
