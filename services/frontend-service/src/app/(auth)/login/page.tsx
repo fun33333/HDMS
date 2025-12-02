@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { Mail, Lock, User, Shield, Wrench, Settings, ChevronDown, Ban } from 'lucide-react';
+import { Mail, Lock, User, Shield, Wrench, Settings, ChevronDown } from 'lucide-react';
 import { THEME } from '../../../lib/theme';
+import { Logo } from '../../../components/ui/logo';
 
 const LoginPage: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<string>('requester');
@@ -90,20 +91,9 @@ const LoginPage: React.FC = () => {
             background: 'none'
           }}
         >
-          <div className="mx-auto h-20 w-20 flex items-center justify-center mb-6 p-4 rounded-full" style={{ backgroundColor: THEME.colors.light }}>
-            <Ban className="w-12 h-12" style={{ color: THEME.colors.primary }} strokeWidth={2} />
+          <div className="mx-auto mb-6 flex justify-center">
+            <Logo size="lg" showText={true} showSubtitle={true} />
           </div>
-          <h1 
-            className="text-4xl font-bold uppercase tracking-wider mb-2"
-            style={{ 
-              color: THEME.colors.primary,
-              letterSpacing: '0.05em',
-              textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              backgroundColor: 'transparent'
-            }}
-          >
-            HELP DESK SYSTEM
-          </h1>
           <p className="text-base" style={{ color: THEME.colors.gray, backgroundColor: 'transparent' }}>
             Sign in to your account
           </p>

@@ -7,7 +7,7 @@ import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
-import { 
+import {
   User,
   Calendar,
   FileText,
@@ -20,49 +20,88 @@ import { THEME } from '../../../../lib/theme';
 import ticketService from '../../../../services/api/ticketService';
 import { Ticket } from '../../../../types';
 import Link from 'next/link';
+import { generateMockReassignableTickets } from '../../../../lib/mockData';
 
 const ReassignPage: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [useMockData, setUseMockData] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDepartment, setFilterDepartment] = useState('all');
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchTickets = async () => {
       try {
+        setLoading(true);
         // Fetch tickets that can be reassigned (assigned or in_progress tickets)
         const response = await ticketService.getTickets();
-        // Filter tickets that are assigned or in progress (can be reassigned)
-        const reassignableTickets = response.results.filter(ticket => 
-          ticket.status === 'assigned' || 
-          ticket.status === 'in_progress' ||
-          ticket.status === 'pending'
-        );
-        setTickets(reassignableTickets);
-      } catch (error) {
-        console.error('Error fetching tickets:', error);
-        setTickets([]);
+
+        if (!isMounted) return;
+
+        // Check if response exists and has results
+        if (response && (Array.isArray(response) || response.results)) {
+          const ticketsList = Array.isArray(response) ? response : (response.results || []);
+
+          // Filter tickets that are assigned or in progress (can be reassigned)
+          const reassignableTickets = ticketsList.filter(ticket =>
+            ticket.status === 'assigned' ||
+            ticket.status === 'in_progress' ||
+            ticket.status === 'pending'
+          );
+
+          setTickets(reassignableTickets);
+          setUseMockData(false);
+        } else {
+          // No valid response, use mock data
+          const mockTickets = generateMockReassignableTickets();
+          setTickets(mockTickets);
+          setUseMockData(true);
+        }
+      } catch (error: any) {
+        if (!isMounted) return;
+
+        // Handle network errors gracefully
+        const isNetworkError = error?.isNetworkError || !error?.response || error?.message?.includes('Network Error');
+
+        if (isNetworkError) {
+          console.warn('API not available, using mock data');
+          const mockTickets = generateMockReassignableTickets();
+          setTickets(mockTickets);
+          setUseMockData(true);
+        } else {
+          console.error('Error fetching tickets:', error);
+          setTickets([]);
+          setUseMockData(false);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchTickets();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = 
+    const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = filterStatus === 'all' || ticket.status === filterStatus;
     const matchesDepartment = filterDepartment === 'all' || ticket.department === filterDepartment;
-    
+
     return matchesSearch && matchesStatus && matchesDepartment;
   });
 
@@ -80,10 +119,20 @@ const ReassignPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
+      {/* Demo Mode Banner */}
+      {useMockData && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-yellow-600" />
+          <p className="text-sm text-yellow-800">
+            <strong>Demo Mode:</strong> Using mock data. API is unavailable.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: THEME.colors.primary }}>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: THEME.colors.primary }}>
           Reassign Tickets
         </h1>
         <p className="text-gray-600">Reassign tickets to different assignees</p>
@@ -99,7 +148,7 @@ const ReassignPage: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
@@ -112,7 +161,7 @@ const ReassignPage: React.FC = () => {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
@@ -127,21 +176,20 @@ const ReassignPage: React.FC = () => {
             value={filterDepartment}
             onChange={(e) => setFilterDepartment(e.target.value)}
             className="px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
             onBlur={(e) => e.target.style.borderColor = THEME.colors.gray}
           >
             <option value="all">All Departments</option>
+            <option value="Development">Development</option>
+            <option value="Finance & Accounts">Finance & Accounts</option>
             <option value="Procurement">Procurement</option>
-            <option value="Electrical">Electrical</option>
-            <option value="IT Mainten">IT Maintenance</option>
-            <option value="IT procurement">IT Procurement</option>
-            <option value="Plumbers">Plumbers</option>
-            <option value="Furniture Mainten">Furniture Maintenance</option>
-            <option value="HR">HR</option>
-            <option value="Accounts">Accounts</option>
+            <option value="Basic Maintenance">Basic Maintenance</option>
+            <option value="IT">IT</option>
+            <option value="Architecture">Architecture</option>
+            <option value="Administration">Administration</option>
           </select>
         </div>
       </div>

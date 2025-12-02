@@ -162,110 +162,82 @@ export const Navbar: React.FC<NavbarProps> = ({ role }) => {
 
   return (
     <nav 
-      className="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between shadow-lg backdrop-blur-sm" 
+      className="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-3 md:py-4 flex items-center justify-end gap-2 sm:gap-3"
       style={{ 
-        backgroundColor: THEME.colors.primary,
-        height: '64px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        backgroundColor: '#e7ecef',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       }}
     >
-      <div className="flex items-center space-x-2 md:space-x-4">
-        {/* Mobile Menu Button */}
+      {/* Notification Bell - SIS Style */}
+      <button 
+        onClick={() => {
+          const targetRole = user?.role || role;
+          router.push(`/${targetRole}/notifications`);
+        }}
+        className="relative text-gray-700 hover:scale-110 active:scale-95 transition-all"
+        title="Notifications"
+      >
+        <Bell className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 animate-shake-interval" />
+        <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 bg-red-500 rounded-full border border-white sm:border-2 animate-ping"></span>
+        <span className="absolute -top-1 -right-1 h-3.5 w-3.5 sm:h-4 sm:w-4 bg-red-500 rounded-full border border-white sm:border-2"></span>
+      </button>
+
+      {/* User Profile Popup - SIS Style */}
+      <div className="relative group">
         <button
-          onClick={toggleMobileSidebar}
-          className="md:hidden text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all duration-200 active:scale-95"
-          aria-label="Toggle menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-        <Logo size="md" />
-        <span className="font-bold text-lg md:text-xl text-white hidden sm:block tracking-wide animate-fade-in">
-          HELP DESK SYSTEM
-        </span>
-      </div>
-      
-      <div className="flex items-center space-x-2 md:space-x-4">
-        <div className="relative search-container hidden md:block">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 w-4 h-4 z-10" />
-          <input
-            type="text"
-            placeholder="Search pages..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10 pr-4 py-2.5 bg-white bg-opacity-10 backdrop-blur-sm text-white placeholder-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 w-48 lg:w-64 transition-all duration-200 border border-white border-opacity-20 hover:bg-opacity-15"
-            style={{ fontSize: '14px' }}
-          />
-          
-          {/* Search Results Dropdown */}
-          {showSearchResults && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto animate-scale-in">
-              {searchResults.map((result, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSearchResultClick(result.url)}
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150 active:bg-gray-100"
-                >
-                  <div className="font-semibold text-gray-900">{result.name}</div>
-                  <div className="text-sm text-gray-500 mt-0.5">{result.description}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <button 
-          onClick={() => {
-            const targetRole = user?.role || role;
-            router.push(`/${targetRole}/notifications`);
-          }}
-          className="relative text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all duration-200 active:scale-95"
-          title="Notifications"
-        >
-          <Bell className="w-6 h-6" />
-          <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-        </button>
-        
-        <div 
-          className="flex items-center space-x-2 cursor-pointer hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
+          className="flex items-center gap-2 p-1.5 sm:p-2 rounded-full hover:bg-gray-100 transition-colors"
           onClick={() => {
             const userRole = user?.role || role;
             router.push(`/${userRole}/profile`);
           }}
         >
-          <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold text-white overflow-hidden border-2 border-white border-opacity-30 shadow-md">
-            {userAvatar && (userAvatar.startsWith('data:image') || userAvatar.startsWith('http') || userAvatar.startsWith('/')) ? (
-              <img 
-                src={userAvatar} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent && !parent.querySelector('.avatar-fallback')) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'avatar-fallback h-full w-full bg-white bg-opacity-20 rounded-full flex items-center justify-center absolute inset-0';
-                    fallback.textContent = user?.name?.charAt(0)?.toUpperCase() || 'AS';
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
+          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs sm:text-sm font-semibold overflow-hidden border-2 border-white/30">
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <div className="h-full w-full bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                {userAvatar && userAvatar.length <= 3 ? userAvatar : (user?.name?.charAt(0)?.toUpperCase() || 'AS')}
-              </div>
+              <span>{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
             )}
           </div>
-          <span className="text-sm font-medium text-white hidden lg:block capitalize">{user?.role || role}</span>
-          <ChevronDown className="w-4 h-4 text-white hidden lg:block" />
-        </div>
-        
-        <button 
-          onClick={logout} 
-          className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all duration-200 active:scale-95"
-          title="Logout"
-        >
-          <LogOut className="w-6 h-6" />
         </button>
+
+        {/* Profile Popup Card - SIS Style */}
+        <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 sm:p-6 rounded-t-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center">
+                {userAvatar ? (
+                  <img src={userAvatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <span className="text-xl sm:text-2xl font-bold">{user?.name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                )}
+              </div>
+              <div>
+                <div className="font-semibold text-sm sm:text-base">{user?.name || 'User'}</div>
+                <div className="text-xs sm:text-sm text-white/80 capitalize">{user?.role || role}</div>
+              </div>
+              <div className="ml-auto w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-3 sm:p-4 max-h-80 sm:max-h-96 overflow-y-auto">
+            {/* Menu items can go here */}
+            <div className="text-sm text-gray-600">Profile Settings</div>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t bg-gray-50 p-3 sm:p-4 rounded-b-xl">
+            <button
+              onClick={logout}
+              className="w-full text-left text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </div>
     </nav>
   );

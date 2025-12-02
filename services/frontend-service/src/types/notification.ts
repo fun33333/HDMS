@@ -3,9 +3,18 @@
  */
 
 export type NotificationType = 
+  | 'ticket_created'
   | 'ticket_assigned' 
-  | 'ticket_completed' 
-  | 'ticket_rejected' 
+  | 'status_changed'
+  | 'new_message'
+  | 'mention'
+  | 'approval_request'
+  | 'ticket_completed'
+  | 'ticket_resolved'
+  | 'reopen_request'
+  | 'postponement'
+  | 'sla_reminder'
+  | 'ticket_rejected'
   | 'ticket_approved'
   | 'ticket_updated'
   | 'ticket_comment'

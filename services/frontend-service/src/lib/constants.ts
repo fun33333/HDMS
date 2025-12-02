@@ -64,13 +64,12 @@ export const PAGINATION = {
 } as const;
 
 export const DEPARTMENTS = [
-  'IT',
-  'HR',
-  'Electrical',
+  'Development',
+  'Finance & Accounts',
   'Procurement',
-  'Accounts',
-  'Furniture',
-  'Plumbing',
-  'Maintenance',
+  'Basic Maintenance',
+  'IT',
+  'Architecture',
+  'Administration',
 ] as const;
 

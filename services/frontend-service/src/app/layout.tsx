@@ -5,8 +5,15 @@ import { Layout } from "../components/layout/layout";
 import { Toast } from "../components/ui/Toast";
 
 export const metadata: Metadata = {
-  title: "Help Desk System",
+  title: "HDMS - Help Desk Management System",
   description: "Professional Help Desk Management System",
+  icons: {
+    icon: [
+      { url: '/Logo.png', type: 'image/png' },
+    ],
+    shortcut: '/Logo.png',
+    apple: '/Logo.png',
+  },
 };
 
 export default function RootLayout({
@@ -16,6 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/Logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/Logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/Logo.png" />
+      </head>
       <body
         className="antialiased"
         suppressHydrationWarning={true}

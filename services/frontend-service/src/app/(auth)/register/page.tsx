@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { Mail, Lock, User, Building, Hash, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Building, Hash, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { THEME } from '../../../lib/theme';
 import { validateEmail, validatePassword } from '../../../lib/helpers';
 import { API_ENDPOINTS } from '../../../lib/constants';
+import { Logo } from '../../../components/ui/logo';
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -121,8 +122,8 @@ const RegisterPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center animate-slide-in">
-          <div className="mx-auto h-20 w-20 flex items-center justify-center mb-6 p-4 rounded-full" style={{ backgroundColor: THEME.colors.light }}>
-            <User className="w-12 h-12" style={{ color: THEME.colors.primary }} strokeWidth={2} />
+          <div className="mx-auto mb-6 flex justify-center">
+            <Logo size="lg" showText={true} showSubtitle={true} />
           </div>
           <h1 
             className="text-4xl font-bold uppercase tracking-wider mb-2"

@@ -25,6 +25,8 @@ export interface UpdateUserData {
   email?: string;
   department?: string;
   avatar?: File;
+  role?: 'requester' | 'moderator' | 'assignee' | 'admin';
+  status?: 'active' | 'inactive' | 'pending';
 }
 
 export interface UserFilters {

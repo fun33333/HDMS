@@ -4,7 +4,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../lib/auth';
 import { Card, CardContent } from '../ui/card';
 import { THEME } from '../../lib/theme';
-import { Send, MessageSquare, Plus, Mic } from 'lucide-react';
+import { Send, MessageSquare, Plus, Mic, Paperclip, X, Download, Eye, File, Image as ImageIcon } from 'lucide-react';
+import { formatFileSize } from '../../lib/helpers';
+
+interface FileAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  data: string; // base64 or URL
+  thumbnail?: string; // for images
+}
 
 interface Message {
   id: string;
@@ -15,10 +25,12 @@ interface Message {
   employeeCode?: string;
   message: string;
   timestamp: string;
+  attachments?: FileAttachment[];
 }
 
 interface TicketChatProps {
   ticketId: string;
+  allowSubTicketRequest?: boolean;
 }
 
 const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
@@ -26,7 +38,11 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
+  const [showFileMenu, setShowFileMenu] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FileAttachment | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load messages from localStorage
   useEffect(() => {
@@ -61,8 +77,96 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Handle file selection
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    const newAttachments: FileAttachment[] = [];
+
+    for (const file of fileArray) {
+      try {
+        const fileData = await convertFileToBase64(file);
+        const attachment: FileAttachment = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: fileData,
+        };
+
+        // Generate thumbnail for images
+        if (file.type.startsWith('image/')) {
+          attachment.thumbnail = fileData;
+        }
+
+        newAttachments.push(attachment);
+      } catch (error) {
+        console.error('Error processing file:', error);
+      }
+    }
+
+    setSelectedFiles(prev => [...prev, ...newAttachments]);
+    setShowFileMenu(false);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Convert file to base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove selected file
+  const removeFile = (fileId: string) => {
+    setSelectedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  // Get file icon based on type
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return ImageIcon;
+    return File;
+  };
+
+  // Check if file is image
+  const isImage = (type: string) => type.startsWith('image/');
+
+  // Check if file is document
+  const isDocument = (type: string) => {
+    return type.includes('pdf') ||
+      type.includes('document') ||
+      type.includes('word') ||
+      type.includes('excel') ||
+      type.includes('text') ||
+      type.includes('sheet');
+  };
+
+  // Download file
+  const handleDownload = (attachment: FileAttachment) => {
+    const link = document.createElement('a');
+    link.href = attachment.data;
+    link.download = attachment.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Preview file
+  const handlePreview = (attachment: FileAttachment) => {
+    setPreviewFile(attachment);
+  };
+
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !user) return;
+    if ((!newMessage.trim() && selectedFiles.length === 0) || !user) return;
 
     setLoading(true);
     const message: Message = {
@@ -73,13 +177,15 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
       userRole: user.role,
       employeeCode: user.employeeCode,
       message: newMessage.trim(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      attachments: selectedFiles.length > 0 ? [...selectedFiles] : undefined
     };
 
     const updatedMessages = [...messages, message];
     setMessages(updatedMessages);
     saveMessages(updatedMessages);
     setNewMessage('');
+    setSelectedFiles([]);
     setLoading(false);
   };
 
@@ -192,7 +298,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
               const getInitials = (name: string) => {
                 return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
               };
-              
+
               const getAvatarColor = (name: string) => {
                 const colors = [
                   THEME.colors.primary,
@@ -229,20 +335,20 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                         {getInitials(msg.userName)}
                       </div>
                     )}
-                    
+
                     {/* Message Container */}
                     <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
                       {/* Employee Code at the top with hover name */}
                       <div className={`mb-0.5 px-1 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
-                        <span 
-                          className="text-xs font-semibold cursor-pointer" 
+                        <span
+                          className="text-xs font-semibold cursor-pointer"
                           style={{ color: '#128C7E' }}
                           title={msg.userName}
                         >
                           {msg.employeeCode || msg.userRole.charAt(0).toUpperCase() + msg.userRole.slice(1)}
                         </span>
                       </div>
-                      
+
                       {/* Message Bubble */}
                       <div
                         className={`rounded-lg px-3 py-2 ${isOwnMessage ? 'rounded-tr-none' : 'rounded-tl-none'}`}
@@ -252,7 +358,70 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                           boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
                         }}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words mb-1.5 leading-relaxed">{msg.message}</p>
+                        {/* Message Text */}
+                        {msg.message && (
+                          <p className="text-sm whitespace-pre-wrap break-words mb-1.5 leading-relaxed">{msg.message}</p>
+                        )}
+
+                        {/* File Attachments */}
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="space-y-2 mb-1.5">
+                            {msg.attachments.map((attachment) => {
+                              const FileIcon = getFileIcon(attachment.type);
+
+                              return (
+                                <div
+                                  key={attachment.id}
+                                  className="bg-white rounded-lg p-2 border border-gray-200 hover:border-gray-300 transition-colors"
+                                >
+                                  {/* Image Preview */}
+                                  {isImage(attachment.type) && attachment.thumbnail && (
+                                    <div className="mb-2 rounded overflow-hidden cursor-pointer" onClick={() => handlePreview(attachment)}>
+                                      <img
+                                        src={attachment.thumbnail}
+                                        alt={attachment.name}
+                                        className="w-full max-w-xs h-auto rounded"
+                                        style={{ maxHeight: '200px', objectFit: 'cover' }}
+                                      />
+                                    </div>
+                                  )}
+
+                                  {/* File Info */}
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-shrink-0">
+                                      <FileIcon className="w-5 h-5" style={{ color: THEME.colors.primary }} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium truncate" title={attachment.name}>
+                                        {attachment.name}
+                                      </p>
+                                      <p className="text-xs text-gray-500">{formatFileSize(attachment.size)}</p>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {isImage(attachment.type) && (
+                                        <button
+                                          onClick={() => handlePreview(attachment)}
+                                          className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                          title="Preview"
+                                        >
+                                          <Eye className="w-4 h-4 text-gray-600" />
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => handleDownload(attachment)}
+                                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                        title="Download"
+                                      >
+                                        <Download className="w-4 h-4 text-gray-600" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         {/* Timestamp at bottom */}
                         <div className={`flex items-center ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                           <p
@@ -266,7 +435,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Avatar - Right for own messages */}
                     {isOwnMessage && (
                       <div
@@ -284,17 +453,119 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* File Preview Modal */}
+        {previewFile && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={() => setPreviewFile(null)}
+          >
+            <div
+              className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setPreviewFile(null)}
+                className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Preview Content */}
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-4">{previewFile.name}</h3>
+
+                {isImage(previewFile.type) ? (
+                  <img
+                    src={previewFile.data}
+                    alt={previewFile.name}
+                    className="max-w-full h-auto rounded-lg"
+                    style={{ maxHeight: '70vh' }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    {(() => {
+                      const FileIconComponent = getFileIcon(previewFile.type);
+                      return <FileIconComponent className="w-16 h-16 text-gray-400 mb-4" />;
+                    })()}
+                    <p className="text-gray-600 mb-2">{previewFile.name}</p>
+                    <p className="text-sm text-gray-500 mb-4">{formatFileSize(previewFile.size)}</p>
+                    <button
+                      onClick={() => handleDownload(previewFile)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download File
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Files Preview */}
+        {selectedFiles.length > 0 && (
+          <div className="px-3 py-2 border-t flex-shrink-0 bg-white" style={{ borderColor: THEME.colors.light }}>
+            <div className="flex flex-wrap gap-2">
+              {selectedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 bg-gray-50 rounded-lg px-2 py-1.5 border border-gray-200"
+                >
+                  {isImage(file.type) && file.thumbnail ? (
+                    <img
+                      src={file.thumbnail}
+                      alt={file.name}
+                      className="w-8 h-8 rounded object-cover"
+                    />
+                  ) : (
+                    <File className="w-4 h-4 text-gray-600" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate max-w-[100px]" title={file.name}>
+                      {file.name}
+                    </p>
+                    <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                  </div>
+                  <button
+                    onClick={() => removeFile(file.id)}
+                    className="p-1 hover:bg-gray-200 rounded transition-colors"
+                  >
+                    <X className="w-3 h-3 text-gray-600" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Input Area - WhatsApp Style */}
         <div className="p-3 border-t flex-shrink-0" style={{ borderColor: THEME.colors.light, backgroundColor: '#F0F2F5' }}>
           <div className="flex gap-2 items-center">
-            {/* Plus Icon */}
-            <button
-              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
-              style={{ color: '#54656F' }}
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-            
+            {/* File Upload Button */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowFileMenu(!showFileMenu);
+                  fileInputRef.current?.click();
+                }}
+                className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                style={{ color: '#54656F' }}
+                title="Attach file"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="*/*"
+              />
+            </div>
+
             {/* Text Input */}
             <div className="flex-1 bg-white rounded-full px-4 py-2 flex items-center" style={{ border: `1px solid ${THEME.colors.light}` }}>
               <textarea
@@ -312,12 +583,12 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
             </div>
 
             {/* Send/Mic Button */}
-            {newMessage.trim() ? (
+            {(newMessage.trim() || selectedFiles.length > 0) ? (
               <button
                 onClick={handleSendMessage}
                 disabled={loading || !user}
                 className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50"
-                style={{ 
+                style={{
                   backgroundColor: loading || !user ? '#8696A0' : '#25D366',
                   color: '#FFFFFF'
                 }}

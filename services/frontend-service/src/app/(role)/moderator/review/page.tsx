@@ -15,7 +15,8 @@ import {
   FileText,
   Eye,
   Search,
-  Filter
+  Filter,
+  AlertCircle
 } from 'lucide-react';
 import { THEME } from '../../../../lib/theme';
 import ticketService from '../../../../services/api/ticketService';
@@ -29,22 +30,44 @@ const ReviewPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [useMockData, setUseMockData] = useState(false);
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
         // Fetch tickets that are completed and need review
         const response = await ticketService.getTickets();
-        // Filter tickets that are completed (status: 'completed' or have completionNote/completionImage)
-        const completedTickets = response.results.filter(ticket => 
-          ticket.status === 'completed' || 
-          ticket.status === 'in_progress' ||
-          (ticket.completionNote || ticket.completionImage)
-        );
-        setTickets(completedTickets);
-      } catch (error) {
-        console.error('Error fetching tickets:', error);
-        setTickets([]);
+        
+        // Check if response exists and has results
+        if (response && (Array.isArray(response) || response.results)) {
+          const ticketsList = Array.isArray(response) ? response : (response.results || []);
+          
+          // Filter tickets that are completed (status: 'completed' or have completionNote/completionImage)
+          const completedTickets = ticketsList.filter(ticket => 
+            ticket.status === 'completed' || 
+            ticket.status === 'in_progress' ||
+            (ticket.completionNote || ticket.completionImage)
+          );
+          setTickets(completedTickets);
+          setUseMockData(false);
+        } else {
+          // No valid response, use mock data
+          setTickets([]);
+          setUseMockData(true);
+        }
+      } catch (error: any) {
+        // Handle network errors gracefully
+        const isNetworkError = error?.isNetworkError || !error?.response;
+        
+        if (isNetworkError) {
+          console.warn('API not available, using empty tickets list');
+          setTickets([]);
+          setUseMockData(true);
+        } else {
+          console.error('Error fetching tickets:', error?.message || error);
+          setTickets([]);
+          setUseMockData(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -80,6 +103,16 @@ const ReviewPage: React.FC = () => {
 
   return (
     <div className="p-6">
+      {/* Mock Data Indicator */}
+      {useMockData && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-yellow-600" />
+          <p className="text-sm text-yellow-800">
+            <strong>Demo Mode:</strong> API not available. Showing empty list.
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2" style={{ color: THEME.colors.primary }}>
@@ -133,6 +166,8 @@ const ReviewPage: React.FC = () => {
             <p className="text-gray-500">
               {searchTerm || filterStatus !== 'all' 
                 ? 'Try adjusting your search or filter criteria'
+                : useMockData
+                ? 'API not available. No tickets to display.'
                 : 'No completed tickets available for review'}
             </p>
           </CardContent>
@@ -148,7 +183,7 @@ const ReviewPage: React.FC = () => {
                       <h3 className="text-lg font-bold" style={{ color: THEME.colors.primary }}>
                         {ticket.subject}
                       </h3>
-                      <PriorityBadge priority={ticket.priority} />
+                      {ticket.priority && <PriorityBadge priority={ticket.priority} />}
                       <StatusBadge status={ticket.status} />
                     </div>
 

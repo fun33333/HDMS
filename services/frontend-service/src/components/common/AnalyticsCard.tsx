@@ -27,18 +27,18 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
   return (
     <div 
       onClick={onClick}
-      className={`${onClick ? 'cursor-pointer group' : ''} animate-fade-in`}
+      className={`${onClick ? 'cursor-pointer group' : ''} h-full`}
     >
       <Card 
-        className="rounded-xl bg-white border-2 hover:shadow-xl transition-all duration-300 card-hover"
+        className="rounded-xl bg-white border-2 hover:shadow-xl transition-all duration-300 card-hover h-full flex flex-col"
         style={{ 
           borderColor: color + '40',
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
         }}
         variant="elevated"
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
+        <CardContent className="p-6 flex-1 flex flex-col">
+          <div className="flex items-center justify-between flex-1">
             <div className="flex-1">
               <p className="text-sm font-semibold mb-1 uppercase tracking-wide" style={{ color: THEME.colors.gray }}>
                 {title}

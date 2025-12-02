@@ -58,18 +58,19 @@ export const Layout: React.FC<LayoutProps> = React.memo(({ children }) => {
       <Navbar key="navbar" role={role} />
 
       {/* Main Content Area - Below Navbar */}
-      <div className="flex flex-1 pt-16">
+      <div className="flex flex-1 pt-16 md:pt-20">
         {/* Left Sidebar - Fixed - Desktop Only */}
-        <div key="desktop-sidebar-wrapper" className="hidden md:block fixed left-0 top-16 bottom-0 z-40">
+        <div key="desktop-sidebar-wrapper" className="hidden md:block fixed left-0 top-0 bottom-0 z-[60]">
           <Sidebar key="desktop-sidebar" role={role} currentPage={pathname || ''} />
         </div>
 
         {/* Content Area - Right side of sidebar */}
         <main 
-          className="flex-1 w-full md:ml-64 transition-all duration-300 ease-in-out"
+          className="flex-1 w-full md:ml-64 transition-all duration-300 ease-in-out overflow-y-auto"
           style={{ 
             minHeight: 'calc(100vh - 64px)',
-            backgroundColor: THEME.colors.background 
+            backgroundColor: THEME.colors.background,
+            paddingTop: '1rem', // Extra padding to ensure content doesn't stick to navbar
           }}
         >
           <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">

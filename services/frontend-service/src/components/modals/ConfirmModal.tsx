@@ -107,6 +107,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             loading={loading}
             style={{
               backgroundColor: getConfirmButtonColor(),
+              color: 'white',
             }}
           >
             {confirmText}

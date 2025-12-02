@@ -27,9 +27,9 @@ export const Button: React.FC<ButtonProps> = ({
   
   const variantClasses = {
     primary: {
-      bg: THEME.colors.primary,
+      bg: '#365486', // primary-medium
       text: 'white',
-      hover: 'hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]',
+      hover: 'hover:bg-[#365486]/90 hover:scale-105 active:scale-95',
       border: 'none',
       before: 'before:absolute before:inset-0 before:bg-white before:opacity-0 before:transition-opacity hover:before:opacity-10',
     },
@@ -97,10 +97,11 @@ export const Button: React.FC<ButtonProps> = ({
         ${className}
       `}
       style={{
-        backgroundColor: variant === 'outline' ? 'transparent' : currentVariant.bg,
-        color: currentVariant.text,
+        backgroundColor: variant === 'outline' ? 'transparent' : (props.style?.backgroundColor || currentVariant.bg),
+        color: props.style?.color || currentVariant.text,
         border: variant === 'outline' ? currentVariant.border : 'none',
         boxShadow: variant !== 'ghost' && variant !== 'outline' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : 'none',
+        ...props.style,
       }}
       disabled={disabled || loading}
       {...props}
@@ -116,7 +117,7 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <>
           {leftIcon && <span className="flex-shrink-0 transition-transform group-hover:scale-110">{leftIcon}</span>}
-          <span className="relative z-10">{children}</span>
+          <span className="relative z-10" style={{ color: 'inherit' }}>{children}</span>
           {rightIcon && <span className="flex-shrink-0 transition-transform group-hover:scale-110">{rightIcon}</span>}
         </>
       )}

@@ -3,45 +3,26 @@
 @tailwind utilities;
 
 :root {
-  /* Theme Colors */
-  --background: #E7ECEF;
-  --gray: #8B8C89;
-  --medium: #6096BA;
-  --light: #A3CEF1;
-  --primary: #274C77;
-  --white: #FFFFFF;
-  --black: #000000;
-  
-  /* Status Colors */
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
-  --info: #3B82F6;
+  /* SIS Color Palette - Exact Values */
+  --background: #e7ecef;           /* Main page background */
+  --primary-dark: #274c77;          /* Main text, headings */
+  --primary-medium: #365486;        /* Buttons, primary elements */
+  --primary-light: #6096ba;         /* Active sidebar items */
+  --accent-light: #a3cef1;          /* Sidebar closed, hover states */
+  --sidebar-open: #e7ecef;          /* Sidebar when open */
+  --sidebar-closed: #a3cef1;        /* Sidebar when closed */
+  --sidebar-border: #1c3f67;        /* Sidebar border */
+  --white: #ffffff;
+  --border-gray: #8b8c89;           /* Borders, muted text */
+  --destructive-red: #ef4444;       /* Delete, logout buttons */
   
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  
-  /* Transitions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-base: 200ms ease-in-out;
-  --transition-slow: 300ms ease-in-out;
+  --shadow-2xl: 0 8px 32px 0 rgba(173, 208, 231, 0.74); /* Sidebar shadow */
+  --shadow-sidebar-closed: 0 2px 8px 0 rgba(163, 206, 241, 0.91);
 }
 
 * {
@@ -63,21 +44,18 @@ html {
 
 body {
   background: var(--background);
-  color: #111827;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  line-height: 1.6;
-  font-size: 16px;
-  min-height: 100vh;
+  color: var(--primary-dark);
+  font-family: 'Geist Sans', -apple-system, BlinkSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  min-height: 100vh;
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   line-height: 1.2;
-  color: var(--primary);
+  color: var(--primary-dark);
 }
 
 h1 { font-size: 2.5rem; }
@@ -344,4 +322,46 @@ body:has([class*="forgot-password"]) aside[class*="sidebar"] {
 /* Ensure only one header renders */
 [class*="login-header"]:not(:first-of-type) {
   display: none !important;
+}
+
+/* SIS Animations */
+@keyframes fade-in {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes shake-interval {
+  0%, 80% { transform: rotate(0deg); }
+  82% { transform: rotate(-16deg); }
+  84% { transform: rotate(16deg); }
+  86% { transform: rotate(-16deg); }
+  88% { transform: rotate(16deg); }
+  90% { transform: rotate(-16deg); }
+  92% { transform: rotate(16deg); }
+  96%, 100% { transform: rotate(0deg); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-shake-interval {
+  animation: shake-interval 6s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

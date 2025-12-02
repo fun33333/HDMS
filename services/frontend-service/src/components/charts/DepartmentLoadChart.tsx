@@ -21,10 +21,13 @@ export const DepartmentLoadChart: React.FC<DepartmentLoadChartProps> = ({
   height = 300 
 }) => {
   const chartData = data.length > 0 ? data : [
+    { department: 'Development', assigned: 8, completed: 5, pending: 3 },
+    { department: 'Finance & Accounts', assigned: 6, completed: 4, pending: 2 },
+    { department: 'Procurement', assigned: 5, completed: 3, pending: 2 },
+    { department: 'Basic Maintenance', assigned: 10, completed: 7, pending: 3 },
     { department: 'IT', assigned: 12, completed: 8, pending: 4 },
-    { department: 'HR', assigned: 8, completed: 6, pending: 2 },
-    { department: 'Finance', assigned: 15, completed: 10, pending: 5 },
-    { department: 'Operations', assigned: 10, completed: 7, pending: 3 },
+    { department: 'Architecture', assigned: 4, completed: 3, pending: 1 },
+    { department: 'Administration', assigned: 3, completed: 2, pending: 1 },
   ];
 
   return (

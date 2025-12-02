@@ -16,22 +16,18 @@ export const Card: React.FC<CardProps> = ({
   style,
   variant = 'default'
 }) => {
-  const variantStyles = {
-    default: 'shadow-md',
-    elevated: 'shadow-lg hover:shadow-xl',
-    outlined: 'shadow-sm border-2',
-  };
-
   return (
     <div 
       className={`
-        bg-white rounded-xl border transition-all duration-300 animate-fade-in
-        ${variantStyles[variant]}
-        ${onClick ? 'cursor-pointer hover:scale-[1.01] hover:shadow-xl' : ''} 
+        bg-white rounded-xl border transition-shadow duration-300
+        ${variant === 'default' ? 'shadow-md hover:shadow-lg' : ''}
+        ${variant === 'elevated' ? 'shadow-lg hover:shadow-xl' : ''}
+        ${variant === 'outlined' ? 'shadow-sm border-2' : ''}
+        ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       style={{
-        borderColor: variant === 'outlined' ? THEME.colors.medium : THEME.colors.medium + '30',
+        borderColor: variant === 'outlined' ? '#8b8c89' : 'transparent',
         ...style
       }}
       onClick={onClick}
@@ -54,6 +50,20 @@ export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = ''
   );
 };
 
+interface CardTitleProps {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export const CardTitle: React.FC<CardTitleProps> = ({ children, className = '', style }) => {
+  return (
+    <h3 className={`text-xl font-semibold ${className}`} style={style}>
+      {children}
+    </h3>
+  );
+};
+
 interface CardContentProps {
   children: React.ReactNode;
   className?: string;
@@ -61,7 +71,7 @@ interface CardContentProps {
 
 export const CardContent: React.FC<CardContentProps> = ({ children, className = '' }) => {
   return (
-    <div className={`px-6 py-5 ${className}`}>
+    <div className={`px-6 py-6 ${className}`}>
       {children}
     </div>
   );

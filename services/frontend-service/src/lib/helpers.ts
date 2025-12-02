@@ -26,21 +26,29 @@ export const formatRelativeTime = (dateString: string | Date): string => {
   if (diffInSeconds < 60) return 'Just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  
+  const diffDays = Math.floor(diffInSeconds / 86400);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
   
   return formatDate(date, 'short');
 };
 
 export const getStatusColor = (status: string): string => {
   const statusColors: Record<string, string> = {
-    [TICKET_STATUS.PENDING]: THEME.colors.warning,
-    [TICKET_STATUS.ASSIGNED]: THEME.colors.info,
-    [TICKET_STATUS.IN_PROGRESS]: THEME.colors.primary,
-    [TICKET_STATUS.COMPLETED]: THEME.colors.success,
-    [TICKET_STATUS.REJECTED]: THEME.colors.error,
-    [TICKET_STATUS.RESOLVED]: THEME.colors.success,
+    'draft': '#9ca3af',
+    'pending': '#fbbf24',
+    'submitted': '#60a5fa',
+    'assigned': '#60a5fa',
+    'in_progress': '#3b82f6',
+    'completed': '#22c55e',
+    'resolved': '#34d399',
+    'closed': '#6b7280',
+    'rejected': '#ef4444',
   };
-  return statusColors[status] || THEME.colors.gray;
+  return statusColors[status.toLowerCase()] || '#6b7280';
 };
 
 export const getStatusColorClasses = (status: string): string => {
@@ -80,19 +88,28 @@ export const getStatusBorderColor = (status: string): string => {
 };
 
 export const getPriorityColor = (priority: string): string => {
-  const priorityColors: Record<string, string> = {
-    [TICKET_PRIORITY.LOW]: `bg-green-100 text-green-800`,
-    [TICKET_PRIORITY.MEDIUM]: `bg-yellow-100 text-yellow-800`,
-    [TICKET_PRIORITY.HIGH]: `bg-orange-100 text-orange-800`,
-    [TICKET_PRIORITY.URGENT]: `bg-red-100 text-red-800`,
+  const classes: Record<string, string> = {
+    'high': 'bg-red-500 text-white',
+    'medium': 'bg-yellow-500 text-black',
+    'low': 'bg-green-500 text-white',
+    'urgent': 'bg-red-700 text-white',
   };
-  return priorityColors[priority] || `bg-gray-100 text-gray-800`;
+  return classes[priority.toLowerCase()] || 'bg-gray-500 text-white';
 };
 
 export const getStatusLabel = (status: string): string => {
-  return status.split('_').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
+  const labels: Record<string, string> = {
+    'draft': 'Draft',
+    'pending': 'Pending',
+    'submitted': 'Submitted',
+    'assigned': 'Assigned',
+    'in_progress': 'In Progress',
+    'completed': 'Completed',
+    'resolved': 'Resolved',
+    'closed': 'Closed',
+    'rejected': 'Rejected',
+  };
+  return labels[status.toLowerCase()] || status;
 };
 
 export const getPriorityLabel = (priority: string): string => {
@@ -155,6 +172,21 @@ export const getInitials = (name: string): string => {
     .join('')
     .toUpperCase()
     .slice(0, 2);
+};
+
+export const getAvatarColor = (name: string): string => {
+  const colors = [
+    '#3b82f6', // blue
+    '#8b5cf6', // purple
+    '#ec4899', // pink
+    '#f59e0b', // amber
+    '#10b981', // green
+    '#ef4444', // red
+    '#06b6d4', // cyan
+    '#6366f1', // indigo
+  ];
+  const index = name.charCodeAt(0) % colors.length;
+  return colors[index];
 };
 
 export const generateTicketId = (): string => {

@@ -1,289 +1,617 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
-import { Card, CardContent } from '../ui/card';
-import { Button } from '../ui/Button';
-import { 
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  TrendingUp,
-  BarChart3,
-  Star,
-  XCircle,
-  PlayCircle
-} from 'lucide-react';
-import { THEME } from '../../lib/theme';
-import { AnalyticsCard } from '../common/AnalyticsCard';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { KpiCard } from '../common/KpiCard';
+import { DepartmentLoadChart } from '../charts/DepartmentLoadChart';
+import { DashboardHeader } from './DashboardHeader';
 import ticketService from '../../services/api/ticketService';
 import { Ticket } from '../../types';
+import { THEME } from '../../lib/theme';
+import { formatRelativeTime, formatDate } from '../../lib/helpers';
+import { generateMockTickets } from '../../lib/mockData';
+import {
+  FileText,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Users,
+  Activity,
+  ArrowRight,
+  AlertTriangle,
+  Timer
+} from 'lucide-react';
+
+interface DashboardStats {
+  pendingReview: number;
+  totalActiveTickets: number;
+  ticketsAssignedToday: number;
+  averageResolutionTime: number; // in hours
+  slaBreaches: number;
+}
+
+interface DepartmentWorkload {
+  department: string;
+  activeTickets: number;
+  loadLevel: 'low' | 'medium' | 'high';
+}
+
+interface TicketRequiringAttention {
+  ticket: Ticket;
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface SLATicket {
+  ticket: Ticket;
+  timeRemaining?: number; // in hours
+  timeOverdue?: number; // in hours
+  isBreached: boolean;
+  isApproaching: boolean;
+}
 
 const ModeratorDashboard: React.FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [useMockData, setUseMockData] = useState(false);
 
   useEffect(() => {
-    const fetchTickets = async () => {
+    const fetchData = async () => {
       try {
         const response = await ticketService.getTickets();
-        const ticketsList = response.results || [];
-        setTickets(ticketsList);
+        const ticketsList = Array.isArray(response) ? response : (response?.results || []);
+
+        if (ticketsList.length > 0) {
+          setTickets(ticketsList);
+          setUseMockData(false);
+        } else {
+          // Use mock data if API returns empty
+          const mockTickets = generateMockTickets();
+          setTickets(mockTickets);
+          setUseMockData(true);
+        }
+
+        // Generate recent activity from tickets
+        const activity = generateRecentActivity(ticketsList.length > 0 ? ticketsList : generateMockTickets());
+        setRecentActivity(activity);
       } catch (error: any) {
-        // Handle network errors gracefully - API might not be available
         const isNetworkError = error?.isNetworkError || !error?.response;
         if (isNetworkError) {
-          console.warn('API not available, using empty tickets list');
-          setTickets([]);
+          console.warn('API not available, using mock data');
+          const mockTickets = generateMockTickets();
+          setTickets(mockTickets);
+          setUseMockData(true);
+
+          const activity = generateRecentActivity(mockTickets);
+          setRecentActivity(activity);
         } else {
           console.error('Error fetching tickets:', error?.message || error);
-          setTickets([]);
+          const mockTickets = generateMockTickets();
+          setTickets(mockTickets);
+          setUseMockData(true);
+
+          const activity = generateRecentActivity(mockTickets);
+          setRecentActivity(activity);
         }
       } finally {
         setLoading(false);
       }
     };
-    fetchTickets();
+    fetchData();
   }, []);
 
-  const handleCardClick = (cardType: string) => {
-    router.push('/moderator/total-requests');
+  // Calculate dashboard statistics
+  const stats: DashboardStats = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const slaHours = 72; // 3 days default SLA
+
+    // Pending Review - tickets pending > 24 hours
+    const pendingReview = tickets.filter(t => {
+      if (t.status !== 'pending' && t.status !== 'submitted') return false;
+      const submitted = new Date(t.submittedDate);
+      const hoursSinceSubmission = (now.getTime() - submitted.getTime()) / (1000 * 60 * 60);
+      return hoursSinceSubmission > 24;
+    }).length;
+
+    // Total Active Tickets - all non-closed tickets
+    const totalActiveTickets = tickets.filter(t =>
+      !['resolved', 'closed', 'rejected'].includes(t.status)
+    ).length;
+
+    // Tickets Assigned Today
+    const ticketsAssignedToday = tickets.filter(t => {
+      if (!t.assignedDate) return false;
+      const assigned = new Date(t.assignedDate);
+      return assigned >= today;
+    }).length;
+
+    // Average Resolution Time
+    const resolvedTickets = tickets.filter(t => t.resolvedDate);
+    const avgResolutionTime = resolvedTickets.length > 0
+      ? resolvedTickets.reduce((sum, t) => {
+        const submitted = new Date(t.submittedDate);
+        const resolved = new Date(t.resolvedDate!);
+        const hours = (resolved.getTime() - submitted.getTime()) / (1000 * 60 * 60);
+        return sum + hours;
+      }, 0) / resolvedTickets.length
+      : 0;
+
+    // SLA Breaches
+    const slaBreaches = tickets.filter(t => {
+      if (['resolved', 'closed', 'rejected'].includes(t.status)) return false;
+      const submitted = new Date(t.submittedDate);
+      const hoursSinceSubmission = (now.getTime() - submitted.getTime()) / (1000 * 60 * 60);
+      return hoursSinceSubmission > slaHours;
+    }).length;
+
+    return {
+      pendingReview,
+      totalActiveTickets,
+      ticketsAssignedToday,
+      averageResolutionTime: Math.round(avgResolutionTime),
+      slaBreaches
+    };
+  }, [tickets]);
+
+  // Department Workload
+  const departmentWorkload: DepartmentWorkload[] = useMemo(() => {
+    const deptMap = new Map<string, number>();
+
+    tickets.forEach(t => {
+      if (!['resolved', 'closed', 'rejected'].includes(t.status)) {
+        const count = deptMap.get(t.department) || 0;
+        deptMap.set(t.department, count + 1);
+      }
+    });
+
+    const workload: DepartmentWorkload[] = Array.from(deptMap.entries()).map(([dept, count]) => {
+      let loadLevel: 'low' | 'medium' | 'high' = 'low';
+      if (count > 15) loadLevel = 'high';
+      else if (count > 8) loadLevel = 'medium';
+
+      return { department: dept, activeTickets: count, loadLevel };
+    });
+
+    return workload.sort((a, b) => b.activeTickets - a.activeTickets);
+  }, [tickets]);
+
+  // Chart data for Department Workload
+  const chartData = useMemo(() => {
+    return departmentWorkload.map(dept => ({
+      department: dept.department,
+      assigned: dept.activeTickets,
+      completed: 0,
+      pending: 0
+    }));
+  }, [departmentWorkload]);
+
+  // Tickets Requiring Attention
+  const ticketsRequiringAttention: TicketRequiringAttention[] = useMemo(() => {
+    const now = new Date();
+    const attentionTickets: TicketRequiringAttention[] = [];
+
+    tickets.forEach(ticket => {
+      const submitted = new Date(ticket.submittedDate);
+      const hoursSinceSubmission = (now.getTime() - submitted.getTime()) / (1000 * 60 * 60);
+      const slaHours = 72;
+
+      // Pending review > 24 hours
+      if ((ticket.status === 'pending' || ticket.status === 'submitted') && hoursSinceSubmission > 24) {
+        attentionTickets.push({
+          ticket,
+          reason: `Pending review for ${Math.floor(hoursSinceSubmission / 24)} days`,
+          priority: hoursSinceSubmission > 48 ? 'high' : 'medium'
+        });
+      }
+
+      // SLA breaches
+      if (!['resolved', 'closed', 'rejected'].includes(ticket.status) && hoursSinceSubmission > slaHours) {
+        const existing = attentionTickets.find(item => item.ticket.id === ticket.id);
+        if (!existing) {
+          attentionTickets.push({
+            ticket,
+            reason: `SLA breached by ${Math.floor((hoursSinceSubmission - slaHours) / 24)} days`,
+            priority: 'high'
+          });
+        }
+      }
+    });
+
+    return attentionTickets
+      .sort((a, b) => {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority];
+      })
+      .slice(0, 10); // Top 10
+  }, [tickets]);
+
+  // SLA Alerts
+  const slaAlerts: SLATicket[] = useMemo(() => {
+    const now = new Date();
+    const slaHours = 72;
+    const alerts: SLATicket[] = [];
+
+    tickets.forEach(ticket => {
+      if (['resolved', 'closed', 'rejected'].includes(ticket.status)) return;
+
+      const submitted = new Date(ticket.submittedDate);
+      const hoursSinceSubmission = (now.getTime() - submitted.getTime()) / (1000 * 60 * 60);
+      const remaining = slaHours - hoursSinceSubmission;
+      const percentage = (remaining / slaHours) * 100;
+
+      const isBreached = hoursSinceSubmission > slaHours;
+      const isApproaching = !isBreached && percentage < 25;
+
+      if (isBreached || isApproaching) {
+        alerts.push({
+          ticket,
+          timeOverdue: isBreached ? hoursSinceSubmission - slaHours : undefined,
+          timeRemaining: !isBreached ? remaining : undefined,
+          isBreached,
+          isApproaching
+        });
+      }
+    });
+
+    return alerts
+      .sort((a, b) => {
+        if (a.isBreached && !b.isBreached) return -1;
+        if (!a.isBreached && b.isBreached) return 1;
+        return (a.timeOverdue || 0) - (b.timeOverdue || 0);
+      })
+      .slice(0, 10); // Top 10
+  }, [tickets]);
+
+  // Generate Recent Activity
+  const generateRecentActivity = (ticketsList: Ticket[]): any[] => {
+    const activities: any[] = [];
+
+    ticketsList.forEach(ticket => {
+      // Ticket assigned
+      if (ticket.assignedDate) {
+        activities.push({
+          id: `${ticket.id}-assigned`,
+          type: 'assigned',
+          title: 'Ticket Assigned',
+          description: `${ticket.ticketId}: ${ticket.subject}`,
+          timestamp: ticket.assignedDate,
+          user: ticket.moderatorName || 'System',
+          ticketId: ticket.id
+        });
+      }
+
+      // Ticket completed
+      if (ticket.completedDate) {
+        activities.push({
+          id: `${ticket.id}-completed`,
+          type: 'completed',
+          title: 'Work Completed',
+          description: `${ticket.ticketId}: ${ticket.subject}`,
+          timestamp: ticket.completedDate,
+          user: ticket.assigneeName || 'Assignee',
+          ticketId: ticket.id
+        });
+      }
+
+      // Ticket resolved
+      if (ticket.resolvedDate) {
+        activities.push({
+          id: `${ticket.id}-resolved`,
+          type: 'resolved',
+          title: 'Ticket Resolved',
+          description: `${ticket.ticketId}: ${ticket.subject}`,
+          timestamp: ticket.resolvedDate,
+          user: ticket.requesterName,
+          ticketId: ticket.id
+        });
+      }
+
+      // Recent ticket created
+      const submitted = new Date(ticket.submittedDate);
+      const hoursAgo = (Date.now() - submitted.getTime()) / (1000 * 60 * 60);
+      if (hoursAgo < 24) {
+        activities.push({
+          id: `${ticket.id}-created`,
+          type: 'created',
+          title: 'Ticket Created',
+          description: `${ticket.ticketId}: ${ticket.subject}`,
+          timestamp: ticket.submittedDate,
+          user: ticket.requesterName,
+          ticketId: ticket.id
+        });
+      }
+    });
+
+    return activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 10);
   };
 
-  const dashboardStats = {
-    totalTickets: tickets.length,
-    pendingTickets: tickets.filter(t => t.status === 'pending').length,
-    assignedTickets: tickets.filter(t => t.status === 'assigned').length,
-    inProgressTickets: tickets.filter(t => t.status === 'in_progress').length,
-    completedTickets: tickets.filter(t => t.status === 'completed' || t.status === 'resolved').length,
-    rejectedTickets: tickets.filter(t => t.status === 'rejected').length
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'created': return FileText;
+      case 'assigned': return Users;
+      case 'completed': return CheckCircle;
+      case 'resolved': return CheckCircle;
+      default: return Activity;
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'created': return THEME.colors.info;
+      case 'assigned': return THEME.colors.primary;
+      case 'completed': return THEME.colors.success;
+      case 'resolved': return THEME.colors.success;
+      default: return THEME.colors.gray;
+    }
+  };
+
+  const handleDepartmentClick = (department: string) => {
+    router.push(`/moderator/ticket-pool?department=${encodeURIComponent(department)}`);
+  };
+
+  const handleTicketClick = (ticketId: string) => {
+    router.push(`/moderator/review?id=${ticketId}`);
   };
 
   if (loading) {
-    return <div className="p-8">Loading...</div>;
+    return (
+      <div className="min-h-screen p-4 md:p-6 lg:p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome! Moderator</h1>
-        <p className="text-gray-600">Manage ticket assignments and monitor system performance</p>
+    <div className="min-h-screen p-4 md:p-6 lg:p-8" style={{ backgroundColor: THEME.colors.background }}>
+      {/* Mock Data Indicator */}
+      {useMockData && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-yellow-600" />
+          <p className="text-sm text-yellow-800">
+            <strong>Demo Mode:</strong> Showing mock data for demonstration purposes
+          </p>
+        </div>
+      )}
+
+      {/* Shared Dashboard Header */}
+      <DashboardHeader
+        title="Helpdesk Overview"
+        subtitle="System-wide statistics and performance metrics"
+        lastUpdated={formatDate(new Date().toISOString(), 'time')}
+        stats={[
+          { label: 'Total Tickets', value: tickets.length, color: THEME.colors.primary },
+          { label: 'Resolved', value: tickets.filter(t => t.status === 'resolved').length, color: THEME.colors.success },
+          { label: 'Pending', value: tickets.filter(t => ['pending', 'submitted'].includes(t.status)).length, color: THEME.colors.warning },
+          { label: 'SLA Breaches', value: stats.slaBreaches, color: THEME.colors.error }
+        ]}
+      />
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-6">
+        <KpiCard
+          title="Pending Review"
+          value={stats.pendingReview}
+          icon={Clock}
+          color={THEME.colors.warning}
+          description="Tickets awaiting review > 24h"
+          onClick={() => router.push('/moderator/review')}
+        />
+        <KpiCard
+          title="Total Active Tickets"
+          value={stats.totalActiveTickets}
+          icon={FileText}
+          color={THEME.colors.primary}
+          description="All non-closed tickets"
+        />
+        <KpiCard
+          title="Assigned Today"
+          value={stats.ticketsAssignedToday}
+          icon={Users}
+          color={THEME.colors.info}
+          description="Tickets assigned today"
+        />
+        <KpiCard
+          title="Avg Resolution Time"
+          value={`${stats.averageResolutionTime}h`}
+          icon={Timer}
+          color={THEME.colors.success}
+          description="Average time to resolve"
+        />
+        <KpiCard
+          title="SLA Breaches"
+          value={stats.slaBreaches}
+          icon={AlertCircle}
+          color={stats.slaBreaches > 0 ? THEME.colors.error : THEME.colors.success}
+          backgroundColor={stats.slaBreaches > 0 ? '#FEE2E2' : '#D1FAE5'}
+          description={stats.slaBreaches > 0 ? 'Tickets with breached SLA' : 'All tickets within SLA'}
+        />
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-        <AnalyticsCard title="In Progress" value={dashboardStats.inProgressTickets} icon={PlayCircle} color={THEME.colors.medium} onClick={() => handleCardClick('in_progress')} hoverDescription="Currently working" />
-        <AnalyticsCard title="Resolved" value={dashboardStats.completedTickets} icon={CheckCircle} color={THEME.colors.primary} onClick={() => handleCardClick('resolved')} hoverDescription="Successfully completed" />
-        <AnalyticsCard title="Pending" value={dashboardStats.pendingTickets} icon={Clock} color={THEME.colors.light} onClick={() => handleCardClick('pending')} hoverDescription="Awaiting assignment" />
-        <AnalyticsCard title="Rejected" value={dashboardStats.rejectedTickets} icon={XCircle} color={THEME.colors.gray} onClick={() => handleCardClick('rejected')} hoverDescription="Declined by requester" />
-        <AnalyticsCard title="Total Requests" value={dashboardStats.totalTickets} icon={FileText} color={THEME.colors.light} onClick={() => handleCardClick('total')} hoverDescription="All submitted requests" />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Department Workload */}
+        <div className="lg:col-span-2">
+          <Card className="h-full shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold" style={{ color: THEME.colors.primary }}>
+                Department Workload
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <DepartmentLoadChart data={chartData} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* High Priority & Urgent Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <AnalyticsCard title="High Priority" value={tickets.filter(t => t.priority === 'high').length} icon={AlertCircle} color={THEME.colors.primary} onClick={() => handleCardClick('high_priority')} hoverDescription="High priority tickets" />
-        <AnalyticsCard title="Urgent" value={tickets.filter(t => t.priority === 'urgent').length} icon={AlertCircle} color={THEME.colors.medium} onClick={() => handleCardClick('urgent')} hoverDescription="Urgent priority tickets" />
-      </div>
-
-      {/* Assignment Analytics & Performance */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Assignment Analytics & Performance</h2>
-          <div className="flex space-x-3">
-            <Button className="px-4 py-2 bg-white border border-blue-500 text-blue-500 hover:bg-blue-50 rounded-lg">Export CSV</Button>
-            <Button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">Export PDF</Button>
-          </div>
+        {/* Tickets Requiring Attention */}
+        <div className="lg:col-span-1">
+          <Card className="h-full shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold flex items-center gap-2" style={{ color: THEME.colors.error }}>
+                <AlertCircle className="w-5 h-5" />
+                Requires Attention
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                {ticketsRequiringAttention.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-500" />
+                    <p>No urgent issues found</p>
+                  </div>
+                ) : (
+                  ticketsRequiringAttention.map((item, index) => (
+                    <div
+                      key={index}
+                      className="p-3 rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                      style={{
+                        borderLeftColor: item.priority === 'high' ? THEME.colors.error : THEME.colors.warning
+                      }}
+                      onClick={() => handleTicketClick(item.ticket.id)}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-sm text-gray-800">{item.ticket.ticketId}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                          {item.ticket.department}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-700 truncate mb-1">{item.ticket.subject}</p>
+                      <p className="text-xs text-red-600 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {item.reason}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Department-wise Assignment Distribution */}
-      <Card className="bg-white shadow-lg rounded-lg mb-8">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Department-wise assignment distribution</h3>
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-8 w-8 flex flex-col justify-between text-xs text-gray-500">
-              <span>10%</span><span>8%</span><span>6%</span><span>4%</span><span>2%</span><span>0%</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* SLA Alerts */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2" style={{ color: THEME.colors.warning }}>
+              <Clock className="w-5 h-5" />
+              SLA Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {slaAlerts.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CheckCircle className="w-12 h-12 mx-auto mb-2 text-green-500" />
+                  <p>All tickets within SLA</p>
+                </div>
+              ) : (
+                slaAlerts.map((alert, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => handleTicketClick(alert.ticket.id)}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">{alert.ticket.ticketId}</span>
+                        {alert.isBreached && (
+                          <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">
+                            Breached
+                          </span>
+                        )}
+                        {alert.isApproaching && (
+                          <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full font-medium">
+                            Approaching
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 truncate max-w-[200px] sm:max-w-xs">
+                        {alert.ticket.subject}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {alert.isBreached ? (
+                        <span className="text-sm font-bold text-red-600">
+                          -{Math.round(alert.timeOverdue || 0)}h
+                        </span>
+                      ) : (
+                        <span className="text-sm font-bold text-yellow-600">
+                          {Math.round(alert.timeRemaining || 0)}h left
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-            <div className="ml-8 mr-4">
-              <div className="flex items-end justify-between h-64 space-x-2">
-                {['Procurement', 'Electrical', 'IT Mainten', 'IT procurement', 'Plumbers', 'Furniture Mainten', 'HR', 'Accounts'].map((dept) => {
-                  const deptTickets = tickets.filter(t => t.department === dept);
-                  const openTickets = deptTickets.filter(t => t.status === 'pending' || t.status === 'assigned' || t.status === 'in_progress').length;
-                  const closedTickets = deptTickets.filter(t => t.status === 'resolved' || t.status === 'rejected').length;
-                  const total = deptTickets.length;
-                  const openPercent = total > 0 ? (openTickets / total) * 100 : 0;
-                  const closedPercent = total > 0 ? (closedTickets / total) * 100 : 0;
-                  
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2" style={{ color: THEME.colors.info }}>
+              <Activity className="w-5 h-5" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivity.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No recent activity</p>
+                </div>
+              ) : (
+                recentActivity.map((activity) => {
+                  const Icon = getActivityIcon(activity.type);
+                  const color = getActivityColor(activity.type);
+
                   return (
-                    <div key={dept} className="flex-1 flex flex-col items-center space-y-2">
-                      <div className="flex space-x-1 h-48 items-end">
-                        <div className="w-4 bg-blue-500 rounded-t-sm relative group" style={{ height: `${Math.max(openPercent * 2.4, 4)}px` }}>
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {openTickets} Open ({openPercent.toFixed(1)}%)
-                          </div>
-                        </div>
-                        <div className="w-4 bg-green-500 rounded-t-sm relative group" style={{ height: `${Math.max(closedPercent * 2.4, 4)}px` }}>
-                          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {closedTickets} Closed ({closedPercent.toFixed(1)}%)
-                          </div>
+                    <div key={activity.id} className="flex gap-3">
+                      <div
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1"
+                        style={{ backgroundColor: `${color}20` }}
+                      >
+                        <Icon className="w-4 h-4" style={{ color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {activity.title}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {activity.description}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-400">
+                            {formatRelativeTime(activity.timestamp)}
+                          </span>
+                          <span className="text-xs text-gray-300">•</span>
+                          <span className="text-xs text-gray-500 font-medium">
+                            {activity.user}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-xs text-gray-600 text-center mt-2">{dept}</div>
                     </div>
                   );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className="mt-6 flex items-center justify-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-gray-600">Open Tickets Score</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-gray-600">Closed Tickets Score</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Performance Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <Card className="bg-white shadow-lg rounded-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center group-hover:text-blue-600 transition-colors duration-300">Performance Cards</h3>
-            <div className="text-center">
-              <div className="relative w-52 h-52 mx-auto mb-4 group-hover:scale-110 transition-transform duration-500">
-                <svg className="w-52 h-52 transform -rotate-90 group-hover:rotate-0 transition-transform duration-700" viewBox="0 0 36 36">
-                  <path className="text-gray-200" stroke="currentColor" strokeWidth="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path className="text-blue-500 group-hover:text-blue-600 transition-colors duration-300" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-5xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">{tickets.length}</div>
-                    <div className="text-lg text-gray-500 group-hover:text-gray-600 transition-colors duration-300">Tickets</div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors duration-300">Tickets Assigned</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white shadow-lg rounded-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center group-hover:text-green-600 transition-colors duration-300">Performance Cards</h3>
-            <div className="text-center">
-              <div className="relative w-52 h-52 mx-auto mb-4 group-hover:scale-110 transition-transform duration-500">
-                <svg className="w-52 h-52 transform -rotate-90 group-hover:rotate-0 transition-transform duration-700" viewBox="0 0 36 36">
-                  <path className="text-gray-200" stroke="currentColor" strokeWidth="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path className="text-green-500 group-hover:text-green-600 transition-colors duration-300" stroke="currentColor" strokeWidth="4" fill="none" strokeDasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-5xl font-bold text-gray-900 group-hover:text-green-600 transition-colors duration-300">
-                      {tickets.length > 0 ? Math.round((tickets.filter(t => t.status === 'resolved').length / tickets.length) * 100) : 0}
-                    </div>
-                    <div className="text-lg text-gray-500 group-hover:text-gray-600 transition-colors duration-300">%</div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm font-medium text-gray-700 group-hover:text-green-600 transition-colors duration-300">Resolution Rate</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Key Performance Indicators & Department Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="space-y-4">
-          <Card className="bg-gray-800 text-white shadow-lg rounded-lg hover:shadow-2xl hover:scale-105 hover:bg-gray-700 transition-all duration-300 cursor-pointer group">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm group-hover:text-gray-200 transition-colors duration-300">Avg. Assignment Time</p>
-                  <p className="text-2xl font-bold group-hover:text-green-400 transition-colors duration-300">
-                    {dashboardStats.inProgressTickets > 0 ? Math.round(dashboardStats.inProgressTickets * 24 / Math.max(dashboardStats.inProgressTickets, 1)) : 0} Hours
-                  </p>
-                </div>
-                <div className="flex items-center text-green-400 group-hover:text-green-300 group-hover:scale-110 transition-all duration-300">
-                  <TrendingUp className="w-5 h-5 mr-1 group-hover:animate-bounce" />
-                  <span className="text-sm">+5%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 text-white shadow-lg rounded-lg hover:shadow-2xl hover:scale-105 hover:bg-gray-700 transition-all duration-300 cursor-pointer group">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-300 text-sm group-hover:text-gray-200 transition-colors duration-300">Ticket Resolution Rate</p>
-                  <p className="text-2xl font-bold group-hover:text-green-400 transition-colors duration-300">
-                    {tickets.length > 0 ? Math.round((tickets.filter(t => t.status === 'resolved').length / tickets.length) * 100) : 0}%
-                  </p>
-                </div>
-                <div className="flex items-center text-green-400 group-hover:text-green-300 group-hover:scale-110 transition-all duration-300">
-                  <TrendingUp className="w-5 h-5 mr-1 group-hover:animate-bounce" />
-                  <span className="text-sm">+3%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Department Performance Table */}
-        <Card className="bg-white shadow-lg rounded-lg">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Performance</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 text-sm font-medium text-gray-600">Department</th>
-                    <th className="text-left py-2 text-sm font-medium text-gray-600">Assigned</th>
-                    <th className="text-left py-2 text-sm font-medium text-gray-600">Resolved</th>
-                    <th className="text-left py-2 text-sm font-medium text-gray-600">Rating</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {['Procurement', 'Electrical', 'IT Mainten', 'IT procurement', 'Plumbers', 'Furniture Mainten', 'HR', 'Accounts'].map((dept) => {
-                    const deptTickets = tickets.filter(t => t.department === dept);
-                    const assigned = deptTickets.filter(t => t.status === 'assigned' || t.status === 'in_progress').length;
-                    const resolved = deptTickets.filter(t => t.status === 'resolved' || t.status === 'rejected').length;
-                    const total = deptTickets.length;
-                    const rating = total > 0 ? (3.5 + (resolved / total) * 1.5).toFixed(1) : '-';
-                    
-                    return (
-                      <tr key={dept} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200">
-                        <td className="py-3 text-sm text-gray-900 font-medium">{dept}</td>
-                        <td className="py-3 text-sm text-gray-600">{assigned}</td>
-                        <td className="py-3 text-sm text-gray-600">{resolved}</td>
-                        <td className="py-3 text-sm text-gray-600">
-                          {rating !== '-' ? (
-                            <div className="flex items-center">
-                              <span className="mr-2 font-medium">{rating}/5</span>
-                              <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`w-3 h-3 ${i < Math.floor(parseFloat(rating)) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                })
+              )}
             </div>
           </CardContent>
         </Card>

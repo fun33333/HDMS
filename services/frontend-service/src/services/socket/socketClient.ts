@@ -51,7 +51,11 @@ class SocketClient {
       };
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        // Silently handle WebSocket errors - don't break the UI
+        // Only log in development mode
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('WebSocket connection error (non-blocking):', error);
+        }
         this.emit(SOCKET_EVENTS.ERROR, { error });
       };
 
