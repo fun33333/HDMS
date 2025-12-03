@@ -103,7 +103,11 @@ const AdminSettingsPage: React.FC = () => {
   ]);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryForm, setCategoryForm] = useState({ name: '', department: '', defaultPriority: 'medium' as const });
+  const [categoryForm, setCategoryForm] = useState<{
+    name: string;
+    department: string;
+    defaultPriority: 'low' | 'medium' | 'high' | 'urgent';
+  }>({ name: '', department: '', defaultPriority: 'medium' });
 
   // SLA Templates
   const [slaTemplates, setSlaTemplates] = useState<SLATemplate[]>([
@@ -114,7 +118,12 @@ const AdminSettingsPage: React.FC = () => {
   ]);
   const [showSLAModal, setShowSLAModal] = useState(false);
   const [editingSLA, setEditingSLA] = useState<SLATemplate | null>(null);
-  const [slaForm, setSlaForm] = useState({ name: '', priority: 'medium' as const, dueDelta: 7, categoryId: '' });
+  const [slaForm, setSlaForm] = useState<{
+    name: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    dueDelta: number;
+    categoryId: string;
+  }>({ name: '', priority: 'medium', dueDelta: 7, categoryId: '' });
 
   // Integrations
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings>({
