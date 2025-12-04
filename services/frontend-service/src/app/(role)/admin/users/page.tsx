@@ -10,10 +10,11 @@ import userService from '../../../../services/api/userService';
 import { User } from '../../../../types';
 import { THEME } from '../../../../lib/theme';
 import { formatDate, formatRelativeTime, getInitials } from '../../../../lib/helpers';
-import { 
-  Users, 
-  UserPlus, 
-  Search, 
+import { getMockEmployees } from '../../../../lib/mockData';
+import {
+  Users,
+  UserPlus,
+  Search,
   Filter,
   Edit,
   UserX,
@@ -38,7 +39,7 @@ const generateDemoUsers = (): User[] => {
   const roles: Array<'requester' | 'moderator' | 'assignee' | 'admin'> = ['requester', 'moderator', 'assignee', 'admin'];
   const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const statuses: Array<'active' | 'inactive' | 'pending'> = ['active', 'inactive', 'pending'];
-  
+
   return Array.from({ length: 50 }, (_, i) => ({
     id: `user-${i + 1}`,
     name: `User ${i + 1}`,
@@ -83,14 +84,14 @@ const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Modals
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -98,18 +99,18 @@ const AdminUsersPage: React.FC = () => {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [showGrantAccessModal, setShowGrantAccessModal] = useState(false);
-  
+
   // Modal states
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [employeeCode, setEmployeeCode] = useState('');
   const [importing, setImporting] = useState(false);
   const [newRole, setNewRole] = useState<string>('requester');
   const [newDepartment, setNewDepartment] = useState<string>('');
-  
+
   // Confirm modal
-  const [confirm, setConfirm] = useState<{ 
-    open: boolean; 
-    userId?: string; 
+  const [confirm, setConfirm] = useState<{
+    open: boolean;
+    userId?: string;
     action?: 'deactivate' | 'revoke' | 'delete';
     title?: string;
     description?: string;
@@ -155,14 +156,14 @@ const AdminUsersPage: React.FC = () => {
   // Filter users
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
-      const matchesSearch = 
+      const matchesSearch =
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || u.role === roleFilter;
       const matchesDepartment = departmentFilter === 'all' || u.department === departmentFilter;
       const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-      
+
       return matchesSearch && matchesRole && matchesDepartment && matchesStatus;
     });
   }, [users, searchTerm, roleFilter, departmentFilter, statusFilter]);
@@ -191,7 +192,7 @@ const AdminUsersPage: React.FC = () => {
         employeeCode: employeeCode,
         joinDate: new Date().toISOString(),
       };
-      
+
       setUsers([...users, newUser]);
       setShowImportModal(false);
       setEmployeeCode('');
@@ -251,7 +252,7 @@ const AdminUsersPage: React.FC = () => {
 
     try {
       setProcessing(true);
-      
+
       switch (confirm.action) {
         case 'deactivate':
           try {
@@ -264,7 +265,7 @@ const AdminUsersPage: React.FC = () => {
               throw error;
             }
           }
-          setUsers(prev => prev.map(u => 
+          setUsers(prev => prev.map(u =>
             u.id === confirm.userId ? { ...u, status: 'inactive' } : u
           ));
           if (selectedUser?.id === confirm.userId) {
@@ -282,7 +283,7 @@ const AdminUsersPage: React.FC = () => {
               throw error;
             }
           }
-          setUsers(prev => prev.map(u => 
+          setUsers(prev => prev.map(u =>
             u.id === confirm.userId ? { ...u, status: 'inactive' } : u
           ));
           if (selectedUser?.id === confirm.userId) {
@@ -292,8 +293,8 @@ const AdminUsersPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error performing action:', error);
-      setUsers(prev => prev.map(u => 
-        u.id === confirm.userId 
+      setUsers(prev => prev.map(u =>
+        u.id === confirm.userId
           ? { ...u, status: 'inactive' }
           : u
       ));
@@ -321,7 +322,7 @@ const AdminUsersPage: React.FC = () => {
           throw error;
         }
       }
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === selectedUser.id ? { ...u, role: newRole as any } : u
       ));
       setSelectedUser({ ...selectedUser, role: newRole as any });
@@ -329,7 +330,7 @@ const AdminUsersPage: React.FC = () => {
       alert('Role updated successfully');
     } catch (error) {
       console.error('Error updating role:', error);
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === selectedUser.id ? { ...u, role: newRole as any } : u
       ));
       setSelectedUser({ ...selectedUser, role: newRole as any });
@@ -355,7 +356,7 @@ const AdminUsersPage: React.FC = () => {
           throw error;
         }
       }
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === selectedUser.id ? { ...u, department: newDepartment } : u
       ));
       setSelectedUser({ ...selectedUser, department: newDepartment });
@@ -364,7 +365,7 @@ const AdminUsersPage: React.FC = () => {
       alert('Department updated successfully');
     } catch (error) {
       console.error('Error updating department:', error);
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === selectedUser.id ? { ...u, department: newDepartment } : u
       ));
       setSelectedUser({ ...selectedUser, department: newDepartment });
@@ -391,7 +392,7 @@ const AdminUsersPage: React.FC = () => {
           throw error;
         }
       }
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === selectedUser.id ? { ...u, status: 'active' } : u
       ));
       setSelectedUser({ ...selectedUser, status: 'active' });
@@ -399,7 +400,7 @@ const AdminUsersPage: React.FC = () => {
       alert('HDMS access granted successfully');
     } catch (error) {
       console.error('Error granting access:', error);
-      setUsers(prev => prev.map(u => 
+      setUsers(prev => prev.map(u =>
         u.id === selectedUser.id ? { ...u, status: 'active' } : u
       ));
       setSelectedUser({ ...selectedUser, status: 'active' });
@@ -443,13 +444,6 @@ const AdminUsersPage: React.FC = () => {
               >
                 <span className="hidden sm:inline">Import from SMS</span>
                 <span className="sm:hidden">Import</span>
-              </Button>
-              <Button
-                variant="primary"
-                leftIcon={<UserPlus className="w-4 h-4" />}
-                onClick={() => setShowAddUserModal(true)}
-              >
-                Add User
               </Button>
             </div>
           </div>
@@ -509,7 +503,7 @@ const AdminUsersPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 md:py-3 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                style={{ 
+                style={{
                   borderColor: THEME.colors.background,
                 }}
               />
@@ -542,7 +536,7 @@ const AdminUsersPage: React.FC = () => {
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -563,7 +557,7 @@ const AdminUsersPage: React.FC = () => {
                     value={departmentFilter}
                     onChange={(e) => setDepartmentFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -583,7 +577,7 @@ const AdminUsersPage: React.FC = () => {
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -660,8 +654,8 @@ const AdminUsersPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
                       {filteredUsers.map((user) => (
-                        <tr 
-                          key={user.id} 
+                        <tr
+                          key={user.id}
                           className="hover:bg-gray-50 transition-colors cursor-pointer"
                           onClick={() => handleViewDetails(user)}
                         >
@@ -689,13 +683,12 @@ const AdminUsersPage: React.FC = () => {
                           </td>
                           <td className="py-4 px-4 whitespace-nowrap">
                             <span
-                              className={`px-2 py-1 rounded text-xs font-medium ${
-                                user.status === 'active'
-                                  ? 'bg-green-100 text-green-800'
-                                  : user.status === 'inactive'
+                              className={`px-2 py-1 rounded text-xs font-medium ${user.status === 'active'
+                                ? 'bg-green-100 text-green-800'
+                                : user.status === 'inactive'
                                   ? 'bg-red-100 text-red-800'
                                   : 'bg-yellow-100 text-yellow-800'
-                              }`}
+                                }`}
                             >
                               {user.status === 'active' ? 'Active' : user.status === 'inactive' ? 'Inactive' : 'Pending'}
                             </span>
@@ -800,13 +793,12 @@ const AdminUsersPage: React.FC = () => {
                     Status
                   </label>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      selectedUser.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : selectedUser.status === 'inactive'
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${selectedUser.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : selectedUser.status === 'inactive'
                         ? 'bg-red-100 text-red-800'
                         : 'bg-yellow-100 text-yellow-800'
-                    }`}
+                      }`}
                   >
                     {selectedUser.status === 'active' ? 'Active' : selectedUser.status === 'inactive' ? 'Inactive' : 'Pending'}
                   </span>
@@ -867,7 +859,7 @@ const AdminUsersPage: React.FC = () => {
                   >
                     Edit User
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     fullWidth
@@ -879,7 +871,7 @@ const AdminUsersPage: React.FC = () => {
                   >
                     Assign Role
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     fullWidth
@@ -891,7 +883,7 @@ const AdminUsersPage: React.FC = () => {
                   >
                     Assign Department
                   </Button>
-                  
+
                   {selectedUser.status === 'inactive' ? (
                     <Button
                       variant="success"
@@ -917,7 +909,7 @@ const AdminUsersPage: React.FC = () => {
                       Revoke Access
                     </Button>
                   )}
-                  
+
                   <Button
                     variant="outline"
                     fullWidth
@@ -958,7 +950,7 @@ const AdminUsersPage: React.FC = () => {
                 <X className="w-5 h-5" style={{ color: THEME.colors.gray }} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <p className="text-sm" style={{ color: THEME.colors.gray }}>
                 Enter employee code to fetch user from SMS system and create HDMS user record.
@@ -973,13 +965,13 @@ const AdminUsersPage: React.FC = () => {
                   onChange={(e) => setEmployeeCode(e.target.value)}
                   placeholder="Enter employee code"
                   className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                  style={{ 
+                  style={{
                     borderColor: THEME.colors.background,
                   }}
                 />
               </div>
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl">
               <Button
                 variant="outline"
@@ -1007,7 +999,7 @@ const AdminUsersPage: React.FC = () => {
       {/* Add User Modal */}
       {showAddUserModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b">
               <div className="flex items-center space-x-3">
                 <UserPlus className="w-6 h-6" style={{ color: THEME.colors.primary }} />
@@ -1025,7 +1017,7 @@ const AdminUsersPage: React.FC = () => {
                 <X className="w-5 h-5" style={{ color: THEME.colors.gray }} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <p className="text-sm" style={{ color: THEME.colors.gray }}>
                 {selectedUser ? 'Update user information' : 'Create a new user manually or import from SMS system.'}
@@ -1040,7 +1032,7 @@ const AdminUsersPage: React.FC = () => {
                     defaultValue={selectedUser?.name}
                     placeholder="Enter full name"
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   />
@@ -1054,24 +1046,28 @@ const AdminUsersPage: React.FC = () => {
                     defaultValue={selectedUser?.email}
                     placeholder="Enter email address"
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
-                    Employee Code
+                    Employee <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedUser?.employeeCode}
-                    placeholder="Enter employee code"
+                  <select
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
-                  />
+                  >
+                    <option value="">Select Employee</option>
+                    {getMockEmployees().map((emp) => (
+                      <option key={emp.employee_id} value={emp.employee_code}>
+                        {emp.employee_code} - {emp.full_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
@@ -1080,7 +1076,7 @@ const AdminUsersPage: React.FC = () => {
                   <select
                     defaultValue={selectedUser?.role}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -1097,7 +1093,7 @@ const AdminUsersPage: React.FC = () => {
                   <select
                     defaultValue={selectedUser?.department}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -1109,7 +1105,7 @@ const AdminUsersPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl">
               <Button
                 variant="outline"
@@ -1157,7 +1153,7 @@ const AdminUsersPage: React.FC = () => {
                 <X className="w-5 h-5" style={{ color: THEME.colors.gray }} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <p className="text-sm" style={{ color: THEME.colors.gray }}>
                 Change role for <strong>{selectedUser.name}</strong>
@@ -1170,7 +1166,7 @@ const AdminUsersPage: React.FC = () => {
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value)}
                   className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                  style={{ 
+                  style={{
                     borderColor: THEME.colors.background,
                   }}
                 >
@@ -1181,7 +1177,7 @@ const AdminUsersPage: React.FC = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl">
               <Button
                 variant="outline"
@@ -1227,7 +1223,7 @@ const AdminUsersPage: React.FC = () => {
                 <X className="w-5 h-5" style={{ color: THEME.colors.gray }} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <p className="text-sm" style={{ color: THEME.colors.gray }}>
                 Assign department for <strong>{selectedUser.name}</strong>
@@ -1240,7 +1236,7 @@ const AdminUsersPage: React.FC = () => {
                   value={newDepartment}
                   onChange={(e) => setNewDepartment(e.target.value)}
                   className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                  style={{ 
+                  style={{
                     borderColor: THEME.colors.background,
                   }}
                 >
@@ -1251,7 +1247,7 @@ const AdminUsersPage: React.FC = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl">
               <Button
                 variant="outline"

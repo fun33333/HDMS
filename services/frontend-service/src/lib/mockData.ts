@@ -621,3 +621,151 @@ export const generateMockReassignableTickets = (): Ticket[] => {
 
   return mockTickets;
 };
+
+// Mock Employees Data
+export interface MockEmployee {
+  employee_id: string;
+  employee_code: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  department: {
+    dept_code: string;
+    dept_name: string;
+  } | null;
+  designation: {
+    position_code: string;
+    position_name: string;
+  } | null;
+  employment_type: string;
+  employment_type_value: string;
+  joining_date: string | null;
+  created_at: string | null;
+}
+
+export const mockEmployees: MockEmployee[] = [
+  {
+    employee_id: '1',
+    employee_code: 'EMP-001',
+    full_name: 'John Doe',
+    email: 'john.doe@example.com',
+    phone: '+1234567890',
+    department: { dept_code: 'IT', dept_name: 'Information Technology' },
+    designation: { position_code: 'DEV', position_name: 'Software Developer' },
+    employment_type: 'Full-time',
+    employment_type_value: 'full_time',
+    joining_date: '2023-01-15',
+    created_at: '2023-01-15T09:00:00Z',
+  },
+  {
+    employee_id: '2',
+    employee_code: 'EMP-002',
+    full_name: 'Jane Smith',
+    email: 'jane.smith@example.com',
+    phone: '+1987654321',
+    department: { dept_code: 'HR', dept_name: 'Human Resources' },
+    designation: { position_code: 'HRM', position_name: 'HR Manager' },
+    employment_type: 'Full-time',
+    employment_type_value: 'full_time',
+    joining_date: '2022-05-20',
+    created_at: '2022-05-20T09:00:00Z',
+  },
+  {
+    employee_id: '3',
+    employee_code: 'EMP-003',
+    full_name: 'Robert Johnson',
+    email: 'robert.johnson@example.com',
+    phone: '+1122334455',
+    department: { dept_code: 'FIN', dept_name: 'Finance' },
+    designation: { position_code: 'ACC', position_name: 'Accountant' },
+    employment_type: 'Contract',
+    employment_type_value: 'contract',
+    joining_date: '2023-08-01',
+    created_at: '2023-08-01T09:00:00Z',
+  },
+  {
+    employee_id: '4',
+    employee_code: 'EMP-004',
+    full_name: 'Emily Davis',
+    email: 'emily.davis@example.com',
+    phone: '+1555666777',
+    department: { dept_code: 'MKT', dept_name: 'Marketing' },
+    designation: { position_code: 'MKT_EXE', position_name: 'Marketing Executive' },
+    employment_type: 'Part-time',
+    employment_type_value: 'part_time',
+    joining_date: '2023-11-10',
+    created_at: '2023-11-10T09:00:00Z',
+  },
+  {
+    employee_id: '5',
+    employee_code: 'EMP-005',
+    full_name: 'Michael Wilson',
+    email: 'michael.wilson@example.com',
+    phone: '+1999888777',
+    department: { dept_code: 'IT', dept_name: 'Information Technology' },
+    designation: { position_code: 'SYS_ADMIN', position_name: 'System Administrator' },
+    employment_type: 'Full-time',
+    employment_type_value: 'full_time',
+    joining_date: '2021-03-15',
+    created_at: '2021-03-15T09:00:00Z',
+  },
+];
+
+export const getMockEmployees = (): MockEmployee[] => {
+  return mockEmployees;
+};
+
+export const getMockEmployeeById = (id: string): MockEmployee | undefined => {
+  return mockEmployees.find(emp => emp.employee_id === id);
+};
+
+// Mock Departments
+export interface MockDepartment {
+  dept_id: string;
+  dept_code: string;
+  dept_name: string;
+  sector: string;
+  description: string;
+}
+
+export const mockDepartments: MockDepartment[] = [
+  { dept_id: '1', dept_code: 'IT', dept_name: 'Information Technology', sector: 'Information Technology', description: 'IT infrastructure and support' },
+  { dept_id: '2', dept_code: 'HR', dept_name: 'Human Resources', sector: 'Administration', description: 'Employee management and relations' },
+  { dept_id: '3', dept_code: 'FIN', dept_name: 'Finance & Accounts', sector: 'Finance', description: 'Financial planning and accounting' },
+  { dept_id: '4', dept_code: 'MKT', dept_name: 'Marketing', sector: 'Marketing', description: 'Brand management and advertising' },
+  { dept_id: '5', dept_code: 'OPS', dept_name: 'Operations', sector: 'Operations', description: 'Daily business operations' },
+  { dept_id: '6', dept_code: 'DEV', dept_name: 'Development', sector: 'Information Technology', description: 'Software development and engineering' },
+  { dept_id: '7', dept_code: 'PROC', dept_name: 'Procurement', sector: 'Procurement', description: 'Purchasing and vendor management' },
+  { dept_id: '8', dept_code: 'MAINT', dept_name: 'Basic Maintenance', sector: 'Maintenance', description: 'General facility maintenance' },
+];
+
+export const getMockDepartments = () => mockDepartments;
+
+export const getMockDepartmentById = (id: string) => mockDepartments.find(d => d.dept_id === id || d.dept_code === id);
+
+// Mock Designations
+export interface MockDesignation {
+  position_code: string;
+  position_name: string;
+  dept_code: string;
+}
+
+export const mockDesignations: MockDesignation[] = [
+  { position_code: 'DEV', position_name: 'Software Developer', dept_code: 'DEV' },
+  { position_code: 'SNR_DEV', position_name: 'Senior Developer', dept_code: 'DEV' },
+  { position_code: 'QA', position_name: 'QA Engineer', dept_code: 'DEV' },
+  { position_code: 'HRM', position_name: 'HR Manager', dept_code: 'HR' },
+  { position_code: 'REC', position_name: 'Recruiter', dept_code: 'HR' },
+  { position_code: 'ACC', position_name: 'Accountant', dept_code: 'FIN' },
+  { position_code: 'FIN_MGR', position_name: 'Finance Manager', dept_code: 'FIN' },
+  { position_code: 'MKT_EXE', position_name: 'Marketing Executive', dept_code: 'MKT' },
+  { position_code: 'SYS_ADMIN', position_name: 'System Administrator', dept_code: 'IT' },
+  { position_code: 'NET_ENG', position_name: 'Network Engineer', dept_code: 'IT' },
+  { position_code: 'OPS_MGR', position_name: 'Operations Manager', dept_code: 'OPS' },
+  { position_code: 'PROC_OFF', position_name: 'Procurement Officer', dept_code: 'PROC' },
+  { position_code: 'TECH', position_name: 'Technician', dept_code: 'MAINT' },
+];
+
+export const getMockDesignations = () => mockDesignations;
+
+export const getMockDesignationsByDept = (deptCode: string) => mockDesignations.filter(d => d.dept_code === deptCode);
