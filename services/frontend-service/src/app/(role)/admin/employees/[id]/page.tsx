@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../../compone
 import { Button } from '../../../../../components/ui/Button';
 import { THEME } from '../../../../../lib/theme';
 import { getMockEmployeeById } from '../../../../../lib/mockData';
+import { checkHdmsAccess, grantHdmsAccess, validatePassword, HdmsAccessStatus } from '../../../../../services/permissionService';
 
 interface Department {
   dept_code: string;
@@ -88,6 +89,13 @@ const EmployeeDetailPage: React.FC = () => {
   const [hdmsPassword, setHdmsPassword] = useState('');
   const [smsRole, setSmsRole] = useState('');
   const [smsPassword, setSmsPassword] = useState('');
+
+  // HDMS Access State
+  const [existingHdmsAccess, setExistingHdmsAccess] = useState<HdmsAccessStatus | null>(null);
+  const [changePassword, setChangePassword] = useState(true);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEmployee = async () => {
@@ -222,41 +230,102 @@ const EmployeeDetailPage: React.FC = () => {
     setShowEditModal(false);
   };
 
-  const handlePermissionSave = () => {
-    // Validate that if a system is selected, role and password are provided
-    if (permissions.hdms && (!hdmsRole || !hdmsPassword)) {
-      alert('Please select a role and enter a password for HDMS');
-      return;
+  // Check existing HDMS access when modal opens
+  const handleOpenPermissionModal = async () => {
+    setShowPermissionModal(true);
+    setPasswordError(null);
+    setSuccessMessage(null);
+
+    if (employee) {
+      const result = await checkHdmsAccess(employee.employee_id);
+      if (result.data) {
+        setExistingHdmsAccess(result.data);
+        if (result.data.has_access) {
+          setPermissions({ ...permissions, hdms: true });
+          setHdmsRole(result.data.role || '');
+          setChangePassword(false); // Default to not changing password for existing users
+        }
+      }
     }
-    if (permissions.sms && (!smsRole || !smsPassword)) {
-      alert('Please select a role and enter a password for SMS');
+  };
+
+  const handlePermissionSave = () => {
+    setPasswordError(null);
+
+    // Validate that if HDMS is selected, role is provided
+    if (permissions.hdms && !hdmsRole) {
+      setPasswordError('Please select a role for HDMS');
       return;
     }
 
-    // Show confirmation modal instead of browser confirm
+    // Validate password if required (new user or changing password)
+    const needsPassword = !existingHdmsAccess?.has_access || changePassword;
+    if (permissions.hdms && needsPassword) {
+      if (!hdmsPassword) {
+        setPasswordError('Password is required');
+        return;
+      }
+      const validation = validatePassword(hdmsPassword);
+      if (!validation.valid) {
+        setPasswordError(validation.error);
+        return;
+      }
+    }
+
+    if (permissions.sms && (!smsRole || !smsPassword)) {
+      setPasswordError('Please select a role and enter a password for SMS');
+      return;
+    }
+
+    // Show confirmation modal
     setShowPermissionConfirm(true);
   };
 
-  const handlePermissionConfirm = () => {
-    console.log('Granting permissions:', {
-      employee: employee?.employee_code,
-      hdms: permissions.hdms ? { role: hdmsRole, password: hdmsPassword } : null,
-      sms: permissions.sms ? { role: smsRole, password: smsPassword } : null
-    });
+  const handlePermissionConfirm = async () => {
+    if (!employee) return;
 
-    // Close confirmation and permission modals
-    setShowPermissionConfirm(false);
-    setShowPermissionModal(false);
+    setIsSubmitting(true);
+    setPasswordError(null);
 
-    // Show success modal
-    setShowSuccessModal(true);
+    try {
+      if (permissions.hdms) {
+        const result = await grantHdmsAccess({
+          employee_id: employee.employee_id,
+          password: hdmsPassword || 'DefaultP1', // Fallback for existing users not changing password
+          role: hdmsRole as 'requestor' | 'moderator' | 'assignee',
+          change_password: changePassword
+        });
 
-    // Reset form
-    setPermissions({ hdms: false, sms: false });
-    setHdmsRole('');
-    setHdmsPassword('');
-    setSmsRole('');
-    setSmsPassword('');
+        if (result.error) {
+          setPasswordError(result.error);
+          setShowPermissionConfirm(false);
+          setIsSubmitting(false);
+          return;
+        }
+
+        setSuccessMessage(result.data?.message || 'HDMS access granted successfully');
+      }
+
+      // Close modals
+      setShowPermissionConfirm(false);
+      setShowPermissionModal(false);
+      setShowSuccessModal(true);
+
+      // Reset form
+      setPermissions({ hdms: false, sms: false });
+      setHdmsRole('');
+      setHdmsPassword('');
+      setSmsRole('');
+      setSmsPassword('');
+      setExistingHdmsAccess(null);
+      setChangePassword(true);
+    } catch (error) {
+      console.error('Error granting permissions:', error);
+      setPasswordError('An unexpected error occurred');
+      setShowPermissionConfirm(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -305,7 +374,7 @@ const EmployeeDetailPage: React.FC = () => {
           </Button>
           <Button
             variant="primary"
-            onClick={() => setShowPermissionModal(true)}
+            onClick={handleOpenPermissionModal}
             className="text-sm"
           >
             🔒 Grant Permission
@@ -662,6 +731,16 @@ const EmployeeDetailPage: React.FC = () => {
             <div className="space-y-6 mb-8">
               {/* HDMS Permission */}
               <div className="border rounded-lg p-4">
+                {/* Existing Access Banner */}
+                {existingHdmsAccess?.has_access && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-amber-800">
+                      <span className="font-semibold">Already has HDMS access</span> as {existingHdmsAccess.role?.toUpperCase()}.
+                      You can update the role below.
+                    </p>
+                  </div>
+                )}
+
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -671,6 +750,7 @@ const EmployeeDetailPage: React.FC = () => {
                       if (!e.target.checked) {
                         setHdmsRole('');
                         setHdmsPassword('');
+                        setPasswordError(null);
                       }
                     }}
                     className="w-5 h-5 mt-0.5 text-blue-600 rounded focus:ring-blue-500"
@@ -694,23 +774,49 @@ const EmployeeDetailPage: React.FC = () => {
                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                       >
                         <option value="">Select Role</option>
-                        <option value="requester">Requester</option>
+                        <option value="requestor">Requestor</option>
                         <option value="moderator">Moderator</option>
                         <option value="assignee">Assignee</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Password <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="password"
-                        value={hdmsPassword}
-                        onChange={e => setHdmsPassword(e.target.value)}
-                        placeholder="Enter password"
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      />
-                    </div>
+
+                    {/* Change Password Checkbox (for existing users) */}
+                    {existingHdmsAccess?.has_access && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="changePassword"
+                          checked={changePassword}
+                          onChange={e => setChangePassword(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <label htmlFor="changePassword" className="text-sm text-gray-700">
+                          Change password
+                        </label>
+                      </div>
+                    )}
+
+                    {/* Password Field */}
+                    {(!existingHdmsAccess?.has_access || changePassword) && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={hdmsPassword}
+                          onChange={e => {
+                            setHdmsPassword(e.target.value);
+                            setPasswordError(null);
+                          }}
+                          placeholder="Enter password"
+                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Min 6 chars, alphanumeric, at least 1 uppercase & 1 lowercase
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -770,6 +876,13 @@ const EmployeeDetailPage: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* Error Display */}
+            {passwordError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-700">{passwordError}</p>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowPermissionModal(false)}>Cancel</Button>

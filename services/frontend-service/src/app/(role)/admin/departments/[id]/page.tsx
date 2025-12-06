@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../../components/ui/card';
 import { Button } from '../../../../../components/ui/Button';
 import { THEME } from '../../../../../lib/theme';
-import { getMockDepartmentById, getMockDesignationsByDept, getMockDepartments, MockDepartment, MockDesignation } from '../../../../../lib/mockData';
+import { fetchDepartmentByCode, fetchDepartments, Department } from '../../../../../services/departmentService';
+import { fetchDesignations, createDesignation, Designation } from '../../../../../services/designationService';
 import {
     ArrowLeft,
     Building2,
@@ -14,67 +15,139 @@ import {
     Layers,
     FileText,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    WifiOff,
+    Users,
+    AlertCircle
 } from 'lucide-react';
 
 const DepartmentDetailPage: React.FC = () => {
     const params = useParams();
     const router = useRouter();
-    const { id } = params;
+    const deptCode = params.id as string;
 
-    const [department, setDepartment] = useState<MockDepartment | null>(null);
-    const [designations, setDesignations] = useState<MockDesignation[]>([]);
+    const [department, setDepartment] = useState<Department | null>(null);
+    const [designations, setDesignations] = useState<Designation[]>([]);
+    const [allDepartments, setAllDepartments] = useState<Department[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isOffline, setIsOffline] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Modal State
     const [showAddDesignationModal, setShowAddDesignationModal] = useState(false);
     const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
     const [newDesignation, setNewDesignation] = useState({
-        dept_code: '',
+        department_code: '',
         position_code: '',
         position_name: '',
         description: '',
-        job_grade: '',
-        qualifications: '',
-        reports_to: ''
     });
 
     useEffect(() => {
-        if (id) {
-            setIsLoading(true);
-            // Simulate fetch
-            setTimeout(() => {
-                const dept = getMockDepartmentById(id as string);
-                if (dept) {
-                    setDepartment(dept);
-                    setDesignations(getMockDesignationsByDept(dept.dept_code));
-                }
-                setIsLoading(false);
-            }, 500);
+        if (deptCode) {
+            loadDepartmentData();
         }
-    }, [id]);
+    }, [deptCode]);
 
-    const handleAddDesignation = () => {
-        if (!newDesignation.position_code || !newDesignation.position_name || !newDesignation.dept_code) return;
+    const loadDepartmentData = async () => {
+        setIsLoading(true);
+        setError(null);
 
-        const newDesig: MockDesignation = {
-            position_code: newDesignation.position_code,
+        // Fetch department details
+        const deptResult = await fetchDepartmentByCode(deptCode);
+        if (deptResult.error) {
+            setError(deptResult.error);
+            setIsLoading(false);
+            return;
+        }
+
+        setDepartment(deptResult.data);
+        setIsOffline(deptResult.isOffline);
+
+        // Fetch designations for this department
+        const desigResult = await fetchDesignations(deptCode);
+        if (desigResult.data) {
+            setDesignations(desigResult.data);
+        }
+
+        // Fetch all departments for the dropdown
+        const allDeptsResult = await fetchDepartments();
+        if (allDeptsResult.data) {
+            setAllDepartments(allDeptsResult.data);
+        }
+
+        setIsLoading(false);
+    };
+
+    const validateDesignation = (): string | null => {
+        if (!newDesignation.department_code) return 'Please select a department';
+        if (!newDesignation.position_code.trim()) return 'Position code is required';
+        if (!/^[A-Za-z0-9]+$/.test(newDesignation.position_code)) return 'Position code must be alphanumeric only';
+        if (newDesignation.position_code.length > 4) return 'Position code must be 4 characters or less';
+        if (!newDesignation.position_name.trim()) return 'Position name is required';
+        return null;
+    };
+
+    const handleAddDesignation = async () => {
+        const validationError = validateDesignation();
+        if (validationError) {
+            setFormError(validationError);
+            return;
+        }
+
+        setIsSubmitting(true);
+        setFormError(null);
+
+        const result = await createDesignation({
+            department_code: newDesignation.department_code,
+            position_code: newDesignation.position_code.toUpperCase(),
             position_name: newDesignation.position_name,
-            dept_code: newDesignation.dept_code
-        };
-
-        setDesignations([...designations, newDesig]);
-        setNewDesignation({
-            dept_code: '',
-            position_code: '',
-            position_name: '',
-            description: '',
-            job_grade: '',
-            qualifications: '',
-            reports_to: ''
+            description: newDesignation.description || undefined,
         });
-        setShowAddDesignationModal(false);
-        setShowAdvancedOptions(false);
+
+        if (result.error) {
+            setFormError(result.error);
+            setIsSubmitting(false);
+            return;
+        }
+
+        setSuccessMessage('Designation created successfully!');
+
+        // Refresh designations list
+        const desigResult = await fetchDesignations(deptCode);
+        if (desigResult.data) {
+            setDesignations(desigResult.data);
+        }
+
+        // Reset form and close modal after delay
+        setTimeout(() => {
+            setNewDesignation({
+                department_code: '',
+                position_code: '',
+                position_name: '',
+                description: '',
+            });
+            setShowAddDesignationModal(false);
+            setShowAdvancedOptions(false);
+            setSuccessMessage(null);
+        }, 1000);
+
+        setIsSubmitting(false);
+    };
+
+    const openAddDesignationModal = () => {
+        // Pre-select current department
+        setNewDesignation({
+            ...newDesignation,
+            department_code: deptCode
+        });
+        setFormError(null);
+        setSuccessMessage(null);
+        setShowAddDesignationModal(true);
     };
 
     if (isLoading) {
@@ -85,21 +158,30 @@ const DepartmentDetailPage: React.FC = () => {
         );
     }
 
-    if (!department) {
+    if (error || !department) {
         return (
             <div className="p-8 flex justify-center items-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
                 <div className="text-center">
-                    <h2 className="text-xl font-bold mb-2">Department Not Found</h2>
+                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold mb-2">{error || 'Department Not Found'}</h2>
                     <Button variant="primary" onClick={() => router.push('/admin/departments')}>Back to List</Button>
                 </div>
             </div>
         );
     }
 
-    const allDepartments = getMockDepartments();
-
     return (
         <div className="p-4 md:p-6 lg:p-8 min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
+            {/* Offline Banner */}
+            {isOffline && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-2 mb-6">
+                    <WifiOff className="w-5 h-5 text-amber-600" />
+                    <span className="text-amber-700 text-sm font-medium">
+                        Using offline data. Some features may be limited.
+                    </span>
+                </div>
+            )}
+
             <Button
                 variant="outline"
                 onClick={() => router.back()}
@@ -133,14 +215,24 @@ const DepartmentDetailPage: React.FC = () => {
                                 <label className="text-sm font-medium text-gray-500 flex items-center gap-2 mb-1">
                                     <Layers className="w-4 h-4" /> Sector
                                 </label>
-                                <p className="text-gray-900 font-medium">{department.sector}</p>
+                                <p className="text-gray-900 font-medium capitalize">{department.dept_sector}</p>
                             </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-500 flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4" /> Description
-                                </label>
-                                <p className="text-gray-900 text-sm leading-relaxed">{department.description}</p>
-                            </div>
+                            {department.description && (
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500 flex items-center gap-2 mb-1">
+                                        <FileText className="w-4 h-4" /> Description
+                                    </label>
+                                    <p className="text-gray-900 text-sm leading-relaxed">{department.description}</p>
+                                </div>
+                            )}
+                            {department.employee_count !== undefined && (
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500 flex items-center gap-2 mb-1">
+                                        <Users className="w-4 h-4" /> Employees
+                                    </label>
+                                    <p className="text-gray-900 font-medium">{department.employee_count} active employees</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -150,13 +242,13 @@ const DepartmentDetailPage: React.FC = () => {
                     <Card className="bg-white rounded-2xl shadow-xl border-0 h-full">
                         <CardHeader className="p-6 border-b flex flex-row items-center justify-between">
                             <CardTitle className="text-xl font-bold flex items-center gap-2" style={{ color: THEME.colors.primary }}>
-                                <Briefcase className="w-5 h-5" /> Designations
+                                <Briefcase className="w-5 h-5" /> Designations ({designations.length})
                             </CardTitle>
                             <Button
                                 variant="primary"
                                 size="sm"
                                 leftIcon={<Plus className="w-4 h-4" />}
-                                onClick={() => setShowAddDesignationModal(true)}
+                                onClick={openAddDesignationModal}
                             >
                                 Add Designation
                             </Button>
@@ -164,7 +256,16 @@ const DepartmentDetailPage: React.FC = () => {
                         <CardContent className="p-0">
                             {designations.length === 0 ? (
                                 <div className="text-center py-12 text-gray-500">
+                                    <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                                     <p>No designations found for this department.</p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-4"
+                                        onClick={openAddDesignationModal}
+                                    >
+                                        Create First Designation
+                                    </Button>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
@@ -177,7 +278,7 @@ const DepartmentDetailPage: React.FC = () => {
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {designations.map((desig, index) => (
-                                                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                                <tr key={desig.id || index} className="hover:bg-gray-50 transition-colors">
                                                     <td className="py-4 px-6 text-sm font-medium text-blue-600">{desig.position_code}</td>
                                                     <td className="py-4 px-6 text-sm text-gray-900">{desig.position_name}</td>
                                                 </tr>
@@ -211,8 +312,8 @@ const DepartmentDetailPage: React.FC = () => {
                                         Select Department <span className="text-red-500">*</span>
                                     </label>
                                     <select
-                                        value={newDesignation.dept_code}
-                                        onChange={e => setNewDesignation({ ...newDesignation, dept_code: e.target.value })}
+                                        value={newDesignation.department_code}
+                                        onChange={e => setNewDesignation({ ...newDesignation, department_code: e.target.value })}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                     >
                                         <option value="">Select Department</option>
@@ -234,17 +335,17 @@ const DepartmentDetailPage: React.FC = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Position Code <span className="text-red-500">*</span>
+                                            Position Code <span className="text-red-500">*</span> <span className="text-gray-500 font-normal">(max 4 chars)</span>
                                         </label>
                                         <input
                                             type="text"
-                                            maxLength={10}
-                                            placeholder="Examples: T (Teacher), P (Principal), DEV (Developer), ACC (Accountant)"
+                                            maxLength={4}
+                                            placeholder="e.g., T, P, DEV, ACC"
                                             value={newDesignation.position_code}
                                             onChange={e => setNewDesignation({ ...newDesignation, position_code: e.target.value.toUpperCase() })}
                                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Short code used in employee codes (must be unique within department)</p>
+                                        <p className="text-xs text-gray-500 mt-1">Short alphanumeric code (max 4 chars, unique within department)</p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -253,7 +354,7 @@ const DepartmentDetailPage: React.FC = () => {
                                         <input
                                             type="text"
                                             maxLength={100}
-                                            placeholder="Examples: Teacher, Principal, Software Developer, Accountant"
+                                            placeholder="e.g., Teacher, Principal, Software Developer"
                                             value={newDesignation.position_name}
                                             onChange={e => setNewDesignation({ ...newDesignation, position_name: e.target.value })}
                                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
@@ -262,18 +363,18 @@ const DepartmentDetailPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* SECTION 3: ROLE DESCRIPTION */}
+                            {/* SECTION 3: DESCRIPTION */}
                             <div>
                                 <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <FileText className="w-4 h-4" /> Section 3: Role Description
+                                    <FileText className="w-4 h-4" /> Section 3: Description (Optional)
                                 </h4>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Role Description & Responsibilities
+                                        Role Description
                                     </label>
                                     <textarea
-                                        rows={5}
-                                        placeholder="Describe key responsibilities, required qualifications, and role expectations..."
+                                        rows={3}
+                                        placeholder="Describe key responsibilities..."
                                         value={newDesignation.description}
                                         onChange={e => setNewDesignation({ ...newDesignation, description: e.target.value })}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
@@ -281,65 +382,19 @@ const DepartmentDetailPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* ADVANCED OPTIONS (Collapsible) */}
-                            <div>
-                                <button
-                                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <span className="text-sm font-semibold text-gray-700">Advanced Options</span>
-                                    {showAdvancedOptions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                </button>
+                            {/* Error Message */}
+                            {formError && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                    <p className="text-sm text-red-700">{formError}</p>
+                                </div>
+                            )}
 
-                                {showAdvancedOptions && (
-                                    <div className="mt-4 space-y-4 p-4 border rounded-lg bg-gray-50">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Job Grade</label>
-                                            <select
-                                                value={newDesignation.job_grade}
-                                                onChange={e => setNewDesignation({ ...newDesignation, job_grade: e.target.value })}
-                                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                                            >
-                                                <option value="">Select Grade</option>
-                                                <option value="junior">Junior</option>
-                                                <option value="mid_level">Mid-Level</option>
-                                                <option value="senior">Senior</option>
-                                                <option value="lead">Lead</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="director">Director</option>
-                                                <option value="executive">Executive</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Required Qualifications</label>
-                                            <textarea
-                                                rows={3}
-                                                placeholder="Example: Bachelor's degree in relevant field, 2 years experience..."
-                                                value={newDesignation.qualifications}
-                                                onChange={e => setNewDesignation({ ...newDesignation, qualifications: e.target.value })}
-                                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none bg-white"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Reporting Position</label>
-                                            <select
-                                                value={newDesignation.reports_to}
-                                                onChange={e => setNewDesignation({ ...newDesignation, reports_to: e.target.value })}
-                                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                                            >
-                                                <option value="">Select reporting position</option>
-                                                {designations
-                                                    .filter(d => d.dept_code === newDesignation.dept_code)
-                                                    .map((desig, idx) => (
-                                                        <option key={idx} value={desig.position_code}>
-                                                            {desig.position_name}
-                                                        </option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Success Message */}
+                            {successMessage && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <p className="text-sm text-green-700">{successMessage}</p>
+                                </div>
+                            )}
                         </div>
 
                         <div className="p-6 border-t bg-gray-50 rounded-b-xl flex justify-end gap-3">
@@ -348,25 +403,24 @@ const DepartmentDetailPage: React.FC = () => {
                                 onClick={() => {
                                     setShowAddDesignationModal(false);
                                     setShowAdvancedOptions(false);
+                                    setFormError(null);
                                     setNewDesignation({
-                                        dept_code: '',
+                                        department_code: '',
                                         position_code: '',
                                         position_name: '',
                                         description: '',
-                                        job_grade: '',
-                                        qualifications: '',
-                                        reports_to: ''
                                     });
                                 }}
+                                disabled={isSubmitting}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 variant="primary"
                                 onClick={handleAddDesignation}
-                                disabled={!newDesignation.dept_code || !newDesignation.position_code || !newDesignation.position_name}
+                                disabled={isSubmitting || !newDesignation.department_code || !newDesignation.position_code || !newDesignation.position_name}
                             >
-                                Save Designation
+                                {isSubmitting ? 'Saving...' : 'Save Designation'}
                             </Button>
                         </div>
                     </div>

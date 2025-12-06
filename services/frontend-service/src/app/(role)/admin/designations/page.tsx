@@ -6,44 +6,63 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Button } from '../../../../components/ui/Button';
 import { AnalyticsCard } from '../../../../components/common/AnalyticsCard';
 import { THEME } from '../../../../lib/theme';
-import { getMockDesignations, getMockDepartments, MockDesignation } from '../../../../lib/mockData';
+import { fetchDesignations, Designation } from '../../../../services/designationService';
+import { fetchDepartments, Department } from '../../../../services/departmentService';
 import {
   Briefcase,
   Search,
   Building2,
-  Users,
-  ArrowLeft
+  ArrowLeft,
+  WifiOff,
+  AlertCircle
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-interface DesignationWithDept extends MockDesignation {
+interface DesignationWithDept extends Designation {
   dept_name?: string;
 }
 
 const DesignationsListPage: React.FC = () => {
   const router = useRouter();
   const [designations, setDesignations] = useState<DesignationWithDept[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate fetch
-    setIsLoading(true);
-    setTimeout(() => {
-      const allDesignations = getMockDesignations();
-      const departments = getMockDepartments();
-
-      // Enrich designations with department names
-      const enrichedDesignations = allDesignations.map(desig => ({
-        ...desig,
-        dept_name: departments.find(d => d.dept_code === desig.dept_code)?.dept_name || 'Unknown'
-      }));
-
-      setDesignations(enrichedDesignations);
-      setIsLoading(false);
-    }, 500);
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    // Fetch departments first
+    const deptResult = await fetchDepartments();
+    if (deptResult.data) {
+      setDepartments(deptResult.data);
+    }
+
+    // Fetch designations
+    const desigResult = await fetchDesignations();
+
+    if (desigResult.error && !desigResult.data) {
+      setError(desigResult.error);
+    } else if (desigResult.data) {
+      // Enrich designations with department names
+      const enrichedDesignations = desigResult.data.map(desig => ({
+        ...desig,
+        dept_name: deptResult.data?.find(d => d.dept_code === desig.dept_code)?.dept_name || 'Unknown'
+      }));
+      setDesignations(enrichedDesignations);
+      setIsOffline(desigResult.isOffline || deptResult.isOffline);
+    }
+
+    setIsLoading(false);
+  };
 
   const filteredDesignations = useMemo(() => {
     return designations.filter(desig => {
@@ -65,10 +84,18 @@ const DesignationsListPage: React.FC = () => {
     };
   }, [designations]);
 
-  const allDepartments = getMockDepartments();
-
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-2">
+          <WifiOff className="w-5 h-5 text-amber-600" />
+          <span className="text-amber-700 text-sm font-medium">
+            Using offline data. Some features may be limited.
+          </span>
+        </div>
+      )}
+
       {/* Page Header */}
       <Card className="bg-white rounded-2xl shadow-xl border-0">
         <CardContent className="p-4 md:p-6 lg:p-8">
@@ -146,7 +173,7 @@ const DesignationsListPage: React.FC = () => {
                 }}
               >
                 <option value="">All Departments</option>
-                {allDepartments.map((dept) => (
+                {departments.map((dept) => (
                   <option key={dept.dept_code} value={dept.dept_code}>
                     {dept.dept_name}
                   </option>
@@ -156,6 +183,22 @@ const DesignationsListPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Error State */}
+      {error && (
+        <Card className="bg-red-50 rounded-2xl border border-red-200">
+          <CardContent className="p-6 flex items-center gap-3">
+            <AlertCircle className="w-6 h-6 text-red-500" />
+            <div>
+              <p className="font-medium text-red-700">Error loading designations</p>
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+            <Button variant="outline" onClick={loadData} className="ml-auto">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Designations Table */}
       <Card className="bg-white rounded-2xl shadow-xl border-0">
@@ -196,7 +239,7 @@ const DesignationsListPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
                       {filteredDesignations.map((desig, index) => (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <tr key={desig.id || index} className="hover:bg-gray-50 transition-colors">
                           <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>{desig.position_code}</td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">

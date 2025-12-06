@@ -6,48 +6,74 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Button } from '../../../../components/ui/Button';
 import { AnalyticsCard } from '../../../../components/common/AnalyticsCard';
 import { THEME } from '../../../../lib/theme';
-import { getMockDepartments, getMockDesignations, MockDepartment } from '../../../../lib/mockData';
+import { fetchDepartments, Department } from '../../../../services/departmentService';
+import { getMockDesignations } from '../../../../lib/mockData';
 import {
   Building2,
   Plus,
   Search,
   Eye,
   Briefcase,
-  Layers
+  Layers,
+  WifiOff,
+  AlertCircle
 } from 'lucide-react';
 
 const DepartmentsListPage: React.FC = () => {
-  const [departments, setDepartments] = useState<MockDepartment[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate fetch
-    setIsLoading(true);
-    setTimeout(() => {
-      setDepartments(getMockDepartments());
-      setIsLoading(false);
-    }, 500);
+    loadDepartments();
   }, []);
+
+  const loadDepartments = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    const result = await fetchDepartments();
+
+    if (result.error && !result.data) {
+      setError(result.error);
+    } else {
+      setDepartments(result.data || []);
+      setIsOffline(result.isOffline);
+    }
+
+    setIsLoading(false);
+  };
 
   const filteredDepartments = useMemo(() => {
     return departments.filter(dept =>
       dept.dept_name.toLowerCase().includes(search.toLowerCase()) ||
       dept.dept_code.toLowerCase().includes(search.toLowerCase()) ||
-      dept.sector.toLowerCase().includes(search.toLowerCase())
+      (dept.dept_sector?.toLowerCase() || '').includes(search.toLowerCase())
     );
   }, [departments, search]);
 
   const stats = useMemo(() => {
     return {
       total: departments.length,
-      sectors: new Set(departments.map(d => d.sector)).size,
+      sectors: new Set(departments.map(d => d.dept_sector)).size,
       designations: getMockDesignations().length
     };
   }, [departments]);
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-2">
+          <WifiOff className="w-5 h-5 text-amber-600" />
+          <span className="text-amber-700 text-sm font-medium">
+            Using offline data. Some features may be limited.
+          </span>
+        </div>
+      )}
+
       {/* Page Header */}
       <Card className="bg-white rounded-2xl shadow-xl border-0">
         <CardContent className="p-4 md:p-6 lg:p-8">
@@ -126,6 +152,22 @@ const DepartmentsListPage: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Error State */}
+      {error && (
+        <Card className="bg-red-50 rounded-2xl border border-red-200">
+          <CardContent className="p-6 flex items-center gap-3">
+            <AlertCircle className="w-6 h-6 text-red-500" />
+            <div>
+              <p className="font-medium text-red-700">Error loading departments</p>
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+            <Button variant="outline" onClick={loadDepartments} className="ml-auto">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Departments Table */}
       <Card className="bg-white rounded-2xl shadow-xl border-0">
         <CardHeader className="p-4 md:p-6 lg:p-8 pb-2 md:pb-4">
@@ -167,7 +209,7 @@ const DepartmentsListPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
                       {filteredDepartments.map((dept) => (
-                        <tr key={dept.dept_id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={dept.dept_code} className="hover:bg-gray-50 transition-colors">
                           <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>{dept.dept_code}</td>
                           <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
@@ -181,12 +223,12 @@ const DepartmentsListPage: React.FC = () => {
                           </td>
                           <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
                             <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              {dept.sector}
+                              {dept.dept_sector}
                             </span>
                           </td>
                           <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap text-gray-500 max-w-xs truncate">{dept.description}</td>
                           <td className="py-4 px-4 whitespace-nowrap">
-                            <Link href={`/admin/departments/${dept.dept_id}`}>
+                            <Link href={`/admin/departments/${dept.dept_code}`}>
                               <Button
                                 variant="primary"
                                 size="sm"
