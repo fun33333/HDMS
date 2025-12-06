@@ -33,6 +33,8 @@ import {
   Clock,
   CheckCircle
 } from 'lucide-react';
+import { TableSkeleton } from '../../../../components/skeletons/TableSkeleton';
+import useSkeletonDelay from '../../../../hooks/useSkeletonDelay';
 
 // Generate demo users
 const generateDemoUsers = (): User[] => {
@@ -83,6 +85,7 @@ const AdminUsersPage: React.FC = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const showSkeleton = useSkeletonDelay(loading);
   const [error, setError] = useState<string | null>(null);
 
   // Filters
@@ -129,9 +132,9 @@ const AdminUsersPage: React.FC = () => {
             : (response?.results || []);
           setUsers(usersList.length > 0 ? usersList : generateDemoUsers());
         } catch (error: any) {
-          const isNetworkError = error?.isNetworkError || !error?.response;
+          const isNetworkError = error?.isNetworkError || !error?.response || error?.response?.status === 404;
           if (isNetworkError) {
-            console.warn('API not available, using demo data');
+            console.warn('API not available (or 404), using demo data');
             setUsers(generateDemoUsers());
           } else {
             throw error;
@@ -411,15 +414,8 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-          <p style={{ color: THEME.colors.gray }}>Loading users...</p>
-        </div>
-      </div>
-    );
+  if (showSkeleton) {
+    return <TableSkeleton />;
   }
 
   return (

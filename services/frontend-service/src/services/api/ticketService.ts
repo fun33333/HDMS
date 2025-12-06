@@ -11,7 +11,9 @@ export interface CreateTicketData {
   description: string;
   department: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  category?: string;
   attachments?: File[];
+  isDraft?: boolean;
 }
 
 export interface UpdateTicketData {
@@ -45,7 +47,7 @@ class TicketService {
   // Get all tickets with filters
   async getTickets(filters?: TicketFilters): Promise<TicketListResponse> {
     const params = new URLSearchParams();
-    
+
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -53,7 +55,7 @@ class TicketService {
         }
       });
     }
-    
+
     return apiClient.get<TicketListResponse>(`/api/tickets/?${params.toString()}`);
   }
 
@@ -69,13 +71,19 @@ class TicketService {
     formData.append('description', data.description);
     formData.append('department', data.department);
     formData.append('priority', data.priority);
-    
+    if (data.category) {
+      formData.append('category', data.category);
+    }
+    if (data.isDraft) {
+      formData.append('is_draft', 'true');
+    }
+
     if (data.attachments) {
       data.attachments.forEach((file) => {
         formData.append('attachments', file);
       });
     }
-    
+
     return apiClient.post<Ticket>('/api/tickets/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -152,7 +160,7 @@ class TicketService {
     if (image) {
       formData.append('image', image);
     }
-    
+
     return apiClient.post<Ticket>(`/api/tickets/${ticketId}/complete/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

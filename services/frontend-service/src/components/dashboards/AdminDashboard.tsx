@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../lib/auth';
 import { Card, CardContent } from '../ui/card';
-import { 
+import {
   Users,
   Activity,
   FileText,
@@ -16,11 +16,15 @@ import {
 } from 'lucide-react';
 import ticketService from '../../services/api/ticketService';
 import { Ticket } from '../../types';
+import { DashboardSkeleton } from '../skeletons/DashboardSkeleton';
+
+import useSkeletonDelay from '../../hooks/useSkeletonDelay';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const showSkeleton = useSkeletonDelay(loading);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -62,8 +66,8 @@ const AdminDashboard: React.FC = () => {
     { id: 4, action: 'System backup completed', time: '1 hour ago', type: 'system' },
   ];
 
-  if (loading) {
-    return <div className="p-8">Loading...</div>;
+  if (showSkeleton) {
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -193,14 +197,13 @@ const AdminDashboard: React.FC = () => {
           <div className="space-y-4">
             {recentActivities.map((activity) => (
               <div key={activity.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  activity.type === 'user' ? 'bg-blue-100' :
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === 'user' ? 'bg-blue-100' :
                   activity.type === 'ticket' ? 'bg-green-100' :
-                  'bg-purple-100'
-                }`}>
+                    'bg-purple-100'
+                  }`}>
                   {activity.type === 'user' ? <UserPlus className="w-5 h-5 text-blue-600" /> :
-                   activity.type === 'ticket' ? <FileText className="w-5 h-5 text-green-600" /> :
-                   <Settings className="w-5 h-5 text-purple-600" />}
+                    activity.type === 'ticket' ? <FileText className="w-5 h-5 text-green-600" /> :
+                      <Settings className="w-5 h-5 text-purple-600" />}
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">{activity.action}</p>

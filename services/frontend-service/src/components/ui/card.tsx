@@ -4,20 +4,20 @@ import { THEME } from '../../lib/theme';
 interface CardProps {
   children: React.ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
   style?: React.CSSProperties;
   variant?: 'default' | 'elevated' | 'outlined';
 }
 
-export const Card: React.FC<CardProps> = ({ 
-  children, 
-  className = '', 
-  onClick, 
+export const Card: React.FC<CardProps> = ({
+  children,
+  className = '',
+  onClick,
   style,
   variant = 'default'
 }) => {
   return (
-    <div 
+    <div
       className={`
         bg-white rounded-xl border transition-shadow duration-300
         ${variant === 'default' ? 'shadow-md hover:shadow-lg' : ''}

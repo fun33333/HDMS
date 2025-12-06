@@ -14,10 +14,10 @@ import { THEME } from '../../../../lib/theme';
 import ticketService from '../../../../services/api/ticketService';
 import { Ticket } from '../../../../types';
 import { formatDate } from '../../../../lib/helpers';
-import { 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
+import {
+  TrendingUp,
+  Clock,
+  CheckCircle,
   AlertCircle,
   Download,
   Calendar,
@@ -26,12 +26,13 @@ import {
   LineChart,
   Gauge
 } from 'lucide-react';
+import { DashboardSkeleton } from '../../../../components/skeletons/DashboardSkeleton';
 
 // SLA Compliance Gauge Chart Component
 const SLAComplianceGauge: React.FC<{ value: number; height?: number }> = ({ value, height = 200 }) => {
   const percentage = Math.min(100, Math.max(0, value));
   const color = percentage >= 90 ? '#22c55e' : percentage >= 70 ? '#fbbf24' : '#ef4444';
-  
+
   return (
     <div className="flex flex-col items-center justify-center" style={{ height }}>
       <div className="relative w-48 h-48">
@@ -77,7 +78,7 @@ const AdminAnalyticsPage: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Date range
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -91,8 +92,8 @@ const AdminAnalyticsPage: React.FC = () => {
         setError(null);
         try {
           const response = await ticketService.getTickets();
-          const ticketsList = Array.isArray(response) 
-            ? response 
+          const ticketsList = Array.isArray(response)
+            ? response
             : (response?.results || []);
           setTickets(ticketsList.length > 0 ? ticketsList : generateDemoTickets());
         } catch (error: any) {
@@ -150,7 +151,7 @@ const AdminAnalyticsPage: React.FC = () => {
 
   // Calculate KPIs
   const totalTickets = filteredTickets.length;
-  const resolvedTickets = filteredTickets.filter(t => 
+  const resolvedTickets = filteredTickets.filter(t =>
     ['resolved', 'completed', 'closed'].includes(t.status)
   ).length;
   const avgResolutionTime = useMemo(() => {
@@ -163,7 +164,7 @@ const AdminAnalyticsPage: React.FC = () => {
     }, 0);
     return totalDays / completed.length;
   }, [filteredTickets]);
-  
+
   const slaCompliance = useMemo(() => {
     const completed = filteredTickets.filter(t => t.resolvedDate || t.completedDate);
     if (completed.length === 0) return 100;
@@ -182,25 +183,25 @@ const AdminAnalyticsPage: React.FC = () => {
     const days = Math.ceil((new Date(dateRange.end).getTime() - new Date(dateRange.start).getTime()) / (1000 * 60 * 60 * 24));
     const data = [];
     const startDate = new Date(dateRange.start);
-    
+
     for (let i = 0; i < Math.min(days, 30); i++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
+
       const dayTickets = filteredTickets.filter(t => {
         const ticketDate = new Date(t.submittedDate);
         return ticketDate.toDateString() === date.toDateString();
       });
-      
+
       const created = dayTickets.length;
-      const resolved = dayTickets.filter(t => 
+      const resolved = dayTickets.filter(t =>
         t.resolvedDate && new Date(t.resolvedDate).toDateString() === date.toDateString()
       ).length;
-      
+
       data.push({ date: dateStr, created, resolved });
     }
-    
+
     return data;
   }, [filteredTickets, dateRange]);
 
@@ -221,12 +222,12 @@ const AdminAnalyticsPage: React.FC = () => {
     const days = Math.min(30, Math.ceil((new Date(dateRange.end).getTime() - new Date(dateRange.start).getTime()) / (1000 * 60 * 60 * 24)));
     const data = [];
     const startDate = new Date(dateRange.start);
-    
+
     for (let i = 0; i < days; i++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
+
       const completedTickets = filteredTickets.filter(t => {
         if (t.resolvedDate || t.completedDate) {
           const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
@@ -234,19 +235,19 @@ const AdminAnalyticsPage: React.FC = () => {
         }
         return false;
       });
-      
+
       const avgDays = completedTickets.length > 0
         ? completedTickets.reduce((sum, t) => {
-            const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
-            const createdDate = new Date(t.submittedDate);
-            const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-            return sum + diffDays;
-          }, 0) / completedTickets.length
+          const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
+          const createdDate = new Date(t.submittedDate);
+          const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+          return sum + diffDays;
+        }, 0) / completedTickets.length
         : 0;
-      
+
       data.push({ date: dateStr, averageDays: Math.round(avgDays * 10) / 10 || 0 });
     }
-    
+
     return data;
   }, [filteredTickets, dateRange]);
 
@@ -255,14 +256,14 @@ const AdminAnalyticsPage: React.FC = () => {
     filteredTickets.forEach(t => {
       priorityCounts[t.priority] = (priorityCounts[t.priority] || 0) + 1;
     });
-    
+
     const colors: Record<string, string> = {
       urgent: '#ef4444',
       high: '#f97316',
       medium: '#fbbf24',
       low: '#34d399',
     };
-    
+
     return Object.entries(priorityCounts).map(([name, value]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
       value,
@@ -276,7 +277,7 @@ const AdminAnalyticsPage: React.FC = () => {
       const status = t.status.charAt(0).toUpperCase() + t.status.slice(1).replace('_', ' ');
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
-    
+
     const colors: Record<string, string> = {
       'Assigned': '#60a5fa',
       'Pending': '#fbbf24',
@@ -285,7 +286,7 @@ const AdminAnalyticsPage: React.FC = () => {
       'Completed': '#22c55e',
       'Closed': '#6b7280',
     };
-    
+
     return Object.entries(statusCounts).map(([name, count]) => ({
       name,
       count,
@@ -304,7 +305,7 @@ const AdminAnalyticsPage: React.FC = () => {
         const createdDate = new Date(t.submittedDate);
         return sum + (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
       }, 0) / (completed || 1);
-      
+
       return {
         department: dept,
         totalTickets: deptTickets.length,
@@ -322,14 +323,7 @@ const AdminAnalyticsPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-          <p style={{ color: THEME.colors.gray }}>Loading analytics...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -538,7 +532,7 @@ const AdminAnalyticsPage: React.FC = () => {
                         <td className="py-4 px-4" style={{ color: THEME.colors.gray }}>{dept.pending}</td>
                         <td className="py-4 px-4" style={{ color: THEME.colors.gray }}>{dept.avgResolutionTime}</td>
                         <td className="py-4 px-4">
-                          <span className="px-2 py-1 rounded text-xs font-medium" style={{ 
+                          <span className="px-2 py-1 rounded text-xs font-medium" style={{
                             backgroundColor: dept.completionRate >= 80 ? '#D1FAE5' : dept.completionRate >= 60 ? '#FEF3C7' : '#FEE2E2',
                             color: dept.completionRate >= 80 ? '#065F46' : dept.completionRate >= 60 ? '#92400E' : '#991B1B',
                           }}>

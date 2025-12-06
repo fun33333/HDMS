@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { KpiCard } from '../common/KpiCard';
 import { DepartmentLoadChart } from '../charts/DepartmentLoadChart';
 import { DashboardHeader } from './DashboardHeader';
+import { DashboardSkeleton } from '../skeletons/DashboardSkeleton';
 import ticketService from '../../services/api/ticketService';
 import { Ticket } from '../../types';
 import { THEME } from '../../lib/theme';
@@ -52,6 +53,8 @@ interface SLATicket {
   isApproaching: boolean;
 }
 
+import useSkeletonDelay from '../../hooks/useSkeletonDelay';
+
 const ModeratorDashboard: React.FC = () => {
   const { user } = useAuth();
   const router = useRouter();
@@ -59,6 +62,7 @@ const ModeratorDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [useMockData, setUseMockData] = useState(false);
+  const showSkeleton = useSkeletonDelay(loading);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -361,19 +365,8 @@ const ModeratorDashboard: React.FC = () => {
     router.push(`/moderator/review?id=${ticketId}`);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen p-4 md:p-6 lg:p-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  if (showSkeleton) {
+    return <DashboardSkeleton />;
   }
 
   return (

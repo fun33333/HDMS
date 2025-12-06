@@ -2,19 +2,26 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/Button';
-import { AnalyticsCard } from '../../../../components/common/AnalyticsCard';
-import { THEME } from '../../../../lib/theme';
-import { getMockDesignations, getMockDepartments, MockDesignation } from '../../../../lib/mockData';
+import { useRouter } from 'next/navigation';
 import {
-  Briefcase,
   Search,
   Building2,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  Briefcase
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/Button';
+import { AnalyticsCard } from '@/components/common/AnalyticsCard';
+import { TableSkeleton } from '@/components/skeletons/TableSkeleton';
+
+import {
+  getMockDesignations,
+  getMockDepartments,
+  MockDesignation
+} from '../../../../lib/mockData';
+import { THEME } from '../../../../lib/theme';
 
 interface DesignationWithDept extends MockDesignation {
   dept_name?: string;
@@ -66,6 +73,10 @@ const DesignationsListPage: React.FC = () => {
   }, [designations]);
 
   const allDepartments = getMockDepartments();
+
+  if (isLoading) {
+    return <TableSkeleton />;
+  }
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
@@ -157,72 +168,49 @@ const DesignationsListPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Designations Table */}
-      <Card className="bg-white rounded-2xl shadow-xl border-0">
-        <CardHeader className="p-4 md:p-6 lg:p-8 pb-2 md:pb-4">
-          <CardTitle className="text-lg md:text-xl lg:text-2xl font-bold" style={{ color: THEME.colors.primary }}>
-            Designations List
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 md:p-6 lg:p-8 pt-2 md:pt-4">
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-              <p style={{ color: THEME.colors.gray }}>Loading designations...</p>
-            </div>
-          ) : filteredDesignations.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME.colors.background }}>
-                <Briefcase className="w-8 h-8" style={{ color: THEME.colors.gray }} />
-              </div>
-              <p className="text-gray-500 mb-4">No designations found</p>
-              {(search || departmentFilter) && (
-                <Button variant="outline" onClick={() => { setSearch(''); setDepartmentFilter(''); }}>
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <div className="overflow-hidden">
-                  <table className="min-w-full divide-y" style={{ borderColor: THEME.colors.background }}>
-                    <thead>
-                      <tr className="border-b-2" style={{ borderColor: THEME.colors.background }}>
-                        <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Code</th>
-                        <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Position Name</th>
-                        <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Department</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
-                      {filteredDesignations.map((desig, index) => (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
-                          <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>{desig.position_code}</td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white" style={{ backgroundColor: THEME.colors.primary }}>
-                                {desig.position_name.charAt(0)}
-                              </div>
-                              <span className="text-xs md:text-sm font-medium" style={{ color: THEME.colors.primary }}>
-                                {desig.position_name}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              {desig.dept_name}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {(search || departmentFilter) && (
+        <Button variant="outline" onClick={() => { setSearch(''); setDepartmentFilter(''); }}>
+          Clear Filters
+        </Button>
+      )}
+
+      <div className="overflow-x-auto -mx-4 md:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <div className="overflow-hidden">
+            <table className="min-w-full divide-y" style={{ borderColor: THEME.colors.background }}>
+              <thead>
+                <tr className="border-b-2" style={{ borderColor: THEME.colors.background }}>
+                  <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Code</th>
+                  <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Position Name</th>
+                  <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Department</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
+                {filteredDesignations.map((desig, index) => (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>{desig.position_code}</td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white" style={{ backgroundColor: THEME.colors.primary }}>
+                          {desig.position_name.charAt(0)}
+                        </div>
+                        <span className="text-xs md:text-sm font-medium" style={{ color: THEME.colors.primary }}>
+                          {desig.position_name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {desig.dept_name}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

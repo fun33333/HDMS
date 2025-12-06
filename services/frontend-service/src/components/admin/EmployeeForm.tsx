@@ -149,7 +149,7 @@ const EmployeeForm: React.FC = () => {
 
   const formatPhone = (value: string) => {
     // Remove all non-digits and + sign
-    let cleaned = value.replace(/[^\d+]/g, '');
+    const cleaned = value.replace(/[^\d+]/g, '');
     // Limit to reasonable phone length (e.g., +92-XXX-XXXXXXX = 15 chars)
     return cleaned.substring(0, 15);
   };

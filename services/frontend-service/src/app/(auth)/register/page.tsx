@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../../../lib/auth';
-import { Mail, Lock, Building, Hash, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Building, Hash, Eye, EyeOff, User } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { THEME } from '../../../lib/theme';
@@ -76,13 +77,13 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${API_ENDPOINTS.REGISTER}`,
@@ -115,7 +116,7 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in"
       style={{ backgroundColor: THEME.colors.background }}
     >
@@ -125,9 +126,9 @@ const RegisterPage: React.FC = () => {
           <div className="mx-auto mb-6 flex justify-center">
             <Logo size="lg" showText={true} showSubtitle={true} />
           </div>
-          <h1 
+          <h1
             className="text-4xl font-bold uppercase tracking-wider mb-2"
-            style={{ 
+            style={{
               color: THEME.colors.primary,
               textShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
@@ -140,9 +141,9 @@ const RegisterPage: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div 
+        <div
           className="rounded-2xl p-8 shadow-xl animate-scale-in"
-          style={{ 
+          style={{
             backgroundColor: THEME.colors.light,
             borderRadius: '16px',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
@@ -151,9 +152,9 @@ const RegisterPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Field */}
             <div className="relative">
-              <User 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" 
-                style={{ color: THEME.colors.gray }} 
+              <User
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: THEME.colors.gray }}
               />
               <Input
                 type="text"
@@ -162,7 +163,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 text-base transition-all"
-                style={{ 
+                style={{
                   borderColor: errors.name ? THEME.colors.error : '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -179,9 +180,9 @@ const RegisterPage: React.FC = () => {
 
             {/* Email Field */}
             <div className="relative">
-              <Mail 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" 
-                style={{ color: THEME.colors.gray }} 
+              <Mail
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: THEME.colors.gray }}
               />
               <Input
                 type="email"
@@ -190,7 +191,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 text-base transition-all"
-                style={{ 
+                style={{
                   borderColor: errors.email ? THEME.colors.error : '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -207,9 +208,9 @@ const RegisterPage: React.FC = () => {
 
             {/* Employee Code Field */}
             <div className="relative">
-              <Hash 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" 
-                style={{ color: THEME.colors.gray }} 
+              <Hash
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: THEME.colors.gray }}
               />
               <Input
                 type="text"
@@ -218,7 +219,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.employeeCode}
                 onChange={handleChange}
                 className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 text-base transition-all"
-                style={{ 
+                style={{
                   borderColor: errors.employeeCode ? THEME.colors.error : '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -235,9 +236,9 @@ const RegisterPage: React.FC = () => {
 
             {/* Department Field */}
             <div className="relative">
-              <Building 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" 
-                style={{ color: THEME.colors.gray }} 
+              <Building
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: THEME.colors.gray }}
               />
               <Input
                 type="text"
@@ -246,7 +247,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.department}
                 onChange={handleChange}
                 className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 text-base transition-all"
-                style={{ 
+                style={{
                   borderColor: errors.department ? THEME.colors.error : '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -263,9 +264,9 @@ const RegisterPage: React.FC = () => {
 
             {/* Password Field */}
             <div className="relative">
-              <Lock 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" 
-                style={{ color: THEME.colors.gray }} 
+              <Lock
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: THEME.colors.gray }}
               />
               <Input
                 type={showPassword ? 'text' : 'password'}
@@ -274,7 +275,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full pl-12 pr-12 py-4 border rounded-lg focus:outline-none focus:ring-2 text-base transition-all"
-                style={{ 
+                style={{
                   borderColor: errors.password ? THEME.colors.error : '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -299,9 +300,9 @@ const RegisterPage: React.FC = () => {
 
             {/* Confirm Password Field */}
             <div className="relative">
-              <Lock 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" 
-                style={{ color: THEME.colors.gray }} 
+              <Lock
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: THEME.colors.gray }}
               />
               <Input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -310,7 +311,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className="w-full pl-12 pr-12 py-4 border rounded-lg focus:outline-none focus:ring-2 text-base transition-all"
-                style={{ 
+                style={{
                   borderColor: errors.confirmPassword ? THEME.colors.error : '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -334,12 +335,12 @@ const RegisterPage: React.FC = () => {
             </div>
 
             {errors.submit && (
-              <div 
+              <div
                 className="text-center p-3 rounded-lg border"
-                style={{ 
-                  backgroundColor: THEME.colors.background, 
-                  borderColor: THEME.colors.error, 
-                  color: THEME.colors.error 
+                style={{
+                  backgroundColor: THEME.colors.background,
+                  borderColor: THEME.colors.error,
+                  color: THEME.colors.error
                 }}
               >
                 {errors.submit}
@@ -360,13 +361,13 @@ const RegisterPage: React.FC = () => {
           <div className="text-center mt-6">
             <p className="text-base" style={{ color: THEME.colors.gray }}>
               Already have an account?{' '}
-              <a 
-                href="/login" 
+              <Link
+                href="/login"
                 className="underline font-medium hover:opacity-80 transition-opacity"
                 style={{ color: THEME.colors.primary }}
               >
                 Login
-              </a>
+              </Link>
             </p>
           </div>
         </div>

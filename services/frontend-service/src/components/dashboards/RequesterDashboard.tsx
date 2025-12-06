@@ -12,6 +12,7 @@ import { PriorityDistributionChart } from '../charts/PriorityDistributionChart';
 import { StatusDistributionChart } from '../charts/StatusDistributionChart';
 import { ResolutionTimeTrendChart } from '../charts/ResolutionTimeTrendChart';
 import { DashboardHeader } from './DashboardHeader';
+import { DashboardSkeleton } from '../skeletons/DashboardSkeleton';
 import DataTable, { Column } from '../ui/DataTable';
 import {
   FileText,
@@ -29,12 +30,15 @@ import {
   getStatusDistribution
 } from '../../lib/mockData';
 
+import useSkeletonDelay from '../../hooks/useSkeletonDelay';
+
 const RequesterDashboard: React.FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'all' | 'open' | 'resolved' | 'drafts'>('all');
+  const showSkeleton = useSkeletonDelay(loading);
 
   // Fetch tickets (hard-coded for now)
   useEffect(() => {
@@ -189,19 +193,8 @@ const RequesterDashboard: React.FC = () => {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="p-6 space-y-6" style={{ backgroundColor: '#e7ecef', minHeight: '100vh' }}>
-        <div className="animate-pulse space-y-6">
-          <div className="h-32 bg-gray-200 rounded-xl"></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  if (showSkeleton) {
+    return <DashboardSkeleton />;
   }
 
   return (

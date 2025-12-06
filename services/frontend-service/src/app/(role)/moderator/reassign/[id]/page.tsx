@@ -9,7 +9,7 @@ import { TextArea } from '../../../../../components/ui/TextArea';
 import { Select, SelectOption } from '../../../../../components/ui/Select';
 import { PriorityBadge } from '../../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../../components/common/StatusBadge';
-import { 
+import {
   ArrowLeft,
   FileText,
   User,
@@ -25,31 +25,32 @@ import { Ticket, User as UserType } from '../../../../../types';
 import { formatDate, formatRelativeTime } from '../../../../../lib/helpers';
 import AlertModal from '../../../../../components/modals/AlertModal';
 import { DEPARTMENTS } from '../../../../../lib/constants';
+import { DashboardSkeleton } from '../../../../../components/skeletons/DashboardSkeleton';
 
 const ReassignTicketDetailPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const ticketId = params.id as string;
-  
+
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [assignees, setAssignees] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [useMockData, setUseMockData] = useState(false);
-  
+
   // Form state
   const [newDepartment, setNewDepartment] = useState<string>('');
   const [newAssignee, setNewAssignee] = useState<string>('');
   const [reason, setReason] = useState<string>('');
-  
+
   // Error states
   const [errors, setErrors] = useState<{
     department?: string;
     assignee?: string;
     reason?: string;
   }>({});
-  
+
   // Alert modal state
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
@@ -68,7 +69,7 @@ const ReassignTicketDetailPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Use Promise.allSettled to handle each API call independently
         const results = await Promise.allSettled([
           ticketService.getTicketById(ticketId).catch(err => {
@@ -85,10 +86,10 @@ const ReassignTicketDetailPage: React.FC = () => {
             throw err;
           })
         ]);
-        
+
         const ticketResult = results[0];
         const usersResult = results[1];
-        
+
         // Check if ticket fetch was successful
         if (ticketResult.status === 'fulfilled') {
           setTicket(ticketResult.value);
@@ -98,7 +99,7 @@ const ReassignTicketDetailPage: React.FC = () => {
           // Ticket fetch failed - check if network error
           const ticketError = ticketResult.reason;
           const isNetworkError = ticketError?.isNetworkError || !ticketError?.response;
-          
+
           if (isNetworkError) {
             setUseMockData(true);
             // Generate mock ticket data
@@ -130,7 +131,7 @@ const ReassignTicketDetailPage: React.FC = () => {
             return; // Don't continue if ticket fetch failed with non-network error
           }
         }
-        
+
         // Check if users fetch was successful
         if (usersResult.status === 'fulfilled') {
           setAssignees(usersResult.value.results || []);
@@ -138,7 +139,7 @@ const ReassignTicketDetailPage: React.FC = () => {
           // Users fetch failed - check if network error
           const usersError = usersResult.reason;
           const isNetworkError = usersError?.isNetworkError || !usersError?.response;
-          
+
           if (isNetworkError) {
             // Use mock assignees if network error
             const mockAssignees: UserType[] = [
@@ -177,7 +178,7 @@ const ReassignTicketDetailPage: React.FC = () => {
         };
         setTicket(mockTicket);
         setNewDepartment(mockTicket.department || '');
-        
+
         const mockAssignees: UserType[] = [
           { id: '1', name: 'Ahmed Khan', email: 'ahmed@example.com', role: 'assignee', department: 'IT' },
           { id: '2', name: 'Fatima Ali', email: 'fatima@example.com', role: 'assignee', department: 'IT' },
@@ -189,7 +190,7 @@ const ReassignTicketDetailPage: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     if (ticketId) {
       fetchData();
     }
@@ -198,7 +199,7 @@ const ReassignTicketDetailPage: React.FC = () => {
   // Get assignees filtered by selected department
   const getAssigneesForDepartment = (department: string): SelectOption[] => {
     if (!department || department === '') return [];
-    
+
     const filtered = assignees.filter(assignee => assignee.department === department);
     return filtered.map(assignee => ({
       value: assignee.id,
@@ -228,19 +229,19 @@ const ReassignTicketDetailPage: React.FC = () => {
   // Validate form
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
-    
+
     if (!newDepartment || newDepartment.trim() === '') {
       newErrors.department = 'Department is required';
     }
-    
+
     if (!newAssignee || newAssignee.trim() === '') {
       newErrors.assignee = 'Assignee is required';
     }
-    
+
     if (!reason || reason.trim().length < 10) {
       newErrors.reason = 'Reason must be at least 10 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -256,14 +257,14 @@ const ReassignTicketDetailPage: React.FC = () => {
       });
       return;
     }
-    
+
     setSubmitting(true);
-    
+
     try {
       if (useMockData) {
         // Simulate API call in demo mode
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         setAlertModal({
           isOpen: true,
           type: 'success',
@@ -271,7 +272,7 @@ const ReassignTicketDetailPage: React.FC = () => {
           message: 'Ticket has been successfully reassigned in demo mode.',
           details: `Reassigned to ${getAssigneesForDepartment(newDepartment).find(a => a.value === newAssignee)?.label || 'Unknown'} in ${newDepartment} department.`,
         });
-        
+
         // Update local state
         if (ticket) {
           setTicket({
@@ -284,7 +285,7 @@ const ReassignTicketDetailPage: React.FC = () => {
         }
       } else {
         await ticketService.reassignTicket(ticketId, newAssignee, reason);
-        
+
         setAlertModal({
           isOpen: true,
           type: 'success',
@@ -295,9 +296,9 @@ const ReassignTicketDetailPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error reassigning ticket:', error);
-      
+
       const isNetworkError = error?.isNetworkError || !error?.response;
-      
+
       if (isNetworkError) {
         setAlertModal({
           isOpen: true,
@@ -323,7 +324,7 @@ const ReassignTicketDetailPage: React.FC = () => {
   // Handle alert modal close
   const handleAlertClose = () => {
     setAlertModal(prev => ({ ...prev, isOpen: false }));
-    
+
     // If success, redirect after a short delay
     if (alertModal.type === 'success' && !useMockData) {
       setTimeout(() => {
@@ -333,16 +334,7 @@ const ReassignTicketDetailPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 md:p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-            <p className="text-gray-600">Loading ticket details...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (!ticket) {

@@ -8,14 +8,15 @@ import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { AnalyticsCard } from '../../../../components/common/AnalyticsCard';
+import { TableSkeleton } from '../../../../components/skeletons/TableSkeleton';
 import ticketService from '../../../../services/api/ticketService';
 import { Ticket } from '../../../../types';
 import { THEME } from '../../../../lib/theme';
 import { formatDate } from '../../../../lib/helpers';
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
+import {
+  FileText,
+  Clock,
+  CheckCircle,
   ArrowLeft,
   Search,
   Filter,
@@ -156,7 +157,7 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
 };
 
 // Calculate SLA status
-const calculateSLA = (ticket: Ticket): { 
+const calculateSLA = (ticket: Ticket): {
   status: 'breached' | 'approaching' | 'normal';
   daysRemaining?: number;
   daysOverdue?: number;
@@ -165,15 +166,15 @@ const calculateSLA = (ticket: Ticket): {
   const createdDate = new Date(ticket.submittedDate);
   const now = new Date();
   const daysSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-  
-  const slaDays = ticket.priority === 'urgent' || ticket.priority === 'high' 
-    ? 7 
-    : ticket.priority === 'medium' 
-    ? 14 
-    : 30;
-  
+
+  const slaDays = ticket.priority === 'urgent' || ticket.priority === 'high'
+    ? 7
+    : ticket.priority === 'medium'
+      ? 14
+      : 30;
+
   const daysRemaining = slaDays - daysSinceCreation;
-  
+
   if (daysRemaining < 0) {
     return {
       status: 'breached',
@@ -259,22 +260,22 @@ const MyTasksPage: React.FC = () => {
 
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      result = result.filter(task => 
+      result = result.filter(task =>
         task.subject.toLowerCase().includes(searchLower) ||
         task.requesterName?.toLowerCase().includes(searchLower) ||
         task.ticketId.toLowerCase().includes(searchLower) ||
         task.department?.toLowerCase().includes(searchLower)
       );
     }
-    
+
     if (statusFilter !== 'all') {
       result = result.filter(task => task.status === statusFilter);
     }
-    
+
     if (priorityFilter !== 'all') {
       result = result.filter(task => task.priority === priorityFilter);
     }
-    
+
     if (slaFilter !== 'all') {
       result = result.filter(task => {
         const sla = calculateSLA(task);
@@ -284,7 +285,7 @@ const MyTasksPage: React.FC = () => {
         return true;
       });
     }
-    
+
     return result;
   }, [myTasks, searchTerm, statusFilter, priorityFilter, slaFilter]);
 
@@ -293,14 +294,7 @@ const MyTasksPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-          <p style={{ color: THEME.colors.gray }}>Loading tasks...</p>
-        </div>
-      </div>
-    );
+    return <TableSkeleton />;
   }
 
   return (
@@ -390,7 +384,7 @@ const MyTasksPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 md:py-3 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                style={{ 
+                style={{
                   borderColor: THEME.colors.background,
                 }}
               />
@@ -423,7 +417,7 @@ const MyTasksPage: React.FC = () => {
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -444,7 +438,7 @@ const MyTasksPage: React.FC = () => {
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -465,7 +459,7 @@ const MyTasksPage: React.FC = () => {
                     value={slaFilter}
                     onChange={(e) => setSlaFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -544,8 +538,8 @@ const MyTasksPage: React.FC = () => {
                       {filteredTasks.map((ticket) => {
                         const sla = calculateSLA(ticket);
                         return (
-                          <tr 
-                            key={ticket.id} 
+                          <tr
+                            key={ticket.id}
                             className="hover:bg-gray-50 transition-colors"
                           >
                             <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>
@@ -570,13 +564,12 @@ const MyTasksPage: React.FC = () => {
                             </td>
                             <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
                               <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${
-                                  sla.status === 'breached' 
-                                    ? 'bg-red-100 text-red-800'
-                                    : sla.status === 'approaching'
+                                className={`px-2 py-1 rounded text-xs font-medium ${sla.status === 'breached'
+                                  ? 'bg-red-100 text-red-800'
+                                  : sla.status === 'approaching'
                                     ? 'bg-yellow-100 text-yellow-800'
                                     : 'bg-green-100 text-green-800'
-                                }`}
+                                  }`}
                               >
                                 {sla.label}
                               </span>

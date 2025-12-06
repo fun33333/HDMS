@@ -8,7 +8,7 @@ import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { ViewButton, ReassignButton } from '../../../../components/common/ActionButtons';
-import { 
+import {
   UserPlus,
   FileText,
   ArrowLeft,
@@ -21,7 +21,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import DataTable, { Column } from '../../../../components/ui/DataTable';
-import PageSkeleton from '../../../../components/ui/PageSkeleton';
+import PageSkeleton from '../../../../components/ui/PageSkeleton'; // Keeping for safety, though unused in this file after edit
+import { TableSkeleton } from '../../../../components/skeletons/TableSkeleton';
 import ErrorBanner from '../../../../components/ui/ErrorBanner';
 import ConfirmModal from '../../../../components/modals/ConfirmModal';
 import ticketService from '../../../../services/api/ticketService';
@@ -40,9 +41,9 @@ const generateMockAssignedTickets = (): Ticket[] => {
     'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh', 'Omar Ali', 'Ayesha Raza',
     'Kamran Malik', 'Saima Khan', 'Tariq Hussain', 'Farhan Ali', 'Hina Sheikh'
   ];
-  
+
   const mockTickets: Ticket[] = [];
-  
+
   for (let i = 1; i <= 20; i++) {
     const dept = departments[Math.floor(Math.random() * departments.length)];
     const assignee = assignees[Math.floor(Math.random() * assignees.length)];
@@ -50,7 +51,7 @@ const generateMockAssignedTickets = (): Ticket[] => {
     const hoursAgo = Math.floor(Math.random() * 72);
     const requesterIndex = (i - 1) % requesterNames.length;
     const status = Math.random() > 0.5 ? 'assigned' : 'in_progress';
-    
+
     mockTickets.push({
       id: `assigned-ticket-${i}`,
       ticketId: `HD-2024-${String(i).padStart(3, '0')}`,
@@ -67,7 +68,7 @@ const generateMockAssignedTickets = (): Ticket[] => {
       assignedDate: new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
     });
   }
-  
+
   return mockTickets;
 };
 
@@ -78,7 +79,7 @@ const AssignedTicketsPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(false);
-  const [confirm, setConfirm] = useState<{ open: boolean; ticketId?: string }>( { open: false } );
+  const [confirm, setConfirm] = useState<{ open: boolean; ticketId?: string }>({ open: false });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -95,16 +96,16 @@ const AssignedTicketsPage: React.FC = () => {
     try {
       // Fetch both assigned and in_progress tickets
       const response = await ticketService.getTickets();
-      
+
       // ✅ Check if response exists and has results
       if (response && (Array.isArray(response) || response.results)) {
         const ticketsList = Array.isArray(response) ? response : (response.results || []);
-        
+
         // Filter for assigned and in_progress tickets
-        const assignedTickets = ticketsList.filter(t => 
+        const assignedTickets = ticketsList.filter(t =>
           t.status === 'assigned' || t.status === 'in_progress'
         );
-        
+
         setTickets(assignedTickets);
         setUseMockData(false);
         setError(null);
@@ -118,7 +119,7 @@ const AssignedTicketsPage: React.FC = () => {
     } catch (error: any) {
       // ✅ Handle network errors gracefully
       const isNetworkError = error?.isNetworkError || !error?.response;
-      
+
       if (isNetworkError) {
         console.warn('API not available, using mock data');
         const mockTickets = generateMockAssignedTickets();
@@ -174,23 +175,23 @@ const AssignedTicketsPage: React.FC = () => {
 
   const filteredTickets = assignedTickets.filter(ticket => {
     const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.ticketId.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.ticketId.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
     const matchesDepartment = departmentFilter === 'all' || ticket.department === departmentFilter;
-    
+
     return matchesSearch && matchesStatus && matchesPriority && matchesDepartment;
   });
 
   const columns: Column<any>[] = [
-    { 
-      key: 'ticketId', 
-      header: 'Ticket ID', 
-      sortable: true, 
+    {
+      key: 'ticketId',
+      header: 'Ticket ID',
+      sortable: true,
       accessor: (r) => (
         <button
           onClick={() => handleViewTicket(r.id)}
@@ -201,20 +202,20 @@ const AssignedTicketsPage: React.FC = () => {
         </button>
       )
     },
-    { 
-      key: 'subject', 
-      header: 'Title', 
-      sortable: true, 
+    {
+      key: 'subject',
+      header: 'Title',
+      sortable: true,
       accessor: (r) => (
         <span className="text-gray-900 max-w-[200px] truncate block" title={r.subject}>
           {r.subject}
         </span>
       )
     },
-    { 
-      key: 'requesterName', 
-      header: 'Requester', 
-      sortable: true, 
+    {
+      key: 'requesterName',
+      header: 'Requester',
+      sortable: true,
       accessor: (r) => (
         <div className="flex items-center gap-2">
           <div
@@ -227,10 +228,10 @@ const AssignedTicketsPage: React.FC = () => {
         </div>
       )
     },
-    { 
-      key: 'assigneeName', 
-      header: 'Assignee', 
-      sortable: true, 
+    {
+      key: 'assigneeName',
+      header: 'Assignee',
+      sortable: true,
       accessor: (r) => (
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-blue-500" />
@@ -238,28 +239,28 @@ const AssignedTicketsPage: React.FC = () => {
         </div>
       )
     },
-    { 
-      key: 'department', 
-      header: 'Department', 
-      sortable: true, 
+    {
+      key: 'department',
+      header: 'Department',
+      sortable: true,
       accessor: (r) => <span className="text-sm text-gray-600">{r.department}</span>
     },
-    { 
-      key: 'priority', 
-      header: 'Priority', 
-      sortable: true, 
+    {
+      key: 'priority',
+      header: 'Priority',
+      sortable: true,
       accessor: (r) => r.priority ? <PriorityBadge priority={r.priority} /> : <span className="text-xs text-gray-400 italic">Not set</span>
     },
-    { 
-      key: 'status', 
-      header: 'Status', 
-      sortable: true, 
+    {
+      key: 'status',
+      header: 'Status',
+      sortable: true,
       accessor: (r) => <StatusBadge status={r.status} />
     },
-    { 
-      key: 'assignedDate', 
-      header: 'Assigned Date', 
-      sortable: true, 
+    {
+      key: 'assignedDate',
+      header: 'Assigned Date',
+      sortable: true,
       accessor: (r) => (
         <div className="flex flex-col">
           <span className="text-sm text-gray-900">
@@ -273,9 +274,9 @@ const AssignedTicketsPage: React.FC = () => {
         </div>
       )
     },
-    { 
-      key: 'actions', 
-      header: 'Actions', 
+    {
+      key: 'actions',
+      header: 'Actions',
       accessor: (r) => (
         <div className="flex gap-2">
           <ViewButton onClick={() => handleViewTicket(r.id)} />
@@ -285,8 +286,8 @@ const AssignedTicketsPage: React.FC = () => {
     }
   ];
 
-  if (loading) return <PageSkeleton rows={8} />;
-  
+  if (loading) return <TableSkeleton />;
+
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" style={{ backgroundColor: THEME.colors.background }}>
       {/* Mock Data Indicator */}
@@ -433,7 +434,7 @@ const AssignedTicketsPage: React.FC = () => {
                 <option value="assigned">Assigned ({stats.assigned})</option>
                 <option value="in_progress">In Progress ({stats.inProgress})</option>
               </select>
-              
+
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
@@ -491,12 +492,12 @@ const AssignedTicketsPage: React.FC = () => {
         <CardContent className="p-0">
           {error && (
             <div className="p-4">
-              <ErrorBanner 
-                message={error} 
+              <ErrorBanner
+                message={error}
                 onRetry={() => {
                   setError(null);
                   fetchTickets();
-                }} 
+                }}
               />
             </div>
           )}
@@ -512,12 +513,12 @@ const AssignedTicketsPage: React.FC = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <DataTable 
-                data={filteredTickets} 
-                columns={columns} 
-                initialSort={{ key: 'assignedDate', dir: 'desc' }} 
-                pageSize={10} 
-                showSearch={false} 
+              <DataTable
+                data={filteredTickets}
+                columns={columns}
+                initialSort={{ key: 'assignedDate', dir: 'desc' }}
+                pageSize={10}
+                showSearch={false}
               />
             </div>
           )}

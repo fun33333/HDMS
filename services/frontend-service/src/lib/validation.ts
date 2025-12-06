@@ -10,7 +10,7 @@ export const validateEmail = (email: string): boolean => {
 
 export const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
-  
+
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters');
   }
@@ -26,7 +26,7 @@ export const validatePassword = (password: string): { valid: boolean; errors: st
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
-  
+
   return { valid: errors.length === 0, errors };
 };
 
@@ -89,14 +89,14 @@ export const validateField = (field: FieldValidation): string | null => {
 
 export const validateForm = (fields: Record<string, FieldValidation>): Record<string, string> => {
   const errors: Record<string, string> = {};
-  
+
   for (const [key, field] of Object.entries(fields)) {
     const error = validateField(field);
     if (error) {
       errors[key] = error;
     }
   }
-  
+
   return errors;
 };
 
@@ -141,7 +141,7 @@ export const validateFileType = (file: File): string | null => {
     ...ALLOWED_FILE_TYPES.images,
     ...ALLOWED_FILE_TYPES.videos,
   ];
-  
+
   if (!allAllowedTypes.includes(file.type)) {
     return `File type ${file.type} is not allowed. Allowed types: PDF, TXT, DOCX, XLSX, JPG, PNG, GIF, MP4, MOV, MKV, AVI`;
   }
@@ -164,7 +164,7 @@ export const validateTotalFileSize = (files: File[]): string | null => {
 };
 
 // Helper function (should be in helpers.ts but adding here for convenience)
-const formatFileSize = (bytes: number): string => {
+export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];

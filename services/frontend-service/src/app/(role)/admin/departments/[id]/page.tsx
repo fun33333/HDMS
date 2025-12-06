@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../../components/ui/card';
 import { Button } from '../../../../../components/ui/Button';
+import { DashboardSkeleton } from '../../../../../components/skeletons/DashboardSkeleton';
+import useSkeletonDelay from '../../../../../hooks/useSkeletonDelay';
 import { THEME } from '../../../../../lib/theme';
 import { getMockDepartmentById, getMockDesignationsByDept, getMockDepartments, MockDepartment, MockDesignation } from '../../../../../lib/mockData';
 import {
@@ -25,6 +27,7 @@ const DepartmentDetailPage: React.FC = () => {
     const [department, setDepartment] = useState<MockDepartment | null>(null);
     const [designations, setDesignations] = useState<MockDesignation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const showSkeleton = useSkeletonDelay(isLoading);
 
     // Modal State
     const [showAddDesignationModal, setShowAddDesignationModal] = useState(false);
@@ -77,12 +80,8 @@ const DepartmentDetailPage: React.FC = () => {
         setShowAdvancedOptions(false);
     };
 
-    if (isLoading) {
-        return (
-            <div className="p-8 flex justify-center items-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: THEME.colors.primary }}></div>
-            </div>
-        );
+    if (showSkeleton) {
+        return <DashboardSkeleton />;
     }
 
     if (!department) {

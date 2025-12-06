@@ -10,9 +10,9 @@ import userService from '../../../../services/api/userService';
 import { Ticket } from '../../../../types';
 import { User } from '../../../../types';
 import { formatDate } from '../../../../lib/helpers';
-import { 
-  FileText, 
-  Download, 
+import {
+  FileText,
+  Download,
   Calendar,
   Filter,
   User as UserIcon,
@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Settings
 } from 'lucide-react';
+import { DashboardSkeleton } from '../../../../components/skeletons/DashboardSkeleton';
 
 // Generate demo data
 const generateDemoTickets = (): Ticket[] => {
@@ -88,12 +89,12 @@ const AdminReportsPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch tickets
         try {
           const ticketsResponse = await ticketService.getTickets();
-          const ticketsList = Array.isArray(ticketsResponse) 
-            ? ticketsResponse 
+          const ticketsList = Array.isArray(ticketsResponse)
+            ? ticketsResponse
             : (ticketsResponse?.results || []);
           setTickets(ticketsList.length > 0 ? ticketsList : generateDemoTickets());
         } catch (error: any) {
@@ -156,10 +157,10 @@ const AdminReportsPage: React.FC = () => {
 
   const handleGenerateReport = async () => {
     setGenerating(true);
-    
+
     // Simulate report generation
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // In real implementation, this would call an API to generate the report
     const reportData = {
       type: reportType,
@@ -227,14 +228,7 @@ const AdminReportsPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-          <p style={{ color: THEME.colors.gray }}>Loading reports...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -332,7 +326,7 @@ const AdminReportsPage: React.FC = () => {
                 <h3 className="text-sm font-semibold" style={{ color: THEME.colors.primary }}>
                   Filters
                 </h3>
-                
+
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -406,9 +400,8 @@ const AdminReportsPage: React.FC = () => {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => setExportFormat('csv')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-                    exportFormat === 'csv' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${exportFormat === 'csv' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   style={exportFormat === 'csv' ? { borderColor: THEME.colors.primary, backgroundColor: THEME.colors.background } : {}}
                 >
                   <FileSpreadsheet className="w-4 h-4" style={{ color: exportFormat === 'csv' ? THEME.colors.primary : THEME.colors.gray }} />
@@ -418,9 +411,8 @@ const AdminReportsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setExportFormat('json')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-                    exportFormat === 'json' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${exportFormat === 'json' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   style={exportFormat === 'json' ? { borderColor: THEME.colors.primary, backgroundColor: THEME.colors.background } : {}}
                 >
                   <FileJson className="w-4 h-4" style={{ color: exportFormat === 'json' ? THEME.colors.primary : THEME.colors.gray }} />
@@ -430,9 +422,8 @@ const AdminReportsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setExportFormat('pdf')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-                    exportFormat === 'pdf' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${exportFormat === 'pdf' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   style={exportFormat === 'pdf' ? { borderColor: THEME.colors.primary, backgroundColor: THEME.colors.background } : {}}
                 >
                   <FileType className="w-4 h-4" style={{ color: exportFormat === 'pdf' ? THEME.colors.primary : THEME.colors.gray }} />
@@ -492,7 +483,7 @@ const AdminReportsPage: React.FC = () => {
                       <td className="py-3 px-4 text-sm" style={{ color: THEME.colors.gray }}>{ticket.subject}</td>
                       <td className="py-3 px-4 text-sm" style={{ color: THEME.colors.gray }}>{ticket.department || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm">
-                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{ 
+                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{
                           backgroundColor: ticket.priority === 'urgent' ? '#FEE2E2' : ticket.priority === 'high' ? '#FEF3C7' : ticket.priority === 'medium' ? '#DBEAFE' : '#D1FAE5',
                           color: ticket.priority === 'urgent' ? '#991B1B' : ticket.priority === 'high' ? '#92400E' : ticket.priority === 'medium' ? '#1E40AF' : '#065F46',
                         }}>
@@ -500,7 +491,7 @@ const AdminReportsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm">
-                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{ 
+                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{
                           backgroundColor: ticket.status === 'completed' || ticket.status === 'resolved' ? '#D1FAE5' : ticket.status === 'in_progress' ? '#DBEAFE' : '#FEF3C7',
                           color: ticket.status === 'completed' || ticket.status === 'resolved' ? '#065F46' : ticket.status === 'in_progress' ? '#1E40AF' : '#92400E',
                         }}>

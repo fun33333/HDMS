@@ -2,23 +2,27 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
-import { Button } from '../../../../components/ui/Button';
-import { AnalyticsCard } from '../../../../components/common/AnalyticsCard';
-import { THEME } from '../../../../lib/theme';
-import { getMockEmployees, MockEmployee, getMockDepartments, getMockDesignations } from '../../../../lib/mockData';
-import { getInitials } from '../../../../lib/helpers';
 import {
-	Users,
-	UserPlus,
 	Search,
 	Filter,
 	Eye,
 	Building2,
 	Briefcase,
 	Clock,
-	UserCheck
+	UserCheck,
+	UserPlus,
+	Users
 } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/Button';
+import { AnalyticsCard } from '@/components/common/AnalyticsCard';
+import { TableSkeleton } from '@/components/skeletons/TableSkeleton';
+import useSkeletonDelay from '../../../../hooks/useSkeletonDelay';
+
+import { getMockEmployees, getMockDepartments, getMockDesignations } from '../../../../lib/mockData';
+import { THEME } from '../../../../lib/theme';
+import { getInitials } from '../../../../lib/helpers';
 
 interface Department {
 	dept_code: string;
@@ -58,6 +62,7 @@ const EmployeesListPage: React.FC = () => {
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
+	const showSkeleton = useSkeletonDelay(isLoading);
 
 	// Filters
 	const [search, setSearch] = useState('');
@@ -149,7 +154,7 @@ const EmployeesListPage: React.FC = () => {
 				setTotal(data.total || 0);
 				setTotalPages(data.total_pages || 0);
 			} catch (err) {
-				console.error('Failed to fetch employees:', err);
+				console.warn('Failed to fetch employees (using mock):', err);
 				// Fallback to mock data
 				console.log('Falling back to mock data');
 				const mockData = getMockEmployees();
@@ -182,6 +187,10 @@ const EmployeesListPage: React.FC = () => {
 			active: employees.length // Assuming all displayed are active for now
 		};
 	}, [total, employees, departments]);
+
+	if (showSkeleton) {
+		return <TableSkeleton />;
+	}
 
 	return (
 		<div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
@@ -366,147 +375,129 @@ const EmployeesListPage: React.FC = () => {
 			</Card>
 
 			{/* Employees Table */}
-			<Card className="bg-white rounded-2xl shadow-xl border-0">
-				<CardHeader className="p-4 md:p-6 lg:p-8 pb-2 md:pb-4">
-					<CardTitle className="text-lg md:text-xl lg:text-2xl font-bold" style={{ color: THEME.colors.primary }}>
-						Employees List
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="p-4 md:p-6 lg:p-8 pt-2 md:pt-4">
-					{isLoading ? (
-						<div className="text-center py-12">
-							<div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-							<p style={{ color: THEME.colors.gray }}>Loading employees...</p>
-						</div>
-					) : employees.length === 0 ? (
-						<div className="text-center py-12">
-							<div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME.colors.background }}>
-								<Users className="w-8 h-8" style={{ color: THEME.colors.gray }} />
-							</div>
-							<p className="text-gray-500 mb-4">No employees found</p>
-							{(search || departmentFilter || employmentTypeFilter) ? (
-								<Button variant="outline" onClick={clearFilters}>
-									Clear Filters
-								</Button>
-							) : (
-								<Link href="/admin/employees/new">
-									<Button variant="primary">Create First Employee</Button>
-								</Link>
-							)}
-						</div>
+			{employees.length === 0 ? (
+				<div className="text-center py-12 bg-white rounded-2xl shadow-xl">
+					<p className="text-lg text-gray-500 mb-4">No employees found</p>
+					{search || departmentFilter || designationFilter || employmentTypeFilter ? (
+						<Button variant="outline" onClick={clearFilters}>
+							Clear Filters
+						</Button>
 					) : (
-						<>
-							<div className="overflow-x-auto -mx-4 md:mx-0">
-								<div className="inline-block min-w-full align-middle">
-									<div className="overflow-hidden">
-										<table className="min-w-full divide-y" style={{ borderColor: THEME.colors.background }}>
-											<thead>
-												<tr className="border-b-2" style={{ borderColor: THEME.colors.background }}>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Code</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Name</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Email</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Phone</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Department</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Designation</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Type</th>
-													<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Actions</th>
-												</tr>
-											</thead>
-											<tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
-												{employees.map((emp) => (
-													<tr key={emp.employee_id} className="hover:bg-gray-50 transition-colors">
-														<td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>{emp.employee_code}</td>
-														<td className="py-4 px-4">
-															<div className="flex items-center gap-2">
-																<div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white" style={{ backgroundColor: THEME.colors.primary }}>
-																	{getInitials(emp.full_name)}
-																</div>
-																<span className="text-xs md:text-sm font-medium" style={{ color: THEME.colors.primary }}>
-																	{emp.full_name}
-																</span>
-															</div>
-														</td>
-														<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>{emp.email}</td>
-														<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>{emp.phone || '-'}</td>
-														<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
-															{emp.department ? (
-																<span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-																	{emp.department.dept_name}
-																</span>
-															) : '-'}
-														</td>
-														<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>{emp.designation?.position_name || '-'}</td>
-														<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
-															<span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-																{emp.employment_type}
-															</span>
-														</td>
-														<td className="py-4 px-4 whitespace-nowrap">
-															<Link href={`/admin/employees/${emp.employee_id}`}>
-																<Button
-																	variant="primary"
-																	size="sm"
-																	leftIcon={<Eye className="w-3 h-3" />}
-																	className="text-xs px-2 md:px-3"
-																>
-																	View Details
-																</Button>
-															</Link>
-														</td>
-													</tr>
-												))}
-											</tbody>
-										</table>
-									</div>
-								</div>
-							</div>
-
-							{/* Pagination */}
-							{totalPages > 1 && (
-								<div className="mt-6 flex items-center justify-between">
-									<p className="text-sm text-gray-600">
-										Showing {((page - 1) * 20) + 1} to {Math.min(page * 20, total)} of {total} employees
-									</p>
-									<div className="flex gap-2">
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => setPage(p => Math.max(1, p - 1))}
-											disabled={page === 1}
-										>
-											« Previous
-										</Button>
-										<div className="flex gap-1">
-											{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-												const pageNum = i + 1;
-												return (
-													<Button
-														key={pageNum}
-														variant={page === pageNum ? 'primary' : 'outline'}
-														size="sm"
-														onClick={() => setPage(pageNum)}
-													>
-														{pageNum}
-													</Button>
-												);
-											})}
-											{totalPages > 5 && <span className="px-2">...</span>}
-										</div>
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-											disabled={page === totalPages}
-										>
-											Next »
-										</Button>
-									</div>
-								</div>
-							)}
-						</>
+						<Link href="/admin/employees/new">
+							<Button variant="primary">Create First Employee</Button>
+						</Link>
 					)}
-				</CardContent>
-			</Card>
+				</div>
+			) : (
+				<div className="overflow-x-auto -mx-4 md:mx-0">
+					<div className="inline-block min-w-full align-middle">
+						<div className="overflow-hidden">
+							<table className="min-w-full divide-y" style={{ borderColor: THEME.colors.background }}>
+								<thead>
+									<tr className="border-b-2" style={{ borderColor: THEME.colors.background }}>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Code</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Name</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Email</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Phone</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Department</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Designation</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Type</th>
+										<th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>Actions</th>
+									</tr>
+								</thead>
+								<tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
+									{employees.map((emp) => (
+										<tr key={emp.employee_id} className="hover:bg-gray-50 transition-colors">
+											<td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>{emp.employee_code}</td>
+											<td className="py-4 px-4">
+												<div className="flex items-center gap-2">
+													<div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white" style={{ backgroundColor: THEME.colors.primary }}>
+														{getInitials(emp.full_name)}
+													</div>
+													<span className="text-xs md:text-sm font-medium" style={{ color: THEME.colors.primary }}>
+														{emp.full_name}
+													</span>
+												</div>
+											</td>
+											<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>{emp.email}</td>
+											<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>{emp.phone || '-'}</td>
+											<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
+												{emp.department ? (
+													<span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+														{emp.department.dept_name}
+													</span>
+												) : '-'}
+											</td>
+											<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>{emp.designation?.position_name || '-'}</td>
+											<td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
+												<span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+													{emp.employment_type}
+												</span>
+											</td>
+											<td className="py-4 px-4 whitespace-nowrap">
+												<Link href={`/admin/employees/${emp.employee_id}`}>
+													<Button
+														variant="primary"
+														size="sm"
+														leftIcon={<Eye className="w-3 h-3" />}
+														className="text-xs px-2 md:px-3"
+													>
+														View Details
+													</Button>
+												</Link>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Pagination */}
+			{totalPages > 1 && (
+				<div className="mt-6 flex items-center justify-between">
+					<p className="text-sm text-gray-600">
+						Showing {((page - 1) * 20) + 1} to {Math.min(page * 20, total)} of {total} employees
+					</p>
+					<div className="flex gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setPage(p => Math.max(1, p - 1))}
+							disabled={page === 1}
+						>
+							« Previous
+						</Button>
+						<div className="flex gap-1">
+							{Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+								const pageNum = i + 1;
+								return (
+									<Button
+										key={pageNum}
+										variant={page === pageNum ? 'primary' : 'outline'}
+										size="sm"
+										onClick={() => setPage(pageNum)}
+									>
+										{pageNum}
+									</Button>
+								);
+							})}
+							{totalPages > 5 && <span className="px-2">...</span>}
+						</div>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+							disabled={page === totalPages}
+						>
+							Next »
+						</Button>
+					</div>
+				</div>
+			)}
+
 		</div>
 	);
 };

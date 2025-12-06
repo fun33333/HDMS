@@ -29,6 +29,7 @@ import { formatDate } from '../../../../../lib/helpers';
 import ConfirmModal from '../../../../../components/modals/ConfirmModal';
 import TicketChat from '../../../../../components/common/TicketChat';
 import { getMockTicketById } from '../../../../../lib/mockData';
+import { DashboardSkeleton } from '../../../../../components/skeletons/DashboardSkeleton';
 
 const AssigneeTaskDetailPage: React.FC = () => {
   const params = useParams();
@@ -378,14 +379,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen" style={{ backgroundColor: THEME.colors.background }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-          <p style={{ color: THEME.colors.gray }}>Loading task details...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error || !ticket) {

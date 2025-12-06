@@ -16,15 +16,15 @@ export const Layout: React.FC<LayoutProps> = React.memo(({ children }) => {
   const pathname = usePathname();
 
   // Don't show layout on auth pages - Early return to prevent any rendering
-  const isAuthPage = pathname?.startsWith('/login') || 
-                     pathname?.startsWith('/register') || 
-                     pathname?.startsWith('/forgot-password');
+  const isAuthPage = pathname?.startsWith('/login') ||
+    pathname?.startsWith('/register') ||
+    pathname?.startsWith('/forgot-password');
 
   if (isAuthPage) {
     return (
-      <div 
-        style={{ 
-          minHeight: '100vh', 
+      <div
+        style={{
+          minHeight: '100vh',
           backgroundColor: THEME.colors.background,
           position: 'relative',
           zIndex: 1
@@ -65,9 +65,9 @@ export const Layout: React.FC<LayoutProps> = React.memo(({ children }) => {
         </div>
 
         {/* Content Area - Right side of sidebar */}
-        <main 
+        <main
           className="flex-1 w-full md:ml-64 transition-all duration-300 ease-in-out overflow-y-auto"
-          style={{ 
+          style={{
             minHeight: 'calc(100vh - 64px)',
             backgroundColor: THEME.colors.background,
             paddingTop: '1rem', // Extra padding to ensure content doesn't stick to navbar

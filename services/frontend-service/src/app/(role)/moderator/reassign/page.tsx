@@ -21,6 +21,7 @@ import ticketService from '../../../../services/api/ticketService';
 import { Ticket } from '../../../../types';
 import Link from 'next/link';
 import { generateMockReassignableTickets } from '../../../../lib/mockData';
+import { DashboardSkeleton } from '../../../../components/skeletons/DashboardSkeleton';
 
 const ReassignPage: React.FC = () => {
   const router = useRouter();
@@ -106,16 +107,7 @@ const ReassignPage: React.FC = () => {
   });
 
   if (loading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: THEME.colors.primary }}></div>
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
