@@ -14,7 +14,7 @@ class TicketOut(Schema):
     status: str
     priority: str
     category: str
-    requester_id: str
+    requestor_id: str
     department_id: Optional[str]
     assignee_id: Optional[str]
     due_at: Optional[datetime]
@@ -30,7 +30,7 @@ class TicketIn(Schema):
     """Ticket input schema."""
     title: str
     description: str
-    requester_id: str
+    requestor_id: str
     department_id: Optional[str] = None
     priority: str = "medium"
     category: str = ""

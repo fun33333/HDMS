@@ -1,11 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { 
-  CheckCircle, 
-  UserPlus, 
-  MessageSquare, 
-  XCircle, 
-  Clock, 
+import {
+  CheckCircle,
+  UserPlus,
+  MessageSquare,
+  XCircle,
+  Clock,
   FileText,
   RefreshCw,
   AlertCircle
@@ -70,14 +70,14 @@ export const TicketTimeline: React.FC<TicketTimelineProps> = ({ ticket }) => {
       type: 'created',
       date: new Date(ticket.submittedDate),
       event: 'Ticket Created',
-      description: `Ticket created by ${ticket.requesterName}`,
-      user: ticket.requesterName,
+      description: `Ticket created by ${ticket.requestorName}`,
+      user: ticket.requestorName,
     },
     ticket.assignedDate ? {
       type: 'assigned',
       date: new Date(ticket.assignedDate),
       event: 'Assigned',
-      description: ticket.assigneeName 
+      description: ticket.assigneeName
         ? `Assigned to ${ticket.assigneeName}`
         : `Assigned to ${ticket.department} department`,
       user: ticket.moderatorName || 'System',
@@ -101,7 +101,7 @@ export const TicketTimeline: React.FC<TicketTimelineProps> = ({ ticket }) => {
       date: new Date(ticket.resolvedDate),
       event: 'Resolved',
       description: 'Ticket marked as resolved',
-      user: ticket.requesterName || 'Requester',
+      user: ticket.requestorName || 'requestor',
     } : null,
     ticket.status === 'rejected' ? {
       type: 'rejected',
@@ -129,7 +129,7 @@ export const TicketTimeline: React.FC<TicketTimelineProps> = ({ ticket }) => {
         <div className="relative">
           {/* Timeline Line */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-          
+
           {/* Timeline Items */}
           <div className="space-y-4">
             {timeline.length === 0 ? (
@@ -138,17 +138,17 @@ export const TicketTimeline: React.FC<TicketTimelineProps> = ({ ticket }) => {
               timeline.map((item, index) => {
                 const Icon = getEventIcon(item.type);
                 const color = getEventColor(item.type);
-                
+
                 return (
                   <div key={index} className="relative flex items-start gap-4">
                     {/* Timeline Dot */}
-                    <div 
+                    <div
                       className="relative z-10 flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0"
                       style={{ backgroundColor: color + '20' }}
                     >
                       <Icon className="w-4 h-4" style={{ color }} />
                     </div>
-                    
+
                     {/* Content */}
                     <div className="flex-1 pb-4 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">

@@ -65,12 +65,12 @@ interface DepartmentWorkload {
 // Mock Department Workload Data (Replace with API call)
 const getDepartmentWorkload = (department: string): DepartmentWorkload => {
   const mockData: Record<string, DepartmentWorkload> = {
-    'Development': { 
-      department: 'Development', 
-      activeTickets: 8, 
-      capacity: 20, 
-      loadPercentage: 40, 
-      availableMembers: 4, 
+    'Development': {
+      department: 'Development',
+      activeTickets: 8,
+      capacity: 20,
+      loadPercentage: 40,
+      availableMembers: 4,
       totalMembers: 5,
       members: [
         { id: '1', name: 'Ahmed Khan', available: true, currentTickets: 2 },
@@ -80,12 +80,12 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '5', name: 'Ali Hassan', available: false, currentTickets: 4 },
       ]
     },
-    'Finance & Accounts': { 
-      department: 'Finance & Accounts', 
-      activeTickets: 6, 
-      capacity: 15, 
-      loadPercentage: 40, 
-      availableMembers: 3, 
+    'Finance & Accounts': {
+      department: 'Finance & Accounts',
+      activeTickets: 6,
+      capacity: 15,
+      loadPercentage: 40,
+      availableMembers: 3,
       totalMembers: 4,
       members: [
         { id: '1', name: 'Zainab Malik', available: true, currentTickets: 1 },
@@ -94,12 +94,12 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '4', name: 'Omar Ali', available: false, currentTickets: 4 },
       ]
     },
-    'Procurement': { 
-      department: 'Procurement', 
-      activeTickets: 5, 
-      capacity: 15, 
-      loadPercentage: 33, 
-      availableMembers: 3, 
+    'Procurement': {
+      department: 'Procurement',
+      activeTickets: 5,
+      capacity: 15,
+      loadPercentage: 33,
+      availableMembers: 3,
       totalMembers: 3,
       members: [
         { id: '1', name: 'Kamran Malik', available: true, currentTickets: 1 },
@@ -107,12 +107,12 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '3', name: 'Tariq Hussain', available: true, currentTickets: 1 },
       ]
     },
-    'Basic Maintenance': { 
-      department: 'Basic Maintenance', 
-      activeTickets: 10, 
-      capacity: 20, 
-      loadPercentage: 50, 
-      availableMembers: 4, 
+    'Basic Maintenance': {
+      department: 'Basic Maintenance',
+      activeTickets: 10,
+      capacity: 20,
+      loadPercentage: 50,
+      availableMembers: 4,
       totalMembers: 5,
       members: [
         { id: '1', name: 'Saima Khan', available: true, currentTickets: 2 },
@@ -122,12 +122,12 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '5', name: 'Nida Raza', available: false, currentTickets: 5 },
       ]
     },
-    'IT': { 
-      department: 'IT', 
-      activeTickets: 12, 
-      capacity: 20, 
-      loadPercentage: 60, 
-      availableMembers: 3, 
+    'IT': {
+      department: 'IT',
+      activeTickets: 12,
+      capacity: 20,
+      loadPercentage: 60,
+      availableMembers: 3,
       totalMembers: 5,
       members: [
         { id: '1', name: 'Ahmed Khan', available: true, currentTickets: 2 },
@@ -137,12 +137,12 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '5', name: 'Ali Hassan', available: false, currentTickets: 4 },
       ]
     },
-    'Architecture': { 
-      department: 'Architecture', 
-      activeTickets: 4, 
-      capacity: 15, 
-      loadPercentage: 27, 
-      availableMembers: 3, 
+    'Architecture': {
+      department: 'Architecture',
+      activeTickets: 4,
+      capacity: 15,
+      loadPercentage: 27,
+      availableMembers: 3,
       totalMembers: 3,
       members: [
         { id: '1', name: 'Zara Khan', available: true, currentTickets: 1 },
@@ -150,12 +150,12 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
         { id: '3', name: 'Mehreen Sheikh', available: true, currentTickets: 1 },
       ]
     },
-    'Administration': { 
-      department: 'Administration', 
-      activeTickets: 3, 
-      capacity: 15, 
-      loadPercentage: 20, 
-      availableMembers: 4, 
+    'Administration': {
+      department: 'Administration',
+      activeTickets: 3,
+      capacity: 15,
+      loadPercentage: 20,
+      availableMembers: 4,
       totalMembers: 4,
       members: [
         { id: '1', name: 'Rashid Malik', available: true, currentTickets: 0 },
@@ -165,13 +165,13 @@ const getDepartmentWorkload = (department: string): DepartmentWorkload => {
       ]
     },
   };
-  
-  return mockData[department] || { 
-    department, 
-    activeTickets: 0, 
-    capacity: 10, 
-    loadPercentage: 0, 
-    availableMembers: 1, 
+
+  return mockData[department] || {
+    department,
+    activeTickets: 0,
+    capacity: 10,
+    loadPercentage: 0,
+    availableMembers: 1,
     totalMembers: 1,
     members: [{ id: '1', name: 'Team Member 1', available: true, currentTickets: 0 }]
   };
@@ -182,13 +182,13 @@ export default function ReviewTicketPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  
+
   // ✅ Fixed: Get ticket ID from params (dynamic route)
   const ticketId = params?.id as string;
-  
+
   // ✅ Get action from query params (optional)
   const actionParam = searchParams.get('action'); // 'assign', 'reject', 'postpone'
-  
+
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionType, setActionType] = useState<ActionType>(null);
@@ -238,7 +238,7 @@ export default function ReviewTicketPage() {
         setLoading(false);
         return;
       }
-      
+
       try {
         const data = await ticketService.getTicketById(ticketId);
         setTicket(data);
@@ -252,7 +252,7 @@ export default function ReviewTicketPage() {
         } else {
           console.error('Error fetching ticket:', error?.message || error);
         }
-        
+
         // Use mock data if API fails
         const mockTicket: Ticket = {
           id: ticketId,
@@ -262,8 +262,8 @@ export default function ReviewTicketPage() {
           department: 'IT',
           priority: 'high',
           status: 'submitted',
-          requesterId: 'req-1',
-          requesterName: 'Ahmed Khan',
+          requestorId: 'req-1',
+          requestorName: 'Ahmed Khan',
           submittedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
         };
         setTicket(mockTicket);
@@ -313,7 +313,7 @@ export default function ReviewTicketPage() {
   // Assignee options (based on selected department)
   const assigneeOptions: SelectOption[] = useMemo(() => {
     if (!selectedDepartment || !departmentWorkload) return [];
-    
+
     return [
       { value: '', label: 'Auto-assign to department head' },
       ...departmentWorkload.members.map(member => ({
@@ -382,7 +382,7 @@ export default function ReviewTicketPage() {
 
     try {
       let result;
-      
+
       if (actionType === 'approve_assign') {
         // Store last action for undo
         setLastAction({
@@ -410,11 +410,11 @@ export default function ReviewTicketPage() {
 
         try {
           result = await ticketService.assignTicket(ticket.id, selectedAssignee || selectedDepartment);
-          
+
           if (priorityOverride !== ticket.priority) {
             await ticketService.changePriority(ticket.id, priorityOverride);
           }
-          
+
           // ✅ Success with details
           showAlert(
             'success',
@@ -424,22 +424,22 @@ export default function ReviewTicketPage() {
           );
         } catch (assignError: any) {
           const isNetworkError = assignError?.isNetworkError || !assignError?.response;
-          
+
           if (isNetworkError) {
             console.warn('API not available, simulating assignment (Demo Mode)');
-            
+
             result = {
               ...ticket,
               status: 'assigned' as const,
               assigneeId: selectedAssignee || 'auto-assigned',
-              assigneeName: selectedAssignee 
+              assigneeName: selectedAssignee
                 ? departmentWorkload?.members.find(m => m.id === selectedAssignee)?.name || 'Department Head'
                 : `${selectedDepartment} Department Head`,
               assignedDate: new Date().toISOString(),
               department: selectedDepartment,
               priority: priorityOverride as any,
             };
-            
+
             // ✅ Demo mode success
             showAlert(
               'info',
@@ -454,7 +454,7 @@ export default function ReviewTicketPage() {
       } else if (actionType === 'reject') {
         try {
           result = await ticketService.rejectTicket(ticket.id, reason);
-          
+
           // ✅ Success with reason
           showAlert(
             'success',
@@ -464,16 +464,16 @@ export default function ReviewTicketPage() {
           );
         } catch (rejectError: any) {
           const isNetworkError = rejectError?.isNetworkError || !rejectError?.response;
-          
+
           if (isNetworkError) {
             console.warn('API not available, simulating rejection (Demo Mode)');
-            
+
             result = {
               ...ticket,
               status: 'rejected' as const,
               rejectionReason: reason,
             };
-            
+
             // ✅ Demo mode success with reason
             showAlert(
               'info',
@@ -497,21 +497,21 @@ export default function ReviewTicketPage() {
         try {
           await ticketService.addComment(ticket.id, `[Clarification Request] ${reason}`);
           result = ticket;
-          
+
           // ✅ Success
           showAlert(
             'success',
             'Clarification Requested!',
-            'A clarification request has been sent to the requester.',
+            'A clarification request has been sent to the requestor.',
             `Request:\n${reason}`
           );
         } catch (clarifyError: any) {
           const isNetworkError = clarifyError?.isNetworkError || !clarifyError?.response;
-          
+
           if (isNetworkError) {
             console.warn('API not available, simulating clarification request (Demo Mode)');
             result = ticket;
-            
+
             // ✅ Demo mode success
             showAlert(
               'info',
@@ -531,7 +531,7 @@ export default function ReviewTicketPage() {
         setActionType(null);
         setReason('');
         setErrors({});
-        
+
         // Redirect after modal is closed
         if (actionType !== 'reject') {
           // Will redirect in modal onConfirm
@@ -544,12 +544,12 @@ export default function ReviewTicketPage() {
       }
     } catch (error: any) {
       console.error('Error submitting action:', error);
-      
+
       const isNetworkError = error?.isNetworkError || !error?.response;
       const errorMessage = isNetworkError
         ? 'Network error. Please check your connection and try again.'
         : error?.message || 'Failed to submit action. Please try again.';
-      
+
       // ✅ Error alert
       showAlert(
         'error',
@@ -569,20 +569,20 @@ export default function ReviewTicketPage() {
     try {
       // Restore previous state
       await ticketService.changeStatus(ticket.id, lastAction.previousStatus);
-      
+
       // Clear undo timer
       if (undoTimer) {
         clearInterval(undoTimer);
         setUndoTimer(null);
       }
-      
+
       setLastAction(null);
       setUndoTimeRemaining(0);
-      
+
       // Refresh ticket
       const updated = await ticketService.getTicketById(ticket.id);
       setTicket(updated);
-      
+
       alert('Last action has been undone');
     } catch (error: any) {
       console.error('Error undoing action:', error);
@@ -733,8 +733,8 @@ export default function ReviewTicketPage() {
               {/* Ticket Metadata - Responsive Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Requester</p>
-                  <p className="text-sm font-medium text-gray-900">{ticket.requesterName}</p>
+                  <p className="text-xs text-gray-500 mb-1">requestor</p>
+                  <p className="text-sm font-medium text-gray-900">{ticket.requestorName}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Department</p>
@@ -812,7 +812,7 @@ export default function ReviewTicketPage() {
                 </label>
                 <div className="space-y-3">
                   {/* Approve & Assign */}
-                  <label 
+                  <label
                     className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                     style={{ borderColor: actionType === 'approve_assign' ? THEME.colors.primary : '#E5E7EB' }}
                   >
@@ -834,7 +834,7 @@ export default function ReviewTicketPage() {
                   </label>
 
                   {/* Reject */}
-                  <label 
+                  <label
                     className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                     style={{ borderColor: actionType === 'reject' ? THEME.colors.error : '#E5E7EB' }}
                   >
@@ -856,7 +856,7 @@ export default function ReviewTicketPage() {
                   </label>
 
                   {/* Request Clarification */}
-                  <label 
+                  <label
                     className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                     style={{ borderColor: actionType === 'request_clarification' ? THEME.colors.warning : '#E5E7EB' }}
                   >
@@ -873,7 +873,7 @@ export default function ReviewTicketPage() {
                         <MessageSquare className="w-5 h-5 text-yellow-600 flex-shrink-0" />
                         <span className="font-semibold text-gray-900">Request Clarification</span>
                       </div>
-                      <p className="text-xs text-gray-600">Request more information from requester</p>
+                      <p className="text-xs text-gray-600">Request more information from requestor</p>
                     </div>
                   </label>
                 </div>
@@ -911,7 +911,7 @@ export default function ReviewTicketPage() {
                           {showWorkload ? 'Hide' : 'View Details'}
                         </Button>
                       </div>
-                      
+
                       {/* Basic Workload Info */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
@@ -924,8 +924,8 @@ export default function ReviewTicketPage() {
                             style={{
                               width: `${departmentWorkload.loadPercentage}%`,
                               backgroundColor: departmentWorkload.loadPercentage > 80 ? THEME.colors.error :
-                                              departmentWorkload.loadPercentage > 60 ? THEME.colors.warning :
-                                              THEME.colors.success
+                                departmentWorkload.loadPercentage > 60 ? THEME.colors.warning :
+                                  THEME.colors.success
                             }}
                           />
                         </div>
@@ -1035,7 +1035,7 @@ export default function ReviewTicketPage() {
                       />
                     </div>
                   </div>
-                  
+
                   {/* Or use modal instead */}
                   {showRejectModal && ticket && (
                     <RejectTicketModal
@@ -1066,7 +1066,7 @@ export default function ReviewTicketPage() {
                   <div>
                     <TextArea
                       label="Clarification Request *"
-                      placeholder="What information do you need from the requester?"
+                      placeholder="What information do you need from the requestor?"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       rows={4}
@@ -1089,7 +1089,7 @@ export default function ReviewTicketPage() {
                   >
                     Submit Action
                   </Button>
-                  
+
                   {/* Undo Button - Only shows within 15 minutes */}
                   {lastAction && undoTimeRemaining > 0 && (
                     <Button

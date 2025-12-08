@@ -2,7 +2,14 @@
  * User Type Definitions
  */
 
-export type UserRole = 'requester' | 'moderator' | 'assignee' | 'admin';
+export type UserRole = 'requestor' | 'moderator' | 'assignee' | 'admin';
+
+export interface UserPermissions {
+  canViewAllTickets?: boolean;
+  canAssignTickets?: boolean;
+  canCloseTickets?: boolean;
+  canManageUsers?: boolean;
+}
 
 export interface User {
   id: string;
@@ -11,12 +18,13 @@ export interface User {
   role: UserRole;
   department?: string;
   avatar?: string;
+  employeeId?: string;
   employeeCode?: string;
   phone?: string;
   status?: 'active' | 'inactive' | 'pending';
   lastLogin?: string;
   joinDate?: string;
-  permissions?: string[];
+  permissions?: UserPermissions | string[];
 }
 
 export interface UserProfile extends User {

@@ -8,7 +8,7 @@ import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { ViewButton, ReassignButton } from '../../../../components/common/ActionButtons';
-import { 
+import {
   UserPlus,
   FileText,
   ArrowLeft,
@@ -35,22 +35,22 @@ const generateMockAssignedTickets = (): Ticket[] => {
   const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const assignees = ['Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan', 'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh'];
   const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
-  const requesterNames = [
+  const requestorNames = [
     'Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan',
     'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh', 'Omar Ali', 'Ayesha Raza',
     'Kamran Malik', 'Saima Khan', 'Tariq Hussain', 'Farhan Ali', 'Hina Sheikh'
   ];
-  
+
   const mockTickets: Ticket[] = [];
-  
+
   for (let i = 1; i <= 20; i++) {
     const dept = departments[Math.floor(Math.random() * departments.length)];
     const assignee = assignees[Math.floor(Math.random() * assignees.length)];
     const priority = priorities[Math.floor(Math.random() * priorities.length)];
     const hoursAgo = Math.floor(Math.random() * 72);
-    const requesterIndex = (i - 1) % requesterNames.length;
+    const requestorIndex = (i - 1) % requestorNames.length;
     const status = Math.random() > 0.5 ? 'assigned' : 'in_progress';
-    
+
     mockTickets.push({
       id: `assigned-ticket-${i}`,
       ticketId: `HD-2024-${String(i).padStart(3, '0')}`,
@@ -59,15 +59,15 @@ const generateMockAssignedTickets = (): Ticket[] => {
       department: dept,
       priority,
       status,
-      requesterId: `req-${i}`,
-      requesterName: requesterNames[requesterIndex],
+      requestorId: `req-${i}`,
+      requestorName: requestorNames[requestorIndex],
       assigneeId: `assignee-${i}`,
       assigneeName: assignee,
       submittedDate: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),
       assignedDate: new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
     });
   }
-  
+
   return mockTickets;
 };
 
@@ -78,7 +78,7 @@ const AssignedTicketsPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(false);
-  const [confirm, setConfirm] = useState<{ open: boolean; ticketId?: string }>( { open: false } );
+  const [confirm, setConfirm] = useState<{ open: boolean; ticketId?: string }>({ open: false });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -95,16 +95,16 @@ const AssignedTicketsPage: React.FC = () => {
     try {
       // Fetch both assigned and in_progress tickets
       const response = await ticketService.getTickets();
-      
+
       // ✅ Check if response exists and has results
       if (response && (Array.isArray(response) || response.results)) {
         const ticketsList = Array.isArray(response) ? response : (response.results || []);
-        
+
         // Filter for assigned and in_progress tickets
-        const assignedTickets = ticketsList.filter(t => 
+        const assignedTickets = ticketsList.filter(t =>
           t.status === 'assigned' || t.status === 'in_progress'
         );
-        
+
         setTickets(assignedTickets);
         setUseMockData(false);
         setError(null);
@@ -118,7 +118,7 @@ const AssignedTicketsPage: React.FC = () => {
     } catch (error: any) {
       // ✅ Handle network errors gracefully
       const isNetworkError = error?.isNetworkError || !error?.response;
-      
+
       if (isNetworkError) {
         console.warn('API not available, using mock data');
         const mockTickets = generateMockAssignedTickets();
@@ -174,23 +174,23 @@ const AssignedTicketsPage: React.FC = () => {
 
   const filteredTickets = assignedTickets.filter(ticket => {
     const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.ticketId.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      ticket.requestorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.ticketId.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
     const matchesDepartment = departmentFilter === 'all' || ticket.department === departmentFilter;
-    
+
     return matchesSearch && matchesStatus && matchesPriority && matchesDepartment;
   });
 
   const columns: Column<any>[] = [
-    { 
-      key: 'ticketId', 
-      header: 'Ticket ID', 
-      sortable: true, 
+    {
+      key: 'ticketId',
+      header: 'Ticket ID',
+      sortable: true,
       accessor: (r) => (
         <button
           onClick={() => handleViewTicket(r.id)}
@@ -201,36 +201,36 @@ const AssignedTicketsPage: React.FC = () => {
         </button>
       )
     },
-    { 
-      key: 'subject', 
-      header: 'Title', 
-      sortable: true, 
+    {
+      key: 'subject',
+      header: 'Title',
+      sortable: true,
       accessor: (r) => (
         <span className="text-gray-900 max-w-[200px] truncate block" title={r.subject}>
           {r.subject}
         </span>
       )
     },
-    { 
-      key: 'requesterName', 
-      header: 'Requester', 
-      sortable: true, 
+    {
+      key: 'requestorName',
+      header: 'requestor',
+      sortable: true,
       accessor: (r) => (
         <div className="flex items-center gap-2">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
             style={{ backgroundColor: `#${Math.floor(Math.random() * 16777215).toString(16)}` }}
           >
-            {r.requesterName?.substring(0, 2).toUpperCase() || 'N/A'}
+            {r.requestorName?.substring(0, 2).toUpperCase() || 'N/A'}
           </div>
-          <span className="text-sm text-gray-700">{r.requesterName || '—'}</span>
+          <span className="text-sm text-gray-700">{r.requestorName || '—'}</span>
         </div>
       )
     },
-    { 
-      key: 'assigneeName', 
-      header: 'Assignee', 
-      sortable: true, 
+    {
+      key: 'assigneeName',
+      header: 'Assignee',
+      sortable: true,
       accessor: (r) => (
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-blue-500" />
@@ -238,28 +238,28 @@ const AssignedTicketsPage: React.FC = () => {
         </div>
       )
     },
-    { 
-      key: 'department', 
-      header: 'Department', 
-      sortable: true, 
+    {
+      key: 'department',
+      header: 'Department',
+      sortable: true,
       accessor: (r) => <span className="text-sm text-gray-600">{r.department}</span>
     },
-    { 
-      key: 'priority', 
-      header: 'Priority', 
-      sortable: true, 
+    {
+      key: 'priority',
+      header: 'Priority',
+      sortable: true,
       accessor: (r) => r.priority ? <PriorityBadge priority={r.priority} /> : <span className="text-xs text-gray-400 italic">Not set</span>
     },
-    { 
-      key: 'status', 
-      header: 'Status', 
-      sortable: true, 
+    {
+      key: 'status',
+      header: 'Status',
+      sortable: true,
       accessor: (r) => <StatusBadge status={r.status} />
     },
-    { 
-      key: 'assignedDate', 
-      header: 'Assigned Date', 
-      sortable: true, 
+    {
+      key: 'assignedDate',
+      header: 'Assigned Date',
+      sortable: true,
       accessor: (r) => (
         <div className="flex flex-col">
           <span className="text-sm text-gray-900">
@@ -273,9 +273,9 @@ const AssignedTicketsPage: React.FC = () => {
         </div>
       )
     },
-    { 
-      key: 'actions', 
-      header: 'Actions', 
+    {
+      key: 'actions',
+      header: 'Actions',
       accessor: (r) => (
         <div className="flex gap-2">
           <ViewButton onClick={() => handleViewTicket(r.id)} />
@@ -286,7 +286,7 @@ const AssignedTicketsPage: React.FC = () => {
   ];
 
   if (loading) return <PageSkeleton rows={8} />;
-  
+
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8" style={{ backgroundColor: THEME.colors.background }}>
       {/* Mock Data Indicator */}
@@ -405,7 +405,7 @@ const AssignedTicketsPage: React.FC = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search by ticket ID, title, requester, assignee, or department..."
+                placeholder="Search by ticket ID, title, requestor, assignee, or department..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 pr-10"
@@ -433,7 +433,7 @@ const AssignedTicketsPage: React.FC = () => {
                 <option value="assigned">Assigned ({stats.assigned})</option>
                 <option value="in_progress">In Progress ({stats.inProgress})</option>
               </select>
-              
+
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
@@ -491,12 +491,12 @@ const AssignedTicketsPage: React.FC = () => {
         <CardContent className="p-0">
           {error && (
             <div className="p-4">
-              <ErrorBanner 
-                message={error} 
+              <ErrorBanner
+                message={error}
                 onRetry={() => {
                   setError(null);
                   fetchTickets();
-                }} 
+                }}
               />
             </div>
           )}
@@ -512,12 +512,12 @@ const AssignedTicketsPage: React.FC = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <DataTable 
-                data={filteredTickets} 
-                columns={columns} 
-                initialSort={{ key: 'assignedDate', dir: 'desc' }} 
-                pageSize={10} 
-                showSearch={false} 
+              <DataTable
+                data={filteredTickets}
+                columns={columns}
+                initialSort={{ key: 'assignedDate', dir: 'desc' }}
+                pageSize={10}
+                showSearch={false}
               />
             </div>
           )}

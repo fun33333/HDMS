@@ -83,7 +83,7 @@ erDiagram
 - **Unique Constraints:** `employee_code` (unique)
 - **Service:** User Service
 - **Relationships:**
-  - One-to-Many: Creates tickets (requester)
+  - One-to-Many: Creates tickets (requestor)
   - One-to-Many: Assigned tickets (assignee)
   - Many-to-One: Belongs to Department
   - One-to-Many: Sends chat messages
@@ -105,7 +105,7 @@ erDiagram
 - **Primary Key:** `id` (UUID)
 - **Service:** Ticket Service
 - **Relationships:**
-  - Many-to-One: Created by User (requester)
+  - Many-to-One: Created by User (requestor)
   - Many-to-One: Assigned to User (assignee/department head)
   - Many-to-One: Assigned to Department
   - One-to-Many: Has sub-tickets
@@ -178,7 +178,7 @@ erDiagram
 - No foreign keys (top-level entity)
 
 #### **Ticket Model**
-- `requester` → ForeignKey to User (related_name='created_tickets', CASCADE)
+- `requestor` → ForeignKey to User (related_name='created_tickets', CASCADE)
 - `assignee` → ForeignKey to User (nullable, related_name='assigned_tickets', SET_NULL)
 - `department` → ForeignKey to Department (related_name='tickets', PROTECT)
 - `sla_template` → ForeignKey to SLATemplate (nullable, related_name='tickets', SET_NULL)
@@ -217,7 +217,7 @@ erDiagram
 
 | Relationship | On Delete Behavior | Rationale |
 |--------------|-------------------|-----------|
-| User → Tickets (requester) | CASCADE | If user deleted, their tickets should be soft-deleted |
+| User → Tickets (requestor) | CASCADE | If user deleted, their tickets should be soft-deleted |
 | User → Tickets (assignee) | SET_NULL | Preserve ticket, just remove assignee |
 | Department → Tickets | PROTECT | Prevent deletion if tickets exist |
 | Ticket → SubTickets | CASCADE | If parent deleted, children should be deleted |
@@ -232,7 +232,7 @@ erDiagram
 All ForeignKey relationships use explicit `related_name`:
 - Pattern: `{model_name_lowercase}_set` or descriptive name
 - Examples:
-  - `User.created_tickets` (tickets where user is requester)
+  - `User.created_tickets` (tickets where user is requestor)
   - `User.assigned_tickets` (tickets where user is assignee)
   - `Ticket.sub_tickets` (child tickets)
   - `Ticket.messages` (chat messages)
@@ -270,7 +270,7 @@ class Meta:
         models.Index(fields=['priority']),
         models.Index(fields=['status', 'department_id']),  # Composite for department status queries
         models.Index(fields=['assignee_id', 'status']),  # Composite for assignee workload
-        models.Index(fields=['requester_id', 'status']),  # Composite for requester tickets
+        models.Index(fields=['requestor_id', 'status']),  # Composite for requestor tickets
         models.Index(fields=['is_deleted', 'status']),  # Composite for active tickets by status
         models.Index(fields=['due_at']),  # For SLA queries
     ]

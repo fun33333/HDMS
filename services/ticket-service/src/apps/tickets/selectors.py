@@ -10,9 +10,9 @@ class TicketSelector:
     
     @staticmethod
     def get_user_tickets(user_id: str, status: str = None):
-        """Get tickets for a user (as requester or assignee)."""
+        """Get tickets for a user (as requestor or assignee)."""
         queryset = Ticket.objects.filter(
-            Q(requester_id=user_id) | Q(assignee_id=user_id),
+            Q(requestor_id=user_id) | Q(assignee_id=user_id),
             is_deleted=False
         )
         if status:

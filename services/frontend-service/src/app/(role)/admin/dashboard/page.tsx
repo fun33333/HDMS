@@ -14,11 +14,11 @@ import userService from '../../../../services/api/userService';
 import { Ticket } from '../../../../types';
 import { User } from '../../../../types';
 import { formatDate, formatRelativeTime } from '../../../../lib/helpers';
-import { 
-  Users, 
-  FileText, 
-  Activity, 
-  Building2, 
+import {
+  Users,
+  FileText,
+  Activity,
+  Building2,
   Server,
   TrendingUp,
   Clock,
@@ -41,8 +41,8 @@ const generateDemoTickets = (): Ticket[] => {
     department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     priority: ['low', 'medium', 'high', 'urgent'][i % 4] as any,
     status: ['assigned', 'in_progress', 'resolved', 'completed', 'pending'][i % 5] as any,
-    requesterId: `req-${i + 1}`,
-    requesterName: `User ${i + 1}`,
+    requestorId: `req-${i + 1}`,
+    requestorName: `User ${i + 1}`,
     submittedDate: new Date(now.getTime() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
     assignedDate: new Date(now.getTime() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString(),
     ...(i % 3 === 0 && {
@@ -57,7 +57,7 @@ const generateDemoUsers = (): User[] => {
     id: `user-${i + 1}`,
     name: `User ${i + 1}`,
     email: `user${i + 1}@example.com`,
-    role: ['requester', 'assignee', 'moderator', 'admin'][i % 4] as any,
+    role: ['requestor', 'assignee', 'moderator', 'admin'][i % 4] as any,
     department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     status: i < 142 ? 'active' : 'inactive',
     lastLogin: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -82,8 +82,8 @@ const AdminDashboardPage: React.FC = () => {
         let ticketsList: Ticket[] = [];
         try {
           const ticketsResponse = await ticketService.getTickets();
-          ticketsList = Array.isArray(ticketsResponse) 
-            ? ticketsResponse 
+          ticketsList = Array.isArray(ticketsResponse)
+            ? ticketsResponse
             : (ticketsResponse?.results || []);
           if (ticketsList.length === 0) {
             ticketsList = generateDemoTickets();
@@ -137,7 +137,7 @@ const AdminDashboardPage: React.FC = () => {
   const totalUsers = users.length;
   const activeUsers = users.filter(u => u.status === 'active').length;
   const totalTickets = tickets.length;
-  const activeTickets = tickets.filter(t => 
+  const activeTickets = tickets.filter(t =>
     !['resolved', 'completed', 'closed', 'rejected'].includes(t.status)
   ).length;
   const departments = Array.from(new Set(users.map(u => u.department).filter(Boolean))).length;
@@ -148,25 +148,25 @@ const AdminDashboardPage: React.FC = () => {
     const days = timeRange === '30' ? 30 : timeRange === '180' ? 180 : 365;
     const data = [];
     const now = new Date();
-    
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
+
       const dayTickets = tickets.filter(t => {
         const ticketDate = new Date(t.submittedDate);
         return ticketDate.toDateString() === date.toDateString();
       });
-      
+
       const created = dayTickets.length;
-      const resolved = dayTickets.filter(t => 
+      const resolved = dayTickets.filter(t =>
         t.resolvedDate && new Date(t.resolvedDate).toDateString() === date.toDateString()
       ).length;
-      
+
       data.push({ date: dateStr, created, resolved });
     }
-    
+
     return data;
   }, [tickets, timeRange]);
 
@@ -187,12 +187,12 @@ const AdminDashboardPage: React.FC = () => {
     const days = 30;
     const data = [];
     const now = new Date();
-    
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
+
       const completedTickets = tickets.filter(t => {
         if (t.resolvedDate || t.completedDate) {
           const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
@@ -200,19 +200,19 @@ const AdminDashboardPage: React.FC = () => {
         }
         return false;
       });
-      
+
       const avgDays = completedTickets.length > 0
         ? completedTickets.reduce((sum, t) => {
-            const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
-            const createdDate = new Date(t.submittedDate);
-            const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-            return sum + diffDays;
-          }, 0) / completedTickets.length
+          const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
+          const createdDate = new Date(t.submittedDate);
+          const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+          return sum + diffDays;
+        }, 0) / completedTickets.length
         : 0;
-      
+
       data.push({ date: dateStr, averageDays: Math.round(avgDays * 10) / 10 || 0 });
     }
-    
+
     return data;
   }, [tickets]);
 
@@ -222,7 +222,7 @@ const AdminDashboardPage: React.FC = () => {
       const status = t.status.charAt(0).toUpperCase() + t.status.slice(1).replace('_', ' ');
       statusCounts[status] = (statusCounts[status] || 0) + 1;
     });
-    
+
     return Object.entries(statusCounts).map(([name, count]) => ({
       name,
       count,
@@ -254,7 +254,7 @@ const AdminDashboardPage: React.FC = () => {
   // System Alerts
   const systemAlerts = useMemo(() => {
     const alerts = [];
-    
+
     // SLA breaches
     const slaBreaches = tickets.filter(t => {
       if (['resolved', 'completed', 'closed'].includes(t.status)) return false;
@@ -264,7 +264,7 @@ const AdminDashboardPage: React.FC = () => {
       const slaDays = t.priority === 'urgent' || t.priority === 'high' ? 7 : t.priority === 'medium' ? 14 : 30;
       return daysSinceCreation > slaDays;
     });
-    
+
     if (slaBreaches.length > 0) {
       alerts.push({
         id: 'sla-breaches',
@@ -274,13 +274,13 @@ const AdminDashboardPage: React.FC = () => {
         icon: AlertCircle,
       });
     }
-    
+
     // High priority pending
-    const highPriorityPending = tickets.filter(t => 
-      (t.priority === 'high' || t.priority === 'urgent') && 
+    const highPriorityPending = tickets.filter(t =>
+      (t.priority === 'high' || t.priority === 'urgent') &&
       ['assigned', 'pending'].includes(t.status)
     );
-    
+
     if (highPriorityPending.length > 0) {
       alerts.push({
         id: 'high-priority',
@@ -290,7 +290,7 @@ const AdminDashboardPage: React.FC = () => {
         icon: XCircle,
       });
     }
-    
+
     // System health
     alerts.push({
       id: 'system-health',
@@ -299,18 +299,18 @@ const AdminDashboardPage: React.FC = () => {
       message: 'All systems operational',
       icon: CheckCircle,
     });
-    
+
     return alerts;
   }, [tickets]);
 
   // Calculate SLA Compliance Rate
   const slaComplianceRate = useMemo(() => {
-    const completedTickets = tickets.filter(t => 
+    const completedTickets = tickets.filter(t =>
       t.resolvedDate || t.completedDate
     );
-    
+
     if (completedTickets.length === 0) return 100;
-    
+
     const withinSLA = completedTickets.filter(t => {
       const createdDate = new Date(t.submittedDate);
       const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
@@ -318,7 +318,7 @@ const AdminDashboardPage: React.FC = () => {
       const slaDays = t.priority === 'urgent' || t.priority === 'high' ? 7 : t.priority === 'medium' ? 14 : 30;
       return daysToResolve <= slaDays;
     }).length;
-    
+
     return Math.round((withinSLA / completedTickets.length) * 100);
   }, [tickets]);
 
@@ -416,33 +416,30 @@ const AdminDashboardPage: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setTimeRange('30')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '30' 
-                    ? 'text-white' 
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${timeRange === '30'
+                    ? 'text-white'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
                 style={timeRange === '30' ? { backgroundColor: THEME.colors.primary } : {}}
               >
                 30 Days
               </button>
               <button
                 onClick={() => setTimeRange('180')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '180' 
-                    ? 'text-white' 
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${timeRange === '180'
+                    ? 'text-white'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
                 style={timeRange === '180' ? { backgroundColor: THEME.colors.primary } : {}}
               >
                 6 Months
               </button>
               <button
                 onClick={() => setTimeRange('365')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '365' 
-                    ? 'text-white' 
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${timeRange === '365'
+                    ? 'text-white'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
                 style={timeRange === '365' ? { backgroundColor: THEME.colors.primary } : {}}
               >
                 1 Year
@@ -527,7 +524,7 @@ const AdminDashboardPage: React.FC = () => {
                     Avg Resolution Time
                   </p>
                   <p className="text-2xl font-bold" style={{ color: THEME.colors.primary }}>
-                    {resolutionTimeData.length > 0 
+                    {resolutionTimeData.length > 0
                       ? `${Math.round(resolutionTimeData.reduce((sum, d) => sum + d.averageDays, 0) / resolutionTimeData.length)} days`
                       : 'N/A'}
                   </p>
@@ -587,8 +584,8 @@ const AdminDashboardPage: React.FC = () => {
                   </thead>
                   <tbody>
                     {recentUserActivity.map((activity) => (
-                      <tr 
-                        key={activity.id} 
+                      <tr
+                        key={activity.id}
                         className="border-b hover:bg-gray-50 transition-colors"
                         style={{ borderColor: THEME.colors.background }}
                       >
@@ -608,7 +605,7 @@ const AdminDashboardPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="py-3 px-2">
-                          <span className="text-xs px-2 py-1 rounded" style={{ 
+                          <span className="text-xs px-2 py-1 rounded" style={{
                             backgroundColor: THEME.colors.background,
                             color: THEME.colors.primary
                           }}>
@@ -653,11 +650,11 @@ const AdminDashboardPage: React.FC = () => {
                         borderColor: alert.type === 'error' ? '#FECACA' : alert.type === 'warning' ? '#FDE68A' : '#A7F3D0',
                       }}
                     >
-                      <Icon 
-                        className="w-5 h-5 flex-shrink-0 mt-0.5" 
-                        style={{ 
-                          color: alert.type === 'error' ? THEME.colors.error : alert.type === 'warning' ? THEME.colors.warning : THEME.colors.success 
-                        }} 
+                      <Icon
+                        className="w-5 h-5 flex-shrink-0 mt-0.5"
+                        style={{
+                          color: alert.type === 'error' ? THEME.colors.error : alert.type === 'warning' ? THEME.colors.warning : THEME.colors.success
+                        }}
                       />
                       <div className="flex-1">
                         <p className="text-sm font-semibold mb-1" style={{ color: THEME.colors.primary }}>

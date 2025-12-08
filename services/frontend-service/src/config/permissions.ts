@@ -1,6 +1,6 @@
 import { ROLES, TICKET_STATUS } from '../lib/constants';
 
-export type Permission = 
+export type Permission =
   | 'ticket:create'
   | 'ticket:view'
   | 'ticket:edit'
@@ -20,7 +20,7 @@ export type Permission =
   | 'settings:manage';
 
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
-  [ROLES.REQUESTER]: [
+  [ROLES.requestor]: [
     'ticket:create',
     'ticket:view',
     'ticket:edit',

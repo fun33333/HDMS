@@ -359,7 +359,7 @@ Every task in this document follows this structure. When using Spec Kit:
 **What to do:**
 - Create User model inheriting from BaseModel
 - Add employee_code (unique, pattern validation)
-- Add role field (requester, moderator, assignee, admin)
+- Add role field (requestor, moderator, assignee, admin)
 - Add is_ceo flag
 - Add department ForeignKey
 - Add SMS sync fields (sms_user_id, last_sms_sync)
@@ -414,7 +414,7 @@ Every task in this document follows this structure. When using Spec Kit:
 - Create Ticket model inheriting from BaseModel
 - Add FSMField for status (django-fsm)
 - Add title, description, priority, category
-- Add requester, department, assignee (ForeignKeys)
+- Add requestor, department, assignee (ForeignKeys)
 - Add version field (for optimistic locking)
 - Add reopen_count (max 3)
 - Add due_at, requires_approval, postponement_reason
@@ -1143,7 +1143,7 @@ Every task in this document follows this structure. When using Spec Kit:
 
 **What to do:**
 - Implement Token Bucket algorithm
-- Add role-based limits (Requester: 150/min, Assignee: 250/min)
+- Add role-based limits (requestor: 150/min, Assignee: 250/min)
 - Add login endpoint limit (10/min)
 - Add rate limit headers
 - Return 429 on limit exceeded

@@ -12,10 +12,10 @@ import ticketService from '../../../../services/api/ticketService';
 import { Ticket } from '../../../../types';
 import { THEME } from '../../../../lib/theme';
 import { formatDate } from '../../../../lib/helpers';
-import { 
-  FileText, 
-  Clock, 
-  CheckCircle, 
+import {
+  FileText,
+  Clock,
+  CheckCircle,
   ArrowLeft,
   Search,
   Filter,
@@ -36,8 +36,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'assigned',
-      requesterId: 'req1',
-      requesterName: 'John Doe',
+      requestorId: 'req1',
+      requestorName: 'John Doe',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
@@ -51,8 +51,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'in_progress',
-      requesterId: 'req2',
-      requesterName: 'Jane Smith',
+      requestorId: 'req2',
+      requestorName: 'Jane Smith',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -66,8 +66,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'low',
       status: 'assigned',
-      requesterId: 'req3',
-      requesterName: 'Bob Wilson',
+      requestorId: 'req3',
+      requestorName: 'Bob Wilson',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -81,8 +81,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'urgent',
       status: 'in_progress',
-      requesterId: 'req4',
-      requesterName: 'Sarah Johnson',
+      requestorId: 'req4',
+      requestorName: 'Sarah Johnson',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
@@ -96,8 +96,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req5',
-      requesterName: 'Tom Brown',
+      requestorId: 'req5',
+      requestorName: 'Tom Brown',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
@@ -111,8 +111,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'completed',
-      requesterId: 'req6',
-      requesterName: 'Alice Green',
+      requestorId: 'req6',
+      requestorName: 'Alice Green',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
@@ -128,8 +128,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'completed',
-      requesterId: 'req7',
-      requesterName: 'Charlie Davis',
+      requestorId: 'req7',
+      requestorName: 'Charlie Davis',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
@@ -145,8 +145,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'low',
       status: 'assigned',
-      requesterId: 'req8',
-      requesterName: 'David Lee',
+      requestorId: 'req8',
+      requestorName: 'David Lee',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
@@ -156,7 +156,7 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
 };
 
 // Calculate SLA status
-const calculateSLA = (ticket: Ticket): { 
+const calculateSLA = (ticket: Ticket): {
   status: 'breached' | 'approaching' | 'normal';
   daysRemaining?: number;
   daysOverdue?: number;
@@ -165,15 +165,15 @@ const calculateSLA = (ticket: Ticket): {
   const createdDate = new Date(ticket.submittedDate);
   const now = new Date();
   const daysSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-  
-  const slaDays = ticket.priority === 'urgent' || ticket.priority === 'high' 
-    ? 7 
-    : ticket.priority === 'medium' 
-    ? 14 
-    : 30;
-  
+
+  const slaDays = ticket.priority === 'urgent' || ticket.priority === 'high'
+    ? 7
+    : ticket.priority === 'medium'
+      ? 14
+      : 30;
+
   const daysRemaining = slaDays - daysSinceCreation;
-  
+
   if (daysRemaining < 0) {
     return {
       status: 'breached',
@@ -259,22 +259,22 @@ const MyTasksPage: React.FC = () => {
 
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      result = result.filter(task => 
+      result = result.filter(task =>
         task.subject.toLowerCase().includes(searchLower) ||
-        task.requesterName?.toLowerCase().includes(searchLower) ||
+        task.requestorName?.toLowerCase().includes(searchLower) ||
         task.ticketId.toLowerCase().includes(searchLower) ||
         task.department?.toLowerCase().includes(searchLower)
       );
     }
-    
+
     if (statusFilter !== 'all') {
       result = result.filter(task => task.status === statusFilter);
     }
-    
+
     if (priorityFilter !== 'all') {
       result = result.filter(task => task.priority === priorityFilter);
     }
-    
+
     if (slaFilter !== 'all') {
       result = result.filter(task => {
         const sla = calculateSLA(task);
@@ -284,7 +284,7 @@ const MyTasksPage: React.FC = () => {
         return true;
       });
     }
-    
+
     return result;
   }, [myTasks, searchTerm, statusFilter, priorityFilter, slaFilter]);
 
@@ -386,11 +386,11 @@ const MyTasksPage: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: THEME.colors.gray }} size={20} />
               <input
                 type="text"
-                placeholder="Search by ticket ID, title, requester, or department..."
+                placeholder="Search by ticket ID, title, requestor, or department..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 md:py-3 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                style={{ 
+                style={{
                   borderColor: THEME.colors.background,
                 }}
               />
@@ -423,7 +423,7 @@ const MyTasksPage: React.FC = () => {
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -444,7 +444,7 @@ const MyTasksPage: React.FC = () => {
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -465,7 +465,7 @@ const MyTasksPage: React.FC = () => {
                     value={slaFilter}
                     onChange={(e) => setSlaFilter(e.target.value)}
                     className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 text-sm md:text-base"
-                    style={{ 
+                    style={{
                       borderColor: THEME.colors.background,
                     }}
                   >
@@ -521,7 +521,7 @@ const MyTasksPage: React.FC = () => {
                           Title
                         </th>
                         <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>
-                          Requester
+                          requestor
                         </th>
                         <th className="text-left py-3 px-4 text-xs md:text-sm font-semibold whitespace-nowrap" style={{ color: THEME.colors.primary }}>
                           Priority
@@ -544,8 +544,8 @@ const MyTasksPage: React.FC = () => {
                       {filteredTasks.map((ticket) => {
                         const sla = calculateSLA(ticket);
                         return (
-                          <tr 
-                            key={ticket.id} 
+                          <tr
+                            key={ticket.id}
                             className="hover:bg-gray-50 transition-colors"
                           >
                             <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>
@@ -557,7 +557,7 @@ const MyTasksPage: React.FC = () => {
                               </div>
                             </td>
                             <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap" style={{ color: THEME.colors.gray }}>
-                              {ticket.requesterName || 'N/A'}
+                              {ticket.requestorName || 'N/A'}
                             </td>
                             <td className="py-4 px-4 whitespace-nowrap">
                               <PriorityBadge priority={ticket.priority} />
@@ -570,13 +570,12 @@ const MyTasksPage: React.FC = () => {
                             </td>
                             <td className="py-4 px-4 text-xs md:text-sm whitespace-nowrap">
                               <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${
-                                  sla.status === 'breached' 
+                                className={`px-2 py-1 rounded text-xs font-medium ${sla.status === 'breached'
                                     ? 'bg-red-100 text-red-800'
                                     : sla.status === 'approaching'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-green-100 text-green-800'
-                                }`}
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-green-100 text-green-800'
+                                  }`}
                               >
                                 {sla.label}
                               </span>

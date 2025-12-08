@@ -39,10 +39,10 @@ HDMS is migrating from a monolithic architecture to microservices. This document
 - References use UUIDs:
   ```python
   # Instead of ForeignKey
-  requester_id = models.UUIDField()  # Reference to User
+  requestor_id = models.UUIDField()  # Reference to User
   
   # Service validates via API call
-  user_client.get_user(requester_id)
+  user_client.get_user(requestor_id)
   ```
 
 ---
@@ -106,10 +106,10 @@ Instead of Django ForeignKeys, use UUIDField:
 
 ```python
 # Monolith (old)
-requester = models.ForeignKey('users.User', on_delete=models.CASCADE)
+requestor = models.ForeignKey('users.User', on_delete=models.CASCADE)
 
 # Microservices (new)
-requester_id = models.UUIDField(db_index=True)
+requestor_id = models.UUIDField(db_index=True)
 ```
 
 ### **Validation:**
@@ -118,7 +118,7 @@ Services validate references via API calls:
 ```python
 # Ticket Service
 user_client = UserClient()
-if not user_client.validate_user_exists(requester_id):
+if not user_client.validate_user_exists(requestor_id):
     raise ValueError("User not found")
 ```
 
@@ -184,10 +184,10 @@ pg_dump -U hdms_user hdms_db > backup_before_migration.sql
 ```python
 # Ticket Service creating ticket
 user_client = UserClient()
-user_data = user_client.get_user(requester_id)  # Validate user exists
+user_data = user_client.get_user(requestor_id)  # Validate user exists
 
 ticket = Ticket.objects.create(
-    requester_id=requester_id,
+    requestor_id=requestor_id,
     # ... other fields
 )
 ```

@@ -177,7 +177,7 @@ export default function RequestDetailPage() {
     if (!ticket || !confirm('Are you sure you want to cancel this ticket? This action cannot be undone.')) return;
     // Implement cancel/delete logic
     await ticketService.deleteTicket(ticket.id);
-    router.push('/requester/requests');
+    router.push('/requestor/requests');
   };
 
   const canEdit = ticket?.status === ('draft' as any) || ticket?.status === 'pending';
@@ -434,7 +434,7 @@ export default function RequestDetailPage() {
                       variant="outline"
                       fullWidth
                       leftIcon={<Edit className="w-4 h-4" />}
-                      onClick={() => router.push(`/requester/new-request?edit=${ticket.id}`)}
+                      onClick={() => router.push(`/requestor/new-request?edit=${ticket.id}`)}
                     >
                       Edit Request
                     </Button>

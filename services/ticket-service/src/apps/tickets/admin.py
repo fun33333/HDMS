@@ -8,7 +8,7 @@ from .models import Ticket, SubTicket, SLATemplate
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
     """Admin interface for Ticket model."""
-    list_display = ['id', 'title', 'status', 'priority', 'requester_id', 'department_id', 'created_at']
+    list_display = ['id', 'title', 'status', 'priority', 'requestor_id', 'department_id', 'created_at']
     list_filter = ['status', 'priority', 'is_deleted']
     search_fields = ['title', 'description']
     ordering = ['-created_at']

@@ -96,7 +96,7 @@ const ReassignPage: React.FC = () => {
     const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.requestorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = filterStatus === 'all' || ticket.status === filterStatus;
@@ -228,8 +228,8 @@ const ReassignPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-400" />
                         <div>
-                          <p className="text-gray-500 text-xs">Requester</p>
-                          <p className="font-medium text-gray-800">{ticket.requesterName || 'N/A'}</p>
+                          <p className="text-gray-500 text-xs">requestor</p>
+                          <p className="font-medium text-gray-800">{ticket.requestorName || 'N/A'}</p>
                         </div>
                       </div>
 

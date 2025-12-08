@@ -5,11 +5,11 @@ import { THEME } from '../../lib/theme';
 interface StatusUpdateSectionProps {
   status: string;
   completionNote?: string;
-  viewType?: 'assignee' | 'requester' | 'moderator';
+  viewType?: 'assignee' | 'requestor' | 'moderator';
 }
 
-export const StatusUpdateSection: React.FC<StatusUpdateSectionProps> = ({ 
-  status, 
+export const StatusUpdateSection: React.FC<StatusUpdateSectionProps> = ({
+  status,
   completionNote,
   viewType = 'assignee'
 }) => {

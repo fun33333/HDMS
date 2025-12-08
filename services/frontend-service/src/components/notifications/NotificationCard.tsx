@@ -3,10 +3,10 @@
 import React from 'react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/Button';
-import { 
-  Check, 
-  X, 
-  Bell, 
+import {
+  Check,
+  X,
+  Bell,
   Ticket,
   UserPlus,
   RefreshCw,
@@ -42,7 +42,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       onRead();
     }
     if (notification.ticketId) {
-      router.push(`/requester/request-detail/${notification.ticketId}`);
+      router.push(`/requestor/request-detail/${notification.ticketId}`);
     } else if (notification.actionUrl) {
       router.push(notification.actionUrl);
     }
@@ -132,11 +132,10 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 
   return (
     <Card
-      className={`transition-all hover:shadow-md cursor-pointer ${
-        !notification.read 
-          ? 'border-l-4 bg-blue-50' 
+      className={`transition-all hover:shadow-md cursor-pointer ${!notification.read
+          ? 'border-l-4 bg-blue-50'
           : 'bg-white opacity-90'
-      }`}
+        }`}
       style={{
         borderLeftColor: !notification.read ? color : 'transparent',
       }}
@@ -145,27 +144,26 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start gap-3 sm:gap-4">
           {/* Icon */}
-          <div 
+          <div
             className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center"
-            style={{ 
+            style={{
               backgroundColor: color + '20',
             }}
           >
             <Icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color }} />
           </div>
-          
+
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 
-                className={`text-sm sm:text-base font-semibold ${
-                  !notification.read ? 'text-gray-900' : 'text-gray-700'
-                }`}
+              <h4
+                className={`text-sm sm:text-base font-semibold ${!notification.read ? 'text-gray-900' : 'text-gray-700'
+                  }`}
               >
                 {notification.title}
               </h4>
               {!notification.read && (
-                <div 
+                <div
                   className="w-2 h-2 rounded-full flex-shrink-0 mt-2"
                   style={{ backgroundColor: color }}
                 />

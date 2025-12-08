@@ -23,7 +23,7 @@ export const useTicketActions = () => {
       const ticket = await ticketService.createTicket(data);
       addTicket(ticket);
       showToast('Ticket created successfully', 'success');
-      router.push(`/requester/request-detail/${ticket.id}`);
+      router.push(`/requestor/request-detail/${ticket.id}`);
       return ticket;
     } catch (error: any) {
       showToast(error.message || 'Failed to create ticket', 'error');
@@ -219,14 +219,14 @@ export const useTicketActions = () => {
     try {
       const comment = await ticketService.addComment(ticketId, content);
       const { activeTicket } = useTicketStore.getState();
-      
+
       if (activeTicket?.id === ticketId) {
         const comments = activeTicket.comments || [];
         updateTicket(ticketId, {
           comments: [...comments, comment],
         });
       }
-      
+
       return true;
     } catch (error: any) {
       showToast(error.message || 'Failed to add comment', 'error');

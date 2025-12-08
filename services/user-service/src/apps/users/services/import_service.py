@@ -54,7 +54,7 @@ class ImportService:
                             first_name=row.get('first_name', ''),
                             last_name=row.get('last_name', ''),
                             password=row.get('password', 'defaultpassword123'),  # Should be changed on first login
-                            role=row.get('role', 'requester'),
+                            role=row.get('role', 'requestor'),
                         )
                         
                         if not pd.isna(row.get('department_id')):

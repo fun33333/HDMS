@@ -33,7 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(({ role, currentPage }
 
   const getSidebarItems = (role: string) => {
     switch (role) {
-      case 'requester':
+      case 'requestor':
         return [
           { name: 'Dashboard', url: `/${role}/dashboard`, icon: Home },
           { name: 'My Requests', url: `/${role}/requests`, icon: FileText },

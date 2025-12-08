@@ -103,8 +103,8 @@ const AssigneeTaskDetailPage: React.FC = () => {
                 department: 'IT',
                 priority: 'medium',
                 status: 'assigned',
-                requesterId: 'req1',
-                requesterName: 'John Doe',
+                requestorId: 'req1',
+                requestorName: 'John Doe',
                 assigneeId: user?.id,
                 assigneeName: user?.name,
                 submittedDate: new Date().toISOString(),
@@ -246,7 +246,7 @@ const AssigneeTaskDetailPage: React.FC = () => {
       setShowCompleteModal(false);
       setCompletionNotes('');
       setCompletionFiles([]);
-      alert('Task marked as complete! Requester will be notified for verification.');
+      alert('Task marked as complete! requestor will be notified for verification.');
     } catch (error) {
       console.error('Error completing task:', error);
       // Fallback for demo
@@ -471,10 +471,10 @@ const AssigneeTaskDetailPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
-                    Requester
+                    requestor
                   </h3>
                   <p className="text-sm md:text-base" style={{ color: THEME.colors.gray }}>
-                    {ticket.requesterName || 'N/A'}
+                    {ticket.requestorName || 'N/A'}
                   </p>
                 </div>
                 <div>

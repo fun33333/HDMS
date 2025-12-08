@@ -234,7 +234,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
         return THEME.colors.primary;
       case 'assignee':
         return THEME.colors.success;
-      case 'requester':
+      case 'requestor':
         return THEME.colors.medium;
       default:
         return THEME.colors.gray;
@@ -253,7 +253,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
           backgroundColor: '#D1FAE5',
           color: THEME.colors.success
         };
-      case 'requester':
+      case 'requestor':
         return {
           backgroundColor: '#E9D5FF',
           color: THEME.colors.medium
@@ -278,7 +278,7 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
             </h3>
           </div>
           <p className="text-sm mt-1" style={{ color: THEME.colors.gray }}>
-            Communicate with requester, moderator, and assignee
+            Communicate with requestor, moderator, and assignee
           </p>
         </div>
 

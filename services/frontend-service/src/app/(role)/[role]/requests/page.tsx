@@ -51,7 +51,7 @@ export default function RequestsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export default function RequestsPage() {
       setLoading(true);
       try {
         const apiFilters: any = {
-          requesterId: user.id,
+          requestorId: user.id,
           page: currentPage,
           pageSize,
         };
@@ -119,8 +119,8 @@ export default function RequestsPage() {
         try {
           const response = await ticketService.getTickets(apiFilters);
           // Handle both TicketListResponse and array responses
-          const ticketsArray = Array.isArray(response) 
-            ? response 
+          const ticketsArray = Array.isArray(response)
+            ? response
             : (response?.results || []);
           setTickets(ticketsArray);
           setError(null);
@@ -129,18 +129,18 @@ export default function RequestsPage() {
           console.warn('API not available, using mock data');
           const mockTickets = getMockTickets(user.id);
           setTickets(mockTickets);
-        setError(null);
+          setError(null);
         }
       } catch (error: any) {
         console.error('Error fetching tickets:', error);
-          setError(error?.message || 'Failed to load tickets');
-          setTickets([]);
+        setError(error?.message || 'Failed to load tickets');
+        setTickets([]);
       } finally {
         setLoading(false);
       }
     };
 
-      fetchTickets();
+    fetchTickets();
   }, [user?.id, filters, currentPage, pageSize]);
 
   // Filter and search tickets
@@ -197,7 +197,7 @@ export default function RequestsPage() {
   const handleFilterChange = (newFilters: FilterValues) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page on filter change
-    
+
     // Update URL params
     const params = new URLSearchParams();
     Object.entries(newFilters).forEach(([key, value]) => {
@@ -205,7 +205,7 @@ export default function RequestsPage() {
         params.set(key, value);
       }
     });
-    router.replace(`/requester/requests?${params.toString()}`, { scroll: false });
+    router.replace(`/requestor/requests?${params.toString()}`, { scroll: false });
   };
 
   // Clear all filters
@@ -219,7 +219,7 @@ export default function RequestsPage() {
     };
     setFilters(clearedFilters);
     setCurrentPage(1);
-    router.replace('/requester/requests', { scroll: false });
+    router.replace('/requestor/requests', { scroll: false });
   };
 
   // Table columns for desktop view
@@ -229,7 +229,7 @@ export default function RequestsPage() {
       header: 'Ticket ID',
       accessor: (ticket: Ticket) => (
         <button
-          onClick={() => router.push(`/requester/request-detail/${ticket.id}`)}
+          onClick={() => router.push(`/requestor/request-detail/${ticket.id}`)}
           className="font-semibold text-blue-600 hover:text-blue-800 hover:underline text-left"
         >
           {ticket.ticketId}
@@ -242,8 +242,8 @@ export default function RequestsPage() {
       header: 'Title',
       accessor: (ticket: Ticket) => (
         <div className="max-w-xs">
-          <p 
-            className="font-medium text-gray-900 truncate" 
+          <p
+            className="font-medium text-gray-900 truncate"
             title={ticket.subject}
           >
             {truncateText(ticket.subject, 50)}
@@ -289,7 +289,7 @@ export default function RequestsPage() {
         <Button
           variant="primary"
           size="sm"
-          onClick={() => router.push(`/requester/request-detail/${ticket.id}`)}
+          onClick={() => router.push(`/requestor/request-detail/${ticket.id}`)}
           leftIcon={<Eye className="w-4 h-4" />}
         >
           View
@@ -299,7 +299,7 @@ export default function RequestsPage() {
     },
   ];
 
-    return (
+  return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6" style={{ backgroundColor: '#e7ecef', minHeight: '100vh' }}>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -315,7 +315,7 @@ export default function RequestsPage() {
           variant="primary"
           size="md"
           leftIcon={<Plus className="w-5 h-5" />}
-          onClick={() => router.push('/requester/new-request')}
+          onClick={() => router.push('/requestor/new-request')}
           className="w-full sm:w-auto"
         >
           New Request
@@ -371,29 +371,29 @@ export default function RequestsPage() {
                   <TicketCard
                     key={ticket.id}
                     ticket={ticket}
-                    onView={(id) => router.push(`/requester/request-detail/${id}`)}
+                    onView={(id) => router.push(`/requestor/request-detail/${id}`)}
                   />
                 ))
               )}
             </div>
           ) : (
             /* Desktop View - Table */
-      <Card>
-        <CardContent className="p-0">
+            <Card>
+              <CardContent className="p-0">
                 {filteredTickets.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
+                  <div className="p-8 text-center text-gray-500">
                     <p>No requests found. Try adjusting your filters or create a new request.</p>
-            </div>
-          ) : (
-            <DataTable
+                  </div>
+                ) : (
+                  <DataTable
                     data={paginatedTickets}
-              columns={columns}
+                    columns={columns}
                     showSearch={false}
                     pageSize={pageSize}
-            />
-          )}
-        </CardContent>
-      </Card>
+                  />
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {/* Pagination Controls */}

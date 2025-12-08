@@ -36,9 +36,9 @@ const generateMockTickets = (): Ticket[] => {
   const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const statuses: Ticket['status'][] = ['pending', 'submitted', 'assigned', 'in_progress'];
   const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
-  
-  // Realistic requester names
-  const requesterNames = [
+
+  // Realistic requestor names
+  const requestorNames = [
     'Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan',
     'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh', 'Omar Ali', 'Ayesha Raza',
     'Kamran Malik', 'Saima Khan', 'Tariq Hussain', 'Farhan Ali', 'Hina Sheikh',
@@ -46,9 +46,9 @@ const generateMockTickets = (): Ticket[] => {
     'Imran Khan', 'Sana Ali', 'Waseem Raza', 'Maryam Ahmed', 'Faisal Hassan',
     'Rabia Malik', 'Shahid Khan', 'Aisha Ali', 'Tahir Raza', 'Noor Ahmed'
   ];
-  
+
   const mockTickets: Ticket[] = [];
-  
+
   for (let i = 1; i <= 30; i++) {
     const status = statuses[Math.floor(Math.random() * statuses.length)];
     // Some tickets might not have priority (90% chance of having priority)
@@ -56,8 +56,8 @@ const generateMockTickets = (): Ticket[] => {
     const priority = hasPriority ? priorities[Math.floor(Math.random() * priorities.length)] : undefined;
     const dept = departments[Math.floor(Math.random() * departments.length)];
     const hoursAgo = Math.floor(Math.random() * 100);
-    const requesterIndex = (i - 1) % requesterNames.length;
-    
+    const requestorIndex = (i - 1) % requestorNames.length;
+
     mockTickets.push({
       id: `ticket-${i}`,
       ticketId: `HD-2024-${String(i).padStart(3, '0')}`,
@@ -66,17 +66,17 @@ const generateMockTickets = (): Ticket[] => {
       department: dept,
       priority: priority as Ticket['priority'] | undefined,
       status,
-      requesterId: `req-${i}`,
-      requesterName: requesterNames[requesterIndex],
+      requestorId: `req-${i}`,
+      requestorName: requestorNames[requestorIndex],
       assigneeId: status === 'assigned' || status === 'in_progress' ? `assignee-${i}` : undefined,
       assigneeName: status === 'assigned' || status === 'in_progress' ? `Assignee ${i}` : undefined,
       submittedDate: new Date(now.getTime() - hoursAgo * 60 * 60 * 1000).toISOString(),
-      assignedDate: status === 'assigned' || status === 'in_progress' 
+      assignedDate: status === 'assigned' || status === 'in_progress'
         ? new Date(now.getTime() - (hoursAgo - 5) * 60 * 60 * 1000).toISOString()
         : undefined,
     });
   }
-  
+
   return mockTickets;
 };
 
@@ -88,10 +88,10 @@ const calculateSLA = (ticket: Ticket): { timeRemaining?: number; timeOverdue?: n
   const hoursSinceSubmission = (now.getTime() - submitted.getTime()) / (1000 * 60 * 60);
   const remaining = slaHours - hoursSinceSubmission;
   const percentage = (remaining / slaHours) * 100;
-  
+
   const isBreached = hoursSinceSubmission > slaHours;
   const isApproaching = !isBreached && percentage < 25;
-  
+
   return {
     timeRemaining: !isBreached ? remaining : undefined,
     timeOverdue: isBreached ? hoursSinceSubmission - slaHours : undefined,
@@ -146,11 +146,10 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, items }) => {
                 item.onClick();
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors ${
-                item.danger
+              className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors ${item.danger
                   ? 'text-red-600 hover:bg-red-50'
                   : 'text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
             >
               {item.icon}
               <span>{item.label}</span>
@@ -187,7 +186,7 @@ export default function TicketPoolPage() {
       try {
         const response = await ticketService.getTickets();
         const ticketsList = Array.isArray(response) ? response : (response?.results || []);
-        
+
         if (ticketsList.length > 0) {
           setTickets(ticketsList);
           setUseMockData(false);
@@ -199,7 +198,7 @@ export default function TicketPoolPage() {
       } catch (error: any) {
         const isNetworkError = error?.isNetworkError || !error?.response;
         if (isNetworkError) {
-        console.warn('API not available, using mock data');
+          console.warn('API not available, using mock data');
           const mockTickets = generateMockTickets();
           setTickets(mockTickets);
           setUseMockData(true);
@@ -236,12 +235,12 @@ export default function TicketPoolPage() {
   ];
 
   const departmentOptions = [
-      { value: 'all', label: 'All Departments' },
+    { value: 'all', label: 'All Departments' },
     ...Array.from(new Set(tickets.map(t => t.department))).map(dept => ({
       value: dept,
       label: dept,
     })),
-    ];
+  ];
 
   const dateRangeOptions = [
     { value: 'all', label: 'All Time' },
@@ -269,7 +268,7 @@ export default function TicketPoolPage() {
         t.ticketId.toLowerCase().includes(searchLower) ||
         t.subject.toLowerCase().includes(searchLower) ||
         t.description.toLowerCase().includes(searchLower) ||
-        t.requesterName.toLowerCase().includes(searchLower)
+        t.requestorName.toLowerCase().includes(searchLower)
       );
     }
 
@@ -292,7 +291,7 @@ export default function TicketPoolPage() {
     if (filters.dateRange !== 'all') {
       const now = new Date();
       let startDate: Date;
-      
+
       switch (filters.dateRange) {
         case 'today':
           startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -309,7 +308,7 @@ export default function TicketPoolPage() {
         default:
           startDate = new Date(0);
       }
-      
+
       filtered = filtered.filter(t => new Date(t.submittedDate) >= startDate);
     }
 
@@ -351,7 +350,7 @@ export default function TicketPoolPage() {
     if (selectedTickets.size === 0) return;
 
     const selectedTicketIds = Array.from(selectedTickets);
-    
+
     switch (action) {
       case 'assign':
         router.push(`/moderator/assigned?bulk=${selectedTicketIds.join(',')}`);
@@ -368,18 +367,18 @@ export default function TicketPoolPage() {
         // Export selected tickets
         const selectedTicketsData = tickets.filter(t => selectedTickets.has(t.id));
         const csv = [
-          ['Ticket ID', 'Subject', 'Requester', 'Department', 'Status', 'Priority', 'Created Date'].join(','),
+          ['Ticket ID', 'Subject', 'requestor', 'Department', 'Status', 'Priority', 'Created Date'].join(','),
           ...selectedTicketsData.map(t => [
             t.ticketId,
             t.subject,
-            t.requesterName,
+            t.requestorName,
             t.department,
             t.status,
             t.priority,
             formatDate(t.submittedDate, 'short')
           ].join(','))
         ].join('\n');
-        
+
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -389,7 +388,7 @@ export default function TicketPoolPage() {
         URL.revokeObjectURL(url);
         break;
     }
-    
+
     setSelectedTickets(new Set());
   };
 
@@ -477,8 +476,8 @@ export default function TicketPoolPage() {
 
       {/* Filters & Search */}
       {showFilters && (
-      <Card className="mb-6 shadow-lg">
-        <CardContent className="p-4 md:p-6">
+        <Card className="mb-6 shadow-lg">
+          <CardContent className="p-4 md:p-6">
             <FilterBar
               filters={filters}
               onFilterChange={setFilters}
@@ -488,7 +487,7 @@ export default function TicketPoolPage() {
               dateRangeOptions={dateRangeOptions}
               onClearFilters={handleClearFilters}
             />
-            
+
             {/* SLA Filter */}
             <div className="mt-4">
               <label className="block text-sm font-semibold mb-2" style={{ color: THEME.colors.primary }}>
@@ -501,19 +500,19 @@ export default function TicketPoolPage() {
                   { value: 'approaching', label: 'Approaching' },
                   { value: 'normal', label: 'Normal' },
                 ].map(option => (
-                <Button
+                  <Button
                     key={option.value}
                     variant={slaFilter === option.value ? 'primary' : 'outline'}
-                  size="sm"
+                    size="sm"
                     onClick={() => setSlaFilter(option.value as any)}
                   >
                     {option.label}
-                </Button>
+                  </Button>
                 ))}
               </div>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Bulk Actions Bar */}
@@ -537,8 +536,8 @@ export default function TicketPoolPage() {
                 <DropdownMenu
                   trigger={
                     <Button variant="primary" size="sm" rightIcon={<ChevronDown className="w-4 h-4" />}>
-                  Bulk Actions
-                </Button>
+                      Bulk Actions
+                    </Button>
                   }
                   items={[
                     {
@@ -595,7 +594,7 @@ export default function TicketPoolPage() {
                     Title
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Requester
+                    requestor
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Department
@@ -632,15 +631,14 @@ export default function TicketPoolPage() {
                   filteredTickets.map((ticket) => {
                     const sla = calculateSLA(ticket);
                     const isSelected = selectedTickets.has(ticket.id);
-                    const initials = getInitials(ticket.requesterName);
-                    const avatarColor = getAvatarColor(ticket.requesterName);
-                    
+                    const initials = getInitials(ticket.requestorName);
+                    const avatarColor = getAvatarColor(ticket.requestorName);
+
                     return (
                       <tr
                         key={ticket.id}
-                        className={`hover:bg-gray-50 transition-colors ${
-                          isSelected ? 'bg-blue-50' : ''
-                        }`}
+                        className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''
+                          }`}
                       >
                         {/* Checkbox */}
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -676,7 +674,7 @@ export default function TicketPoolPage() {
                           </div>
                         </td>
 
-                        {/* Requester */}
+                        {/* requestor */}
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <div
@@ -685,7 +683,7 @@ export default function TicketPoolPage() {
                             >
                               {initials}
                             </div>
-                            <span className="text-sm text-gray-700">{ticket.requesterName}</span>
+                            <span className="text-sm text-gray-700">{ticket.requestorName}</span>
                           </div>
                         </td>
 
@@ -702,7 +700,7 @@ export default function TicketPoolPage() {
                         {/* Priority */}
                         <td className="px-4 py-4 whitespace-nowrap">
                           {ticket.priority ? (
-                          <PriorityBadge priority={ticket.priority} />
+                            <PriorityBadge priority={ticket.priority} />
                           ) : (
                             <span className="text-xs text-gray-400 italic">Not set</span>
                           )}
@@ -714,9 +712,9 @@ export default function TicketPoolPage() {
                             <span className="text-sm text-gray-900">
                               {formatDate(ticket.submittedDate, 'short')}
                             </span>
-                          <span className="text-xs text-gray-500">
-                            {formatRelativeTime(ticket.submittedDate)}
-                          </span>
+                            <span className="text-xs text-gray-500">
+                              {formatRelativeTime(ticket.submittedDate)}
+                            </span>
                           </div>
                         </td>
 
@@ -751,8 +749,8 @@ export default function TicketPoolPage() {
                           <DropdownMenu
                             trigger={
                               <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                              <MoreVertical className="w-5 h-5 text-gray-600" />
-                            </button>
+                                <MoreVertical className="w-5 h-5 text-gray-600" />
+                              </button>
                             }
                             items={[
                               {
@@ -807,7 +805,7 @@ export default function TicketPoolPage() {
               <div className="text-sm text-gray-600">
                 Showing <span className="font-semibold">{filteredTickets.length}</span> of{' '}
                 <span className="font-semibold">{filteredTickets.length}</span> tickets
-      </div>
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"

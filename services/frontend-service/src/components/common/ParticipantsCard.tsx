@@ -22,32 +22,32 @@ interface ParticipantsCardProps {
 export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({ ticket }) => {
   const participants: Participant[] = [
     {
-      id: ticket.requesterId,
-      name: ticket.requesterName,
-      role: 'Requester',
+      id: ticket.requestorId,
+      name: ticket.requestorName,
+      role: 'requestor',
       joinDate: ticket.submittedDate,
     },
     ...(ticket.moderatorId && ticket.moderatorName
       ? [{
-          id: ticket.moderatorId,
-          name: ticket.moderatorName,
-          role: 'Moderator',
-          joinDate: ticket.assignedDate || ticket.submittedDate,
-        }]
+        id: ticket.moderatorId,
+        name: ticket.moderatorName,
+        role: 'Moderator',
+        joinDate: ticket.assignedDate || ticket.submittedDate,
+      }]
       : []),
     ...(ticket.assigneeId && ticket.assigneeName
       ? [{
-          id: ticket.assigneeId,
-          name: ticket.assigneeName,
-          role: 'Assignee',
-          joinDate: ticket.assignedDate || ticket.submittedDate,
-        }]
+        id: ticket.assigneeId,
+        name: ticket.assigneeName,
+        role: 'Assignee',
+        joinDate: ticket.assignedDate || ticket.submittedDate,
+      }]
       : []),
   ];
 
   const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
-      case 'requester':
+      case 'requestor':
         return THEME.colors.primary;
       case 'moderator':
         return '#8b5cf6';

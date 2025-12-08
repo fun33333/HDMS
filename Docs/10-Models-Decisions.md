@@ -36,7 +36,7 @@
   - Inherits from BaseModel (UUID, soft delete, timestamps)
   - `employee_code` (CharField, unique, with pattern validation)
   - `is_ceo` (BooleanField - for financial approvals)
-  - `role` (CharField - requester, moderator, assignee, admin)
+  - `role` (CharField - requestor, moderator, assignee, admin)
   - `department` (ForeignKey to Department)
   - Authentication via employee_code + password
 

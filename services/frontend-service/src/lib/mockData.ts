@@ -1,12 +1,12 @@
 /**
  * Mock Data for Development
- * Hard-coded data for Requester Dashboard
+ * Hard-coded data for requestor Dashboard
  */
 
 import { Ticket } from '../types';
 
-// Hard-coded tickets for Requester
-export const getMockTickets = (requesterId: string): Ticket[] => {
+// Hard-coded tickets for requestor
+export const getMockTickets = (requestorId: string): Ticket[] => {
   return [
     {
       id: '1',
@@ -16,8 +16,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       assigneeId: '3',
       assigneeName: 'IT Support',
       submittedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -31,8 +31,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'pending',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       submittedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -43,8 +43,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'resolved',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       assigneeId: '3',
       assigneeName: 'IT Support',
       submittedDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
@@ -58,8 +58,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'Procurement',
       priority: 'low',
       status: 'completed',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       assigneeId: '5',
       assigneeName: 'Procurement Team',
       submittedDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
@@ -73,8 +73,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'medium',
       status: 'resolved',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       assigneeId: '6',
       assigneeName: 'Maintenance Team',
       submittedDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
@@ -88,8 +88,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'low',
       status: 'in_progress',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       assigneeId: '6',
       assigneeName: 'Maintenance Team',
       submittedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -103,8 +103,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'Administration',
       priority: 'medium',
       status: 'pending',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       submittedDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -115,8 +115,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'resolved',
-      requesterId: requesterId,
-      requesterName: 'John Requester',
+      requestorId: requestorId,
+      requestorName: 'John requestor',
       assigneeId: '3',
       assigneeName: 'IT Support',
       submittedDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
@@ -126,8 +126,8 @@ export const getMockTickets = (requesterId: string): Ticket[] => {
 };
 
 // Get a single mock ticket by ID
-export const getMockTicketById = (ticketId: string, requesterId?: string): Ticket | null => {
-  const tickets = getMockTickets(requesterId || '1');
+export const getMockTicketById = (ticketId: string, requestorId?: string): Ticket | null => {
+  const tickets = getMockTickets(requestorId || '1');
   return tickets.find(t => t.id === ticketId || t.ticketId === ticketId) || null;
 };
 
@@ -272,8 +272,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'urgent',
       status: 'pending',
-      requesterId: 'req-1',
-      requesterName: 'Ahmed Khan',
+      requestorId: 'req-1',
+      requestorName: 'Ahmed Khan',
       submittedDate: new Date(now.getTime() - 30 * 60 * 60 * 1000).toISOString(), // 30 hours ago
     },
     {
@@ -284,8 +284,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'high',
       status: 'submitted',
-      requesterId: 'req-2',
-      requesterName: 'Fatima Ali',
+      requestorId: 'req-2',
+      requestorName: 'Fatima Ali',
       submittedDate: new Date(now.getTime() - 28 * 60 * 60 * 1000).toISOString(), // 28 hours ago
     },
     {
@@ -296,8 +296,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'high',
       status: 'pending',
-      requesterId: 'req-3',
-      requesterName: 'Hassan Raza',
+      requestorId: 'req-3',
+      requestorName: 'Hassan Raza',
       submittedDate: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString(), // 50 hours ago
     },
 
@@ -310,8 +310,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'urgent',
       status: 'assigned',
-      requesterId: 'req-4',
-      requesterName: 'Sara Ahmed',
+      requestorId: 'req-4',
+      requestorName: 'Sara Ahmed',
       assigneeId: 'assignee-1',
       assigneeName: 'IT Support Team',
       moderatorId: 'mod-1',
@@ -327,8 +327,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req-5',
-      requesterName: 'Ali Hassan',
+      requestorId: 'req-5',
+      requestorName: 'Ali Hassan',
       assigneeId: 'assignee-2',
       assigneeName: 'IT Technician',
       submittedDate: new Date(now.getTime() - 90 * 60 * 60 * 1000).toISOString(), // 90 hours ago (breached)
@@ -344,8 +344,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Finance & Accounts',
       priority: 'medium',
       status: 'assigned',
-      requesterId: 'req-6',
-      requesterName: 'Zainab Malik',
+      requestorId: 'req-6',
+      requestorName: 'Zainab Malik',
       assigneeId: 'assignee-3',
       assigneeName: 'Finance & Accounts Team',
       submittedDate: new Date(now.getTime() - 65 * 60 * 60 * 1000).toISOString(), // 65 hours ago (approaching)
@@ -359,8 +359,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Procurement',
       priority: 'medium',
       status: 'in_progress',
-      requesterId: 'req-7',
-      requesterName: 'Bilal Khan',
+      requestorId: 'req-7',
+      requestorName: 'Bilal Khan',
       assigneeId: 'assignee-4',
       assigneeName: 'Procurement Officer',
       submittedDate: new Date(now.getTime() - 68 * 60 * 60 * 1000).toISOString(), // 68 hours ago (approaching)
@@ -376,8 +376,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'medium',
       status: 'assigned',
-      requesterId: 'req-8',
-      requesterName: 'Nadia Sheikh',
+      requestorId: 'req-8',
+      requestorName: 'Nadia Sheikh',
       assigneeId: 'assignee-5',
       assigneeName: 'Electrician',
       moderatorId: 'mod-1',
@@ -393,8 +393,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'low',
       status: 'assigned',
-      requesterId: 'req-9',
-      requesterName: 'Omar Ali',
+      requestorId: 'req-9',
+      requestorName: 'Omar Ali',
       assigneeId: 'assignee-6',
       assigneeName: 'Maintenance Team',
       submittedDate: new Date(now.getTime() - 10 * 60 * 60 * 1000).toISOString(),
@@ -408,8 +408,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Finance & Accounts',
       priority: 'high',
       status: 'assigned',
-      requesterId: 'req-10',
-      requesterName: 'Ayesha Raza',
+      requestorId: 'req-10',
+      requestorName: 'Ayesha Raza',
       assigneeId: 'assignee-7',
       assigneeName: 'Finance & Accounts Team',
       submittedDate: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(),
@@ -425,8 +425,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req-11',
-      requesterName: 'Kamran Malik',
+      requestorId: 'req-11',
+      requestorName: 'Kamran Malik',
       assigneeId: 'assignee-1',
       assigneeName: 'IT Support Team',
       submittedDate: new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString(),
@@ -440,8 +440,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'medium',
       status: 'assigned',
-      requesterId: 'req-12',
-      requesterName: 'Saima Khan',
+      requestorId: 'req-12',
+      requestorName: 'Saima Khan',
       assigneeId: 'assignee-8',
       assigneeName: 'Plumber',
       submittedDate: new Date(now.getTime() - 15 * 60 * 60 * 1000).toISOString(),
@@ -455,8 +455,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'low',
       status: 'in_progress',
-      requesterId: 'req-13',
-      requesterName: 'Tariq Hussain',
+      requestorId: 'req-13',
+      requestorName: 'Tariq Hussain',
       assigneeId: 'assignee-6',
       assigneeName: 'Maintenance Team',
       submittedDate: new Date(now.getTime() - 25 * 60 * 60 * 1000).toISOString(),
@@ -470,8 +470,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Finance & Accounts',
       priority: 'medium',
       status: 'pending',
-      requesterId: 'req-14',
-      requesterName: 'Farhan Ali',
+      requestorId: 'req-14',
+      requestorName: 'Farhan Ali',
       submittedDate: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
     },
     {
@@ -482,8 +482,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Finance & Accounts',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req-15',
-      requesterName: 'Hina Sheikh',
+      requestorId: 'req-15',
+      requestorName: 'Hina Sheikh',
       assigneeId: 'assignee-7',
       assigneeName: 'Finance & Accounts Team',
       submittedDate: new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString(),
@@ -499,8 +499,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'resolved',
-      requesterId: 'req-16',
-      requesterName: 'Usman Khan',
+      requestorId: 'req-16',
+      requestorName: 'Usman Khan',
       assigneeId: 'assignee-1',
       assigneeName: 'IT Support Team',
       submittedDate: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString(),
@@ -516,8 +516,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'low',
       status: 'resolved',
-      requesterId: 'req-17',
-      requesterName: 'Amina Raza',
+      requestorId: 'req-17',
+      requestorName: 'Amina Raza',
       assigneeId: 'assignee-1',
       assigneeName: 'IT Support Team',
       submittedDate: new Date(now.getTime() - 120 * 60 * 60 * 1000).toISOString(),
@@ -533,8 +533,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'high',
       status: 'resolved',
-      requesterId: 'req-18',
-      requesterName: 'Zubair Ahmed',
+      requestorId: 'req-18',
+      requestorName: 'Zubair Ahmed',
       assigneeId: 'assignee-6',
       assigneeName: 'Maintenance Team',
       submittedDate: new Date(now.getTime() - 150 * 60 * 60 * 1000).toISOString(),
@@ -552,8 +552,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'low',
       status: 'assigned',
-      requesterId: 'req-19',
-      requesterName: 'Rashid Ali',
+      requestorId: 'req-19',
+      requestorName: 'Rashid Ali',
       assigneeId: 'assignee-1',
       assigneeName: 'IT Support Team',
       submittedDate: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
@@ -567,8 +567,8 @@ export const generateMockTickets = (): Ticket[] => {
       department: 'Basic Maintenance',
       priority: 'medium',
       status: 'in_progress',
-      requesterId: 'req-20',
-      requesterName: 'Nida Malik',
+      requestorId: 'req-20',
+      requestorName: 'Nida Malik',
       assigneeId: 'assignee-5',
       assigneeName: 'Electrician',
       submittedDate: new Date(now.getTime() - 14 * 60 * 60 * 1000).toISOString(),
@@ -585,7 +585,7 @@ export const generateMockReassignableTickets = (): Ticket[] => {
   const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const assignees = ['Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan', 'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh'];
   const priorities: Ticket['priority'][] = ['low', 'medium', 'high', 'urgent'];
-  const requesterNames = [
+  const requestorNames = [
     'Ahmed Khan', 'Fatima Ali', 'Hassan Raza', 'Sara Ahmed', 'Ali Hassan',
     'Zainab Malik', 'Bilal Khan', 'Nadia Sheikh', 'Omar Ali', 'Ayesha Raza',
     'Kamran Malik', 'Saima Khan', 'Tariq Hussain', 'Farhan Ali', 'Hina Sheikh'
@@ -600,7 +600,7 @@ export const generateMockReassignableTickets = (): Ticket[] => {
     const priority = priorities[Math.floor(Math.random() * priorities.length)];
     const status = statuses[Math.floor(Math.random() * statuses.length)];
     const hoursAgo = Math.floor(Math.random() * 72);
-    const requesterIndex = (i - 1) % requesterNames.length;
+    const requestorIndex = (i - 1) % requestorNames.length;
 
     mockTickets.push({
       id: `reassign-ticket-${i}`,
@@ -610,8 +610,8 @@ export const generateMockReassignableTickets = (): Ticket[] => {
       department: dept,
       priority,
       status,
-      requesterId: `req-${i}`,
-      requesterName: requesterNames[requesterIndex],
+      requestorId: `req-${i}`,
+      requestorName: requestorNames[requestorIndex],
       assigneeId: `assignee-${i}`,
       assigneeName: assignee,
       submittedDate: new Date(now.getTime() - (hoursAgo + 24) * 60 * 60 * 1000).toISOString(),

@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(blank=True, max_length=254, null=True, unique=True)),
                 ('first_name', models.CharField(blank=True, max_length=150)),
                 ('last_name', models.CharField(blank=True, max_length=150)),
-                ('role', models.CharField(choices=[('requester', 'Requester'), ('moderator', 'Moderator'), ('assignee', 'Assignee'), ('admin', 'Admin')], db_index=True, default='requester', max_length=20)),
+                ('role', models.CharField(choices=[('requestor', 'requestor'), ('moderator', 'Moderator'), ('assignee', 'Assignee'), ('admin', 'Admin')], db_index=True, default='requestor', max_length=20)),
                 ('is_ceo', models.BooleanField(db_index=True, default=False)),
                 ('helpdesk_authorized', models.BooleanField(default=False)),
                 ('department_id', models.UUIDField(blank=True, db_index=True, null=True)),

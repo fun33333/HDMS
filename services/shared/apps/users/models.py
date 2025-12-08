@@ -29,7 +29,7 @@ except ImportError:
 
 class Role(models.TextChoices):
     """User roles in the system."""
-    REQUESTER = 'requester', 'Requester'
+    requestor = 'requestor', 'requestor'
     MODERATOR = 'moderator', 'Moderator'
     ASSIGNEE = 'assignee', 'Assignee'
     ADMIN = 'admin', 'Admin'
@@ -100,7 +100,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.REQUESTER, db_index=True)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.requestor, db_index=True)
     is_ceo = models.BooleanField(default=False, db_index=True)
     helpdesk_authorized = models.BooleanField(default=False)
     

@@ -26,8 +26,8 @@ export interface Ticket {
   department: string;
   priority: TicketPriority;
   status: TicketStatus;
-  requesterId: string;
-  requesterName: string;
+  requestorId: string;
+  requestorName: string;
   assigneeId?: string;
   assigneeName?: string;
   moderatorId?: string;
@@ -52,7 +52,7 @@ export interface TicketFilters {
   priority?: TicketPriority | 'all';
   department?: string | 'all';
   assigneeId?: string;
-  requesterId?: string;
+  requestorId?: string;
   search?: string;
   page?: number;
   pageSize?: number;
@@ -91,8 +91,8 @@ export interface Draft {
   description: string;
   department: string;
   priority: TicketPriority;
-  requesterId: string;
-  requesterName: string;
+  requestorId: string;
+  requestorName: string;
   createdAt: string;
   updatedAt: string;
   attachments?: Array<{

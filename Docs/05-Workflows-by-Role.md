@@ -6,18 +6,18 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 
 ---
 
-## **Requester Workflows**
+## **requestor Workflows**
 
 ### **Group A — Ticket Lifecycle & Creation**
 
 #### **A1. Create Ticket**
-**Purpose:** Requester files a new problem/request.
+**Purpose:** requestor files a new problem/request.
 
-**Actors:** Requester, Moderator
+**Actors:** requestor, Moderator
 
 **Flow:**
 1. Frontend validates form → `POST /api/v1/tickets` with `{title, desc, dept_id, priority, category}`
-2. Backend creates `Ticket(status=Submitted)` and `TicketParticipant` for requester
+2. Backend creates `Ticket(status=Submitted)` and `TicketParticipant` for requestor
 3. Create `AuditLog(action=create_ticket)`
 4. Emit WS `ticket:created` to moderator pool
 5. Create `Notification(to=moderator, type=new_ticket)`
@@ -31,7 +31,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 #### **A2. Save Draft / Resume Draft**
 **Purpose:** Save half-composed ticket and submit later.
 
-**Actors:** Requester
+**Actors:** requestor
 
 **Flow:**
 1. `POST /api/v1/tickets` with `is_draft=true`
@@ -79,7 +79,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 5. **Ticket Creation:**
    - Ticket created with attachment references
    - Attachment status: `processing` → `ok` or `failed`
-   - If scan fails, notification to requester and moderator; ticket flagged
+   - If scan fails, notification to requestor and moderator; ticket flagged
 
 **DB Entities:** `Attachment(status=processing/ok/failed)`
 
@@ -98,7 +98,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 ---
 
 #### **A4. Edit Draft → Submit**
-**Purpose:** Requester edits and submits draft.
+**Purpose:** requestor edits and submits draft.
 
 **Flow:**
 1. `PATCH /api/v1/tickets/{id}` with updates
@@ -106,16 +106,16 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 3. Ticket status changes to `Submitted`
 4. Moderator notified
 
-**Note:** Requester can only edit **before submission** (cannot edit after)
+**Note:** requestor can only edit **before submission** (cannot edit after)
 
 ---
 
 ### **Group B — Collaboration & Chat**
 
 #### **B1. Post Comment / Chat Message**
-**Purpose:** Requester converses with Moderator/Assignee in ticket chat.
+**Purpose:** requestor converses with Moderator/Assignee in ticket chat.
 
-**Actors:** Requester + participants
+**Actors:** requestor + participants
 
 **Flow:**
 1. WebSocket `chat:send` to room `ticket:{id}` with message payload
@@ -129,8 +129,8 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 
 ---
 
-#### **B2. Requester Added/Removed from Ticket Chat**
-**Purpose:** Admin/Moderator adjusts participants; requester gains/loses visibility.
+#### **B2. requestor Added/Removed from Ticket Chat**
+**Purpose:** Admin/Moderator adjusts participants; requestor gains/loses visibility.
 
 **Flow:**
 1. Moderator calls `/api/tickets/{id}/participants/add` or `/remove`
@@ -144,27 +144,27 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 
 ### **Group C — Status Changes & Resolution**
 
-#### **C1. Assignee Marks Completed → Requester Verifies & Marks Resolved**
-**Purpose:** Ensure requester confirmation before final close.
+#### **C1. Assignee Marks Completed → requestor Verifies & Marks Resolved**
+**Purpose:** Ensure requestor confirmation before final close.
 
 **Flow:**
-1. Assignee sets status `Completed` → notify requester via WS & email
-2. Requester opens details and clicks **Resolve** or **Request Rework**
-   - If **Resolve**: `PATCH /api/v1/tickets/{id}/resolve_by_requester` → status `Resolved`
+1. Assignee sets status `Completed` → notify requestor via WS & email
+2. requestor opens details and clicks **Resolve** or **Request Rework**
+   - If **Resolve**: `PATCH /api/v1/tickets/{id}/resolve_by_requestor` → status `Resolved`
    - If **Request Rework**: comment + status `Reopened`/`In_Progress`
 3. Moderator verifies, then `Closed`
 
 **DB Entities:** `Ticket.history`, `AuditLog`
 
-**Edge Cases:** Requester doesn't respond → auto-verify after 3 days (configurable)
+**Edge Cases:** requestor doesn't respond → auto-verify after 3 days (configurable)
 
 ---
 
-#### **C2. Requester Reopens a Closed Ticket**
+#### **C2. requestor Reopens a Closed Ticket**
 **Purpose:** If result unsatisfactory.
 
 **Flow:**
-1. Requester clicks `Reopen` and provides reason → creates `ReopenRequest`
+1. requestor clicks `Reopen` and provides reason → creates `ReopenRequest`
 2. Backend validates (max 2 reopens), requires Moderator approval
 3. If approved, Ticket transitions to `Reopened` and version increments (Ticket V2)
 4. Assignee receives notification and works on rework
@@ -177,7 +177,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 
 ### **Group D — Visibility & Reporting**
 
-#### **D1. Requester Views Personal Dashboard**
+#### **D1. requestor Views Personal Dashboard**
 **Purpose:** See own tickets, stats, drafts.
 
 **Flow:**
@@ -216,7 +216,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 **Flow:**
 1. Moderator reviews ticket validity and correctness
 2. If valid → assigns to appropriate department head
-3. If incomplete → rejects or requests clarification from requester
+3. If incomplete → rejects or requests clarification from requestor
 4. All actions logged in audit trail
 
 **Actions:**
@@ -233,7 +233,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 1. Moderator clicks 'Reject'
 2. Enter reason (optional if system-detected duplicates)
 3. Ticket status = `Rejected` (end of lifecycle, cannot be reopened)
-4. Notify Requester
+4. Notify requestor
 5. Audit log entry
 
 ---
@@ -340,9 +340,9 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 **Purpose:** Whenever a ticket is created or assigned, moderator becomes automatic participant.
 
 **Flow:**
-1. Ticket created by Requester
+1. Ticket created by requestor
 2. Chat room auto-created
-3. Participants added → Requester + Moderator
+3. Participants added → requestor + Moderator
 4. Moderator has full read/write access
 5. Can see full chat history (unlike new participants)
 
@@ -386,7 +386,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 2. System creates new version (Ticket V2) with same ID
 3. Moderator adds reason & timestamp
 4. Ticket assigned back to department
-5. Requester notified automatically
+5. requestor notified automatically
 6. Only last involved participants rejoin automatically
 7. Old messages archived (new chat starts from zero)
 
@@ -396,7 +396,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 **Purpose:** Final verification and closure.
 
 **Flow:**
-1. Requester confirms resolution (or auto-close after 3 days)
+1. requestor confirms resolution (or auto-close after 3 days)
 2. Moderator verifies resolution quality
 3. If acceptable, mark ticket `Closed`
 4. If parent ticket, can force-close all children simultaneously
@@ -411,7 +411,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 ### **1. Receive Assignment**
 **Purpose:** Department Head receives and acknowledges ticket assignment.
 
-**Actors:** Assignee (Department Head), Moderator, Requester
+**Actors:** Assignee (Department Head), Moderator, requestor
 
 **Flow:**
 1. System creates `Assignment` record, sets `Ticket.status = Assigned`
@@ -446,7 +446,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 **Flow:**
 1. Assignee updates `progress_percent` or `progress_notes`
 2. Optionally attach files or interim deliverables
-3. System logs partial update; notifies Moderator and Requester
+3. System logs partial update; notifies Moderator and requestor
 
 **API:** `PATCH /api/v1/tickets/{id}/progress`
 
@@ -472,7 +472,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 ### **5. Create Approval Request (Finance → CEO)**
 **Purpose:** Ticket requires high-level approval (payment, sensitive procurement).
 
-**Actors:** Assignee (usually Finance Head), CEO, Moderator, Requester
+**Actors:** Assignee (usually Finance Head), CEO, Moderator, requestor
 
 **Flow:**
 1. Finance Assignee marks ticket `requires_approval = true` and creates `ApprovalRequest`
@@ -487,7 +487,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 
 ---
 
-### **6. Mark Completed / Submit for Requester Verification**
+### **6. Mark Completed / Submit for requestor Verification**
 **Purpose:** Assignee believes task is complete.
 
 **Flow:**
@@ -499,8 +499,8 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 2. **Completion Process:**
    - Assignee sets `status = Completed` and adds completion notes + attachments
    - Version incremented
-   - System notifies Requester to verify
-   - `status` moves to `Resolved` (pending requester confirmation)
+   - System notifies requestor to verify
+   - `status` moves to `Resolved` (pending requestor confirmation)
 
 3. **Cache Invalidation:**
    - Invalidate ticket-related caches: `DEL ticket:detail:ticket_id:{id}`
@@ -511,8 +511,8 @@ This document outlines all workflow scenarios organized by role. For detailed Me
    - All changes committed atomically
 
 5. **Next Steps:**
-   - If Requester confirms (Resolve) → Moderator will verify and close
-   - If Requester requests rework → reopened
+   - If requestor confirms (Resolve) → Moderator will verify and close
+   - If requestor requests rework → reopened
 
 **API:** `PATCH /api/v1/tickets/{id}/status` with `completed`
 
@@ -562,7 +562,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 1. Admin opens Import User UI → `POST /api/v1/admin/users/import {employee_code}`
 2. Backend calls SMS service: `GET /sms/users/{employee_code}`
 3. If SMS returns valid user data, backend creates local `User` record
-4. Admin sets initial Helpdesk role (Requester/Assignee/Moderator/Admin)
+4. Admin sets initial Helpdesk role (requestor/Assignee/Moderator/Admin)
 5. System sends welcome email + in-app notification
 
 **API:** `POST /api/v1/admin/users/import`
@@ -657,7 +657,7 @@ This document outlines all workflow scenarios organized by role. For detailed Me
 
 **Purpose:** Handle cross-departmental tasks by creating linked sub-tickets under a parent ticket.
 
-**Actors:** Moderator (creator/requester of sub-ticket), Assignee (Dept Head), Requester (from parent ticket)
+**Actors:** Moderator (creator/requestor of sub-ticket), Assignee (Dept Head), requestor (from parent ticket)
 
 **Flow:**
 1. Moderator reviews main ticket, decides multiple departments are involved
@@ -692,9 +692,9 @@ This document provides workflow descriptions and API references. For detailed Me
 
 ## **Quick Reference: Key Endpoints by Role**
 
-### **Requester**
+### **requestor**
 - `POST /api/v1/tickets` - Create ticket
-- `PATCH /api/v1/tickets/{id}/resolve_by_requester` - Resolve ticket
+- `PATCH /api/v1/tickets/{id}/resolve_by_requestor` - Resolve ticket
 - `POST /api/v1/tickets/{id}/reopen` - Request reopen
 
 ### **Moderator**

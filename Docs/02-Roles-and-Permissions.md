@@ -18,7 +18,7 @@ This document defines all **stakeholders, their roles, authorities, and responsi
 | **Helpdesk Administrator (Admin)** | Technical | System-level user and configuration management. |
 | **Moderator (Helpdesk Officer)** | Operational | Workflow management, ticket validation, and progress control. |
 | **Assignees (Department Heads / Leads)** | Operational | Departmental execution of assigned tasks. |
-| **Requesters (Principals / Staff)** | Functional | Initiate and track service requests. |
+| **requestors (Principals / Staff)** | Functional | Initiate and track service requests. |
 
 ---
 
@@ -26,7 +26,7 @@ This document defines all **stakeholders, their roles, authorities, and responsi
 
 ---
 
-## **🧍‍♂️ Requester**
+## **🧍‍♂️ requestor**
 
 *(Principals, Department Heads, or Authorized Staff Members)*
 
@@ -56,7 +56,7 @@ Initiate, collaborate, and finalize internal service or maintenance requests wit
 
   * Add other departments if the issue spans multiple areas.
 
-  * **Note:** Requester cannot request sub-tickets directly. Only Assignee can request sub-tickets via chat.
+  * **Note:** requestor cannot request sub-tickets directly. Only Assignee can request sub-tickets via chat.
 
 * Stay informed through notifications about:
 
@@ -74,7 +74,7 @@ Initiate, collaborate, and finalize internal service or maintenance requests wit
 
 #### **Key Value:**
 
-Makes the requester an *active participant* in the lifecycle rather than a passive initiator — improving engagement and faster resolutions.
+Makes the requestor an *active participant* in the lifecycle rather than a passive initiator — improving engagement and faster resolutions.
 
 ---
 
@@ -122,7 +122,7 @@ Serve as the **workflow controller**, ensuring all tickets are valid, properly c
 
 * **Undo capability:** Can undo actions (reject, assign, postpone) within **15 minutes** of performing the action.
 
-* **Communication:** Maintain open dialogue with both Requesters and Assignees to resolve delays or missing details.
+* **Communication:** Maintain open dialogue with both requestors and Assignees to resolve delays or missing details.
 
 #### **Access & Visibility:**
 
@@ -164,7 +164,7 @@ Execute and oversee ticket resolution for their respective department.
 
 #### **Enhanced Capabilities:**
 
-* Participate in **real-time chat** with Moderator and Requester.
+* Participate in **real-time chat** with Moderator and requestor.
 
 * **Request Moderator to create linked sub-tickets** for other departments if the task extends beyond their scope. **Note:** Assignee cannot create sub-tickets directly; must request via chat with `request_subticket` flag.
 
@@ -198,7 +198,7 @@ Govern overall system structure, access control, and configuration management.
 
 * **Assign employees to departments** under their respective department heads.
 
-* Assign appropriate roles (Requester, Moderator, Assignee).
+* Assign appropriate roles (requestor, Moderator, Assignee).
 
 * Configure departments, categories, SLA durations, and notifications.
 
@@ -292,7 +292,7 @@ Provide executive oversight and approve major, cross-departmental, or financial 
 
 | Role | System Access | Operational Authority | Configuration Rights |
 | ----- | ----- | ----- | ----- |
-| Requester | Own Tickets Only | Create & Resolve | ❌ |
+| requestor | Own Tickets Only | Create & Resolve | ❌ |
 | Moderator | All Tickets | Manage Workflows | ❌ |
 | Assignee | Department Tickets | Execute Tasks | ❌ |
 | Admin | All System Data | Supervise & Configure | ✅ |
@@ -306,10 +306,10 @@ Provide executive oversight and approve major, cross-departmental, or financial 
 ### **Sub-Ticket Creation:**
 * **ONLY Moderator** can create sub-tickets
 * **Assignee** can request sub-tickets via chat with `request_subticket` flag
-* **Requester** cannot request sub-tickets
+* **requestor** cannot request sub-tickets
 
 ### **Ticket Editing:**
-* **Requester** can only edit tickets **before submission** (cannot edit after submission)
+* **requestor** can only edit tickets **before submission** (cannot edit after submission)
 
 ### **Team Members/Employees:**
 * System users assigned to departments by **Admin**

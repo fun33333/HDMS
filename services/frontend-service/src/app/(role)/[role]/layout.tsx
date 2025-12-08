@@ -16,7 +16,7 @@ export default function RoleLayout({
 
   // Extract role from pathname
   const roleFromPath = pathname?.split('/')[1];
-  const allowedRoles = ['requester', 'moderator', 'assignee', 'admin'];
+  const allowedRoles = ['requestor', 'moderator', 'assignee', 'admin'];
 
   // Handle navigation in useEffect to avoid setState during render
   useEffect(() => {

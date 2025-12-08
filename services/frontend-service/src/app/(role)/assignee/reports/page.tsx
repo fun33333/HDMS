@@ -8,9 +8,9 @@ import { Button } from '../../../../components/ui/Button';
 import { THEME } from '../../../../lib/theme';
 import { Ticket } from '../../../../types';
 import ticketService from '../../../../services/api/ticketService';
-import { 
-  BarChart3, 
-  TrendingUp, 
+import {
+  BarChart3,
+  TrendingUp,
   Download,
   ArrowLeft,
   FileText,
@@ -35,8 +35,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'resolved',
-      requesterId: 'req1',
-      requesterName: 'John Doe',
+      requestorId: 'req1',
+      requestorName: 'John Doe',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
@@ -52,8 +52,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'in_progress',
-      requesterId: 'req2',
-      requesterName: 'Jane Smith',
+      requestorId: 'req2',
+      requestorName: 'Jane Smith',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -67,8 +67,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'low',
       status: 'assigned',
-      requesterId: 'req3',
-      requesterName: 'Bob Wilson',
+      requestorId: 'req3',
+      requestorName: 'Bob Wilson',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -82,8 +82,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'urgent',
       status: 'resolved',
-      requesterId: 'req4',
-      requesterName: 'Sarah Johnson',
+      requestorId: 'req4',
+      requestorName: 'Sarah Johnson',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
@@ -99,8 +99,8 @@ const generateDemoTasks = (assigneeId: string): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req5',
-      requesterName: 'Tom Brown',
+      requestorId: 'req5',
+      requestorName: 'Tom Brown',
       assigneeId: assigneeId,
       assigneeName: 'Current User',
       submittedDate: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
@@ -234,7 +234,7 @@ const AssigneeReportsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center space-x-3">
-              <button 
+              <button
                 onClick={() => router.push('/assignee/dashboard')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -310,7 +310,7 @@ const AssigneeReportsPage: React.FC = () => {
                 Performance Overview
               </h2>
             </div>
-            
+
             <div className="space-y-4 md:space-y-6">
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -318,11 +318,11 @@ const AssigneeReportsPage: React.FC = () => {
                   <span className="text-base md:text-lg font-bold" style={{ color: THEME.colors.primary }}>{completionRate}%</span>
                 </div>
                 <div className="w-full rounded-full" style={{ backgroundColor: THEME.colors.background, height: '12px' }}>
-                  <div 
+                  <div
                     className="rounded-full h-full transition-all duration-500"
-                    style={{ 
+                    style={{
                       width: `${completionRate}%`,
-                      backgroundColor: THEME.colors.primary 
+                      backgroundColor: THEME.colors.primary
                     }}
                   />
                 </div>
@@ -334,11 +334,11 @@ const AssigneeReportsPage: React.FC = () => {
                   <span className="text-base md:text-lg font-bold" style={{ color: THEME.colors.primary }}>{avgResolutionTime}</span>
                 </div>
                 <div className="w-full rounded-full" style={{ backgroundColor: THEME.colors.background, height: '12px' }}>
-                  <div 
+                  <div
                     className="rounded-full h-full transition-all duration-500"
-                    style={{ 
+                    style={{
                       width: '75%',
-                      backgroundColor: THEME.colors.medium 
+                      backgroundColor: THEME.colors.medium
                     }}
                   />
                 </div>
@@ -357,12 +357,12 @@ const AssigneeReportsPage: React.FC = () => {
                 Task Status Distribution
               </h2>
             </div>
-            
+
             <div className="space-y-4">
               {statusStats.map((stat) => (
                 <div key={stat.name} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: stat.color }}
                     />
@@ -392,12 +392,12 @@ const AssigneeReportsPage: React.FC = () => {
                 Priority Distribution
               </h2>
             </div>
-            
+
             <div className="space-y-4">
               {priorityStats.map((stat) => (
                 <div key={stat.name} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: stat.color }}
                     />
@@ -424,18 +424,18 @@ const AssigneeReportsPage: React.FC = () => {
                 Export Report
               </h2>
             </div>
-            
+
             <div className="space-y-3">
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 fullWidth
                 leftIcon={<Download className="w-4 h-4" />}
                 onClick={() => handleExportReport('PDF')}
               >
                 Export as PDF
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 fullWidth
                 leftIcon={<Download className="w-4 h-4" />}
                 onClick={() => handleExportReport('Excel')}

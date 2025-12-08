@@ -13,7 +13,7 @@ This document consolidates all business rules, validation rules, constraints, an
 ### **1.1 Creation Authority**
 * **ONLY Moderator** can create sub-tickets
 * **Assignee** can request sub-tickets via chat with `request_subticket` flag
-* **Requester** cannot request sub-tickets
+* **requestor** cannot request sub-tickets
 
 ### **1.2 Sub-Ticket Structure**
 * No nested sub-tickets allowed (only parent-child, one level)
@@ -36,7 +36,7 @@ This document consolidates all business rules, validation rules, constraints, an
 
 ## **2. Ticket Editing Rules**
 
-### **2.1 Requester Editing**
+### **2.1 requestor Editing**
 * Can only edit tickets **before submission** (cannot edit after submission)
 * Can edit or cancel drafts before final submission
 
@@ -53,7 +53,7 @@ This document consolidates all business rules, validation rules, constraints, an
 * **Maximum 2 reopens** per ticket (hard limit, not configurable)
 * **Always requires Moderator approval**
 * Creates new version (Ticket v2) while retaining same ID
-* Only last involved participants (Moderator, Requester, Assignee) rejoin automatically
+* Only last involved participants (Moderator, requestor, Assignee) rejoin automatically
 * Old messages archived (new chat starts from zero)
 
 ### **3.2 Rejected Status**
@@ -72,7 +72,7 @@ This document consolidates all business rules, validation rules, constraints, an
 ### **3.4 Auto-Close Rules**
 * **3 days** after ticket reaches Resolved status (configurable, default 3 days)
 * **Reminder sent 2 days before** auto-close (i.e., on day 1 if auto-close is day 3)
-* If Requester doesn't confirm within 3 days, system auto-closes
+* If requestor doesn't confirm within 3 days, system auto-closes
 * Moderator verifies automatically
 
 ---
@@ -81,7 +81,7 @@ This document consolidates all business rules, validation rules, constraints, an
 
 ### **4.1 Approval Request**
 * **Only Finance Assignee** can request approval
-* Cannot be requested by Requester or other roles
+* Cannot be requested by requestor or other roles
 * Finance Assignee marks `requires_approval=true`
 
 ### **4.2 Approval Decision**
@@ -206,14 +206,14 @@ When SLA expires, all three triggers fire:
 
 ### **12.1 Ticket Creation**
 * Required fields: title, description, department, category
-* Maximum 10 open tickets per requester (warning shown if exceeded)
+* Maximum 10 open tickets per requestor (warning shown if exceeded)
 * File size limits for attachments
 * Invalid file types are skipped automatically with warning
 
 ### **12.2 Permission Checks**
 * Cannot file ticket for department they're not authorized for → 403
 * Attachment exceeds max size → client error + hint
-* Too many open tickets from same requester → rate limiting or moderator review
+* Too many open tickets from same requestor → rate limiting or moderator review
 
 ---
 
@@ -257,7 +257,7 @@ When SLA expires, all three triggers fire:
 
 ## **15. Role-Based Access Rules**
 
-### **15.1 Requester**
+### **15.1 requestor**
 * Can view and track **only self-created or linked tickets**
 * Can only edit before submission
 * Cannot request sub-tickets
@@ -453,7 +453,7 @@ When SLA expires, all three triggers fire:
 | Endpoint | Role | Limit |
 | ----- | ----- | ----- |
 | `/api/v1/auth/login` | All Users | 10 requests/minute |
-| All Endpoints | Requester | 150 requests/minute |
+| All Endpoints | requestor | 150 requests/minute |
 | All Endpoints | Assignee | 250 requests/minute |
 | All Endpoints | Moderator | Unlimited |
 | All Endpoints | Admin | Unlimited |
@@ -593,14 +593,14 @@ When SLA expires, all three triggers fire:
 | Auto-Close Reminder | 2 days before | System |
 | Undo Time Window | 15 minutes | System |
 | Postponement Reason | Required | Validation |
-| Requester Edit | Only before submission | Business Logic |
+| requestor Edit | Only before submission | Business Logic |
 | Sub-Ticket Creation | Only Moderator | Permission Check |
 | Finance Approval | Only Finance Assignee | Permission Check |
 | Soft Delete | All deletions | System Policy |
 | Chat Visibility | After join timestamp | Business Logic |
 | Draft Expiration | 7 days (soft delete) | Celery Task |
 | Rate Limit (Login) | 10 requests/minute | Middleware |
-| Rate Limit (Requester) | 150 requests/minute | Middleware |
+| Rate Limit (requestor) | 150 requests/minute | Middleware |
 | Rate Limit (Assignee) | 250 requests/minute | Middleware |
 | File Upload (Server) | 500MB per file | Validation |
 | File Upload (Frontend) | 250MB per file | Client Validation |

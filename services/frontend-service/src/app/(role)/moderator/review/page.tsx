@@ -7,7 +7,7 @@ import { Card, CardContent } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/Button';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
-import { 
+import {
   CheckCircle,
   XCircle,
   User,
@@ -37,14 +37,14 @@ const ReviewPage: React.FC = () => {
       try {
         // Fetch tickets that are completed and need review
         const response = await ticketService.getTickets();
-        
+
         // Check if response exists and has results
         if (response && (Array.isArray(response) || response.results)) {
           const ticketsList = Array.isArray(response) ? response : (response.results || []);
-          
+
           // Filter tickets that are completed (status: 'completed' or have completionNote/completionImage)
-          const completedTickets = ticketsList.filter(ticket => 
-            ticket.status === 'completed' || 
+          const completedTickets = ticketsList.filter(ticket =>
+            ticket.status === 'completed' ||
             ticket.status === 'in_progress' ||
             (ticket.completionNote || ticket.completionImage)
           );
@@ -58,7 +58,7 @@ const ReviewPage: React.FC = () => {
       } catch (error: any) {
         // Handle network errors gracefully
         const isNetworkError = error?.isNetworkError || !error?.response;
-        
+
         if (isNetworkError) {
           console.warn('API not available, using empty tickets list');
           setTickets([]);
@@ -77,14 +77,14 @@ const ReviewPage: React.FC = () => {
   }, []);
 
   const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = 
+    const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.requestorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.assigneeName?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesFilter = filterStatus === 'all' || ticket.status === filterStatus;
-    
+
     return matchesSearch && matchesFilter;
   });
 
@@ -131,7 +131,7 @@ const ReviewPage: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
@@ -144,7 +144,7 @@ const ReviewPage: React.FC = () => {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
+            style={{
               borderColor: THEME.colors.gray
             }}
             onFocus={(e) => e.target.style.borderColor = THEME.colors.primary}
@@ -164,11 +164,11 @@ const ReviewPage: React.FC = () => {
             <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No tickets found</h3>
             <p className="text-gray-500">
-              {searchTerm || filterStatus !== 'all' 
+              {searchTerm || filterStatus !== 'all'
                 ? 'Try adjusting your search or filter criteria'
                 : useMockData
-                ? 'API not available. No tickets to display.'
-                : 'No completed tickets available for review'}
+                  ? 'API not available. No tickets to display.'
+                  : 'No completed tickets available for review'}
             </p>
           </CardContent>
         </Card>
@@ -193,8 +193,8 @@ const ReviewPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-400" />
                         <div>
-                          <p className="text-gray-500 text-xs">Requester</p>
-                          <p className="font-medium text-gray-800">{ticket.requesterName || 'N/A'}</p>
+                          <p className="text-gray-500 text-xs">requestor</p>
+                          <p className="font-medium text-gray-800">{ticket.requestorName || 'N/A'}</p>
                         </div>
                       </div>
 

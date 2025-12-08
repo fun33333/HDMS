@@ -26,7 +26,7 @@ class UserIn(Schema):
     first_name: str
     last_name: str
     password: str
-    role: str = "requester"
+    role: str = "requestor"
     department_id: Optional[str] = None
 
 

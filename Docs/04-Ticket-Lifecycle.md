@@ -15,7 +15,7 @@ This document outlines the **end-to-end lifecycle of tickets**, the **real-time 
 The system uses the following status values:
 
 * **Draft** - Ticket is being created, not yet submitted
-* **Submitted** - Ticket has been submitted by Requester
+* **Submitted** - Ticket has been submitted by requestor
 * **Pending** - Ticket is waiting for initial review
 * **Under_Review** - Moderator is reviewing the ticket
 * **Assigned** - Ticket has been assigned to a Department Head
@@ -23,7 +23,7 @@ The system uses the following status values:
 * **Waiting_Approval** - Ticket requires approval (Finance/CEO)
 * **Approved** - Approval granted
 * **Rejected** - Ticket rejected (end of lifecycle, cannot be reopened)
-* **Resolved** - Requester has confirmed resolution
+* **Resolved** - requestor has confirmed resolution
 * **Closed** - Ticket is fully closed
 * **Reopened** - Ticket has been reopened (requires Moderator approval)
 * **Postponed** - Ticket temporarily paused
@@ -45,14 +45,14 @@ Draft → Submitted → Pending → Under_Review → Assigned → In_Progress �
 * Standard departmental request
 
 **Transitions:**
-1. Requester creates ticket (Draft)
-2. Requester submits (Submitted)
+1. requestor creates ticket (Draft)
+2. requestor submits (Submitted)
 3. System moves to Pending
 4. Moderator reviews (Under_Review)
 5. Moderator assigns to Department Head (Assigned)
 6. Department Head starts work (In_Progress)
 7. Department Head marks Completed → System moves to Resolved
-8. Requester confirms → Moderator verifies → Closed
+8. requestor confirms → Moderator verifies → Closed
 
 ---
 
@@ -127,7 +127,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 ```
 
 **Conditions:**
-* Requester or Moderator requests reopen
+* requestor or Moderator requests reopen
 * **Always requires Moderator approval**
 * **Maximum 2 reopens** per ticket (hard limit)
 * Creates new version (Ticket v2) while retaining same ID
@@ -137,7 +137,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 2. Moderator reviews and approves
 3. Status = Reopened
 4. Version increments (e.g., version=2)
-5. Only last involved participants (Moderator, Requester, Assignee) rejoin automatically
+5. Only last involved participants (Moderator, requestor, Assignee) rejoin automatically
 6. Moderator can manually add/remove participants
 7. Old messages archived (new chat starts from zero)
 8. Ticket continues from Assigned or In_Progress status
@@ -152,7 +152,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 
 | From Status | To Status | Who Can Perform | Conditions |
 | ----- | ----- | ----- | ----- |
-| Draft | Submitted | Requester | Before submission only (cannot edit after) |
+| Draft | Submitted | requestor | Before submission only (cannot edit after) |
 | Submitted | Pending | System | Automatic |
 | Pending | Under_Review | Moderator | - |
 | Under_Review | Assigned | Moderator | Only Moderator can assign |
@@ -163,7 +163,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 | Waiting_Approval | Approved | CEO/Finance | - |
 | Waiting_Approval | Rejected | CEO/Finance | End of lifecycle |
 | Approved | Resolved | System | Automatic after approval |
-| Completed | Resolved | Requester | Requester confirms |
+| Completed | Resolved | requestor | requestor confirms |
 | Resolved | Closed | Moderator | After verification |
 | Any Active | Postponed | Moderator | Reason required |
 | Postponed | Previous Status | Moderator/Assignee | Restart |
@@ -175,16 +175,16 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 
 **Timing:**
 * 3 days after ticket reaches Resolved status (configurable, default 3 days)
-* If Requester doesn't confirm within 3 days, system auto-closes
+* If requestor doesn't confirm within 3 days, system auto-closes
 
 **Reminder:**
 * Reminder sent **2 days before** auto-close (i.e., on day 1 if auto-close is day 3)
-* Final reminder to Requester and Moderator
+* Final reminder to requestor and Moderator
 
 **Process:**
 1. Assignee marks Completed
 2. Ticket status = Resolved
-3. Requester receives notification
+3. requestor receives notification
 4. If no response after 3 days → Auto-close
 5. Moderator verifies automatically
 6. Status = Closed
@@ -194,7 +194,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 ### **6. Draft Handling**
 
 **Creation:**
-* Requester can save drafts before submission
+* requestor can save drafts before submission
 * Drafts are not visible to Moderator
 
 **Expiration:**
@@ -203,7 +203,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 * Celery task runs daily to mark expired drafts as deleted
 
 **Editing:**
-* Requester can edit drafts **only before submission**
+* requestor can edit drafts **only before submission**
 * Cannot edit after submission
 
 ---
@@ -212,7 +212,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 
 | Feature | Description |
 | ----- | ----- |
-| **Participants** | Requester, Moderator, Assignee(s), and Sub-ticket members. |
+| **Participants** | requestor, Moderator, Assignee(s), and Sub-ticket members. |
 | **Visibility Rules** | Only linked users can view chat. Admin has read-only audit access. |
 | **Technology** | Implemented using Django Channels WebSocket for instant updates. |
 | **Moderator Controls** | Can add/remove users, create sub-tickets directly from chat. |
@@ -254,7 +254,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 
 * **Assignee → Marks Completed**
 
-* **Requester → Confirms Resolution** (or auto-close after 3 days)
+* **requestor → Confirms Resolution** (or auto-close after 3 days)
 
 * **Moderator → Finalizes & Closes Ticket**  
    Each closed ticket contributes to satisfaction analytics and performance dashboards.
@@ -267,7 +267,7 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 
 * **Assignee closes, Moderator verifies:** prevents self-approval bias.
 
-* **Requester confirmation mandatory:** ensures satisfaction-based closure.
+* **requestor confirmation mandatory:** ensures satisfaction-based closure.
 
 * **All actions logged:** guarantees transparency and traceability.
 
@@ -304,13 +304,13 @@ Closed → Reopened → (Moderator assigns) → Assigned → In_Progress → ...
 ```
 stateDiagram-v2
     [*] --> Draft
-    Draft --> Submitted : Requester submits
+    Draft --> Submitted : requestor submits
     Submitted --> Pending : System
     Pending --> Under_Review : Moderator reviews
     Under_Review --> Assigned : Moderator assigns
     Assigned --> In_Progress : Department Head starts
     In_Progress --> Completed : Department Head marks done
-    Completed --> Resolved : Requester confirms (or auto after 3 days)
+    Completed --> Resolved : requestor confirms (or auto after 3 days)
     Resolved --> Closed : Moderator verifies
     Closed --> Reopened : Reopen request (max 2x, requires Moderator approval)
     Reopened --> Assigned : Moderator reassigns
@@ -431,7 +431,7 @@ def transition_ticket_status(ticket_id, new_status, version):
 
 3. **Draft Expiration:** Soft-deleted after 7 days (not hard deleted)
 
-4. **Requester Edit:** Can only edit before submission (cannot edit after)
+4. **requestor Edit:** Can only edit before submission (cannot edit after)
 
 5. **Rejected Status:** End of lifecycle (cannot be reopened, final state)
 

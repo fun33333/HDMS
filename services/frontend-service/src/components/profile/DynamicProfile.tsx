@@ -53,14 +53,14 @@ const DynamicProfile: React.FC = () => {
 
   const handleSave = () => {
     if (!editedUser) return;
-    
+
     setUser(editedUser);
     setIsEditing(false);
-    
+
     // Update localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('user', JSON.stringify(editedUser));
-      
+
       // Dispatch avatar update event
       if (editedUser.avatar !== user?.avatar) {
         const event = new CustomEvent('avatarUpdated', { detail: editedUser.avatar });
@@ -76,7 +76,7 @@ const DynamicProfile: React.FC = () => {
 
   const handleInputChange = (field: string, value: string) => {
     if (!editedUser) return;
-    
+
     setEditedUser(prev => ({
       ...prev!,
       [field]: value
@@ -97,22 +97,22 @@ const DynamicProfile: React.FC = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      
+
       // Update the user avatar
       const updatedUser = {
         ...user,
         avatar: base64String
       };
-      
+
       setUser(updatedUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
+
         // Dispatch avatar update event to update navbar
         const event = new CustomEvent('avatarUpdated', { detail: base64String });
         window.dispatchEvent(event);
       }
-      
+
       // Update editedUser if in edit mode
       if (editedUser) {
         setEditedUser({
@@ -120,12 +120,12 @@ const DynamicProfile: React.FC = () => {
           avatar: base64String
         });
       }
-      
+
       // simple success indicator
       setContactSuccess('Profile image updated successfully!');
       setTimeout(() => setContactSuccess(''), 2000);
     };
-    
+
     reader.readAsDataURL(file);
   };
 
@@ -138,7 +138,7 @@ const DynamicProfile: React.FC = () => {
       case 'admin': return Settings;
       case 'moderator': return Shield;
       case 'assignee': return Wrench;
-      case 'requester': return FileText;
+      case 'requestor': return FileText;
       default: return UserIcon;
     }
   };
@@ -148,7 +148,7 @@ const DynamicProfile: React.FC = () => {
       case 'admin': return { color: THEME.colors.primary, backgroundColor: THEME.colors.background };
       case 'moderator': return { color: THEME.colors.primary, backgroundColor: THEME.colors.background };
       case 'assignee': return { color: THEME.colors.primary, backgroundColor: THEME.colors.background };
-      case 'requester': return { color: THEME.colors.primary, backgroundColor: THEME.colors.background };
+      case 'requestor': return { color: THEME.colors.primary, backgroundColor: THEME.colors.background };
       default: return { color: THEME.colors.gray, backgroundColor: THEME.colors.background };
     }
   };
@@ -158,7 +158,7 @@ const DynamicProfile: React.FC = () => {
       case 'admin': return 'System Administrator - Full system access and management';
       case 'moderator': return 'Ticket Moderator - Assign and manage tickets';
       case 'assignee': return 'Department Staff - Handle assigned tasks';
-      case 'requester': return 'Request Submitter - Create and track requests';
+      case 'requestor': return 'Request Submitter - Create and track requests';
       default: return 'User';
     }
   };
@@ -166,7 +166,7 @@ const DynamicProfile: React.FC = () => {
   const RoleIcon = getRoleIcon(user.role);
 
   const roleColorStyle = getRoleColor(user.role);
-  
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -190,7 +190,7 @@ const DynamicProfile: React.FC = () => {
             onChange={handleImageUpload}
             className="hidden"
           />
-          
+
           {/* Profile Card */}
           <div className="xl:col-span-1">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
@@ -198,9 +198,9 @@ const DynamicProfile: React.FC = () => {
                 <div className="relative inline-block">
                   <div className="h-32 w-32 mx-auto rounded-full bg-white flex items-center justify-center text-4xl font-bold shadow-lg overflow-hidden relative">
                     {user.avatar && (user.avatar.startsWith('data:image') || user.avatar.startsWith('http') || user.avatar.startsWith('/')) ? (
-                      <img 
-                        src={user.avatar} 
-                        alt="Profile" 
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
@@ -213,7 +213,7 @@ const DynamicProfile: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <button 
+                  <button
                     onClick={handleCameraClick}
                     className="absolute bottom-0 right-0 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
                     style={{ color: THEME.colors.primary }}
@@ -222,7 +222,7 @@ const DynamicProfile: React.FC = () => {
                     <Camera className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <div className="mt-6">
                   <h2 className="text-2xl font-bold text-white mb-2">{user.name}</h2>
                   <p className="mb-4" style={{ color: THEME.colors.light }}>{user.email}</p>
@@ -232,7 +232,7 @@ const DynamicProfile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="p-6">
                 <p className="text-gray-600 text-center leading-relaxed">
                   {getRoleDescription(user.role)}
@@ -254,7 +254,7 @@ const DynamicProfile: React.FC = () => {
                   {user.role === 'admin' && (
                     <>
                       {!isEditing ? (
-                        <button 
+                        <button
                           onClick={handleEdit}
                           className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                           style={{ backgroundColor: THEME.colors.primary }}
@@ -264,7 +264,7 @@ const DynamicProfile: React.FC = () => {
                         </button>
                       ) : (
                         <div className="flex space-x-3">
-                          <button 
+                          <button
                             onClick={handleSave}
                             className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                             style={{ backgroundColor: THEME.colors.primary }}
@@ -272,7 +272,7 @@ const DynamicProfile: React.FC = () => {
                             <Save className="w-5 h-5 mr-2" />
                             Save Changes
                           </button>
-                          <button 
+                          <button
                             onClick={handleCancel}
                             className="inline-flex items-center px-6 py-3 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                             style={{ backgroundColor: THEME.colors.gray }}
@@ -286,7 +286,7 @@ const DynamicProfile: React.FC = () => {
                   )}
                 </div>
               </div>
-              
+
               <div className="p-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Name */}
@@ -381,9 +381,9 @@ const DynamicProfile: React.FC = () => {
                       <div className="flex-shrink-0">
                         <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center text-2xl font-bold shadow-lg overflow-hidden relative">
                           {user.avatar && (user.avatar.startsWith('data:image') || user.avatar.startsWith('http') || user.avatar.startsWith('/')) ? (
-                            <img 
-                              src={user.avatar} 
-                              alt="Profile" 
+                            <img
+                              src={user.avatar}
+                              alt="Profile"
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
@@ -401,7 +401,7 @@ const DynamicProfile: React.FC = () => {
                         <p className="text-base leading-relaxed mb-3" style={{ color: THEME.colors.gray }}>
                           Update your profile picture to help people recognize you easily. The image will appear in your navbar across all pages.
                         </p>
-                        <button 
+                        <button
                           onClick={handleCameraClick}
                           className="inline-flex items-center px-6 py-2 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
                           style={{ backgroundColor: THEME.colors.primary }}

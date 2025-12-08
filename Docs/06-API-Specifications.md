@@ -62,7 +62,7 @@ POST /api/v1/auth/login
     "id": "integer",
     "employee_code": "string",
     "name": "string",
-    "role": "requester|moderator|assignee|admin",
+    "role": "requestor|moderator|assignee|admin",
     "department": "string"
   }
 }
@@ -116,7 +116,7 @@ GET /api/v1/tickets/{id}?include_subtickets=true
 PATCH /api/v1/tickets/{id}
 ```
 
-**Note:** Requester can only update before submission
+**Note:** requestor can only update before submission
 
 ### **2.4 Get User Tickets**
 ```
@@ -167,9 +167,9 @@ PATCH /api/v1/tickets/{id}/progress
 }
 ```
 
-### **2.8 Resolve by Requester**
+### **2.8 Resolve by requestor**
 ```
-PATCH /api/v1/tickets/{id}/resolve_by_requester
+PATCH /api/v1/tickets/{id}/resolve_by_requestor
 ```
 
 **Request Body:**
@@ -460,7 +460,7 @@ PATCH /api/v1/admin/users/{id}
 ```json
 {
   "helpdesk_authorized": "boolean",
-  "role": "requester|moderator|assignee|admin"
+  "role": "requestor|moderator|assignee|admin"
 }
 ```
 
@@ -732,7 +732,7 @@ GET /api/v1/analytics/dashboard
 ```
 
 **Query Parameters:**
-- `role`: requester|moderator|assignee|admin
+- `role`: requestor|moderator|assignee|admin
 - `department_id`: filter by department (for assignee)
 - `date_range`: filter by date
 
@@ -786,7 +786,7 @@ Authorization: Bearer {jwt_token}
 | `chat:message` | `{id, sender, message, timestamp, mentions[]}` | New message received |
 | `chat:participant_added` | `{user_id, ticket_id}` | Participant added |
 | `chat:participant_removed` | `{user_id, ticket_id}` | Participant removed |
-| `ticket:created` | `{ticket_id, requester_id}` | New ticket created |
+| `ticket:created` | `{ticket_id, requestor_id}` | New ticket created |
 | `ticket:assigned` | `{ticket_id, assignee_id}` | Ticket assigned |
 | `ticket:status_changed` | `{ticket_id, old_status, new_status}` | Status updated |
 | `ticket:in_progress` | `{ticket_id}` | Ticket in progress |
@@ -831,7 +831,7 @@ Authorization: Bearer {jwt_token}
 ### **14.3 Common Error Scenarios**
 
 **403 Forbidden:**
-- Requester trying to access other's tickets
+- requestor trying to access other's tickets
 - Assignee trying to access other department's tickets
 - Non-Moderator trying to create sub-tickets
 - Non-Finance trying to request approval
@@ -857,7 +857,7 @@ Authorization: Bearer {jwt_token}
 | Endpoint | Role | Limit |
 | ----- | ----- | ----- |
 | `/api/v1/auth/login` | All Users | 10 requests/minute |
-| All Endpoints | Requester | 150 requests/minute |
+| All Endpoints | requestor | 150 requests/minute |
 | All Endpoints | Assignee | 250 requests/minute |
 | All Endpoints | Moderator | Unlimited |
 | All Endpoints | Admin | Unlimited |

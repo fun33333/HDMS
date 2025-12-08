@@ -16,10 +16,10 @@ const DynamicNotifications: React.FC = () => {
   const { user } = useAuth();
   const { notifications, fetchNotifications } = useNotifications(true);
   const router = useRouter();
-  const [tab, setTab] = useState<'all'|'unread'>('all');
+  const [tab, setTab] = useState<'all' | 'unread'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [confirm, setConfirm] = useState<{ open: boolean; action?: 'markAll' }>( { open: false } );
+  const [confirm, setConfirm] = useState<{ open: boolean; action?: 'markAll' }>({ open: false });
   const [processing, setProcessing] = useState(false);
 
   const items = (tab === 'unread' ? notifications.filter(n => !n.read) : notifications)
@@ -95,7 +95,7 @@ const DynamicNotifications: React.FC = () => {
 
   const getRoleSpecificTitle = (role: string) => {
     switch (role) {
-      case 'requester':
+      case 'requestor':
         return 'Your Request Notifications';
       case 'moderator':
         return 'Moderation Notifications';
@@ -110,7 +110,7 @@ const DynamicNotifications: React.FC = () => {
 
   const getRoleSpecificDescription = (role: string) => {
     switch (role) {
-      case 'requester':
+      case 'requestor':
         return 'Stay updated on your request status, approvals, and completions';
       case 'moderator':
         return 'Monitor new requests, assignments, and system alerts';
@@ -140,46 +140,53 @@ const DynamicNotifications: React.FC = () => {
   const gotoRelated = (n: any) => {
     if (!n.ticketId) return;
     const role = user?.role;
-    if (role === 'requester') router.push(`/requester/request-detail/${n.ticketId}?from=notifications`);
+    if (role === 'requestor') router.push(`/requestor/request-detail/${n.ticketId}?from=notifications`);
     else if (role === 'moderator') router.push(`/moderator/request-detail/${n.ticketId}?from=notifications`);
     else if (role === 'assignee') router.push(`/assignee/task-detail/${n.ticketId}?from=notifications`);
     else if (role === 'admin') router.push(`/admin/requests`);
   };
 
   const columns: Column<any>[] = [
-    { key: 'title', header: 'Title', sortable: true, accessor: (r) => (
-      <button onClick={() => gotoRelated(r)} className={`font-medium text-left ${!r.read ? 'text-gray-900' : 'text-gray-700'} hover:underline`}>{r.title}</button>
-    ) },
-    { key: 'message', header: 'Message', accessor: (r) => (
-      <div className="truncate max-w-[480px] text-gray-700">{r.message}</div>
-    ) },
-    { key: 'type', header: 'Type', sortable: true, accessor: (r) => (
-      <span
-        className={`px-2 py-1 rounded text-xs font-medium border ${
-          r.type === 'success' || r.type === 'ticket_completed'
-            ? 'bg-green-50 text-green-700 border-green-200'
-          : r.type === 'warning' || r.type === 'urgent'
-            ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-          : r.type === 'ticket_rejected'
-            ? 'bg-red-50 text-red-700 border-red-200'
-            : 'bg-blue-50 text-blue-700 border-blue-200'
-        }`}
-      >
-        {r.type.replace('ticket_', '')}
-      </span>
-    ) },
+    {
+      key: 'title', header: 'Title', sortable: true, accessor: (r) => (
+        <button onClick={() => gotoRelated(r)} className={`font-medium text-left ${!r.read ? 'text-gray-900' : 'text-gray-700'} hover:underline`}>{r.title}</button>
+      )
+    },
+    {
+      key: 'message', header: 'Message', accessor: (r) => (
+        <div className="truncate max-w-[480px] text-gray-700">{r.message}</div>
+      )
+    },
+    {
+      key: 'type', header: 'Type', sortable: true, accessor: (r) => (
+        <span
+          className={`px-2 py-1 rounded text-xs font-medium border ${r.type === 'success' || r.type === 'ticket_completed'
+              ? 'bg-green-50 text-green-700 border-green-200'
+              : r.type === 'warning' || r.type === 'urgent'
+                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                : r.type === 'ticket_rejected'
+                  ? 'bg-red-50 text-red-700 border-red-200'
+                  : 'bg-blue-50 text-blue-700 border-blue-200'
+            }`}
+        >
+          {r.type.replace('ticket_', '')}
+        </span>
+      )
+    },
     { key: 'timestamp', header: 'Time', sortable: true, accessor: (r) => new Date(r.timestamp).toLocaleString() },
-    { key: 'actions', header: 'Actions', accessor: (r) => (
-      <div className="flex items-center gap-2">
-        {!r.read && (
-          <button onClick={() => markAsRead(r.id)} className="px-2 py-1 border rounded text-gray-700">Mark read</button>
-        )}
-        {r.ticketId ? (
-          <button onClick={() => gotoRelated(r)} className="px-2 py-1 border rounded text-blue-700">Open</button>
-        ) : null}
-        <button onClick={() => deleteNotification(r.id)} className="px-2 py-1 border rounded text-gray-700">Delete</button>
-      </div>
-    ) },
+    {
+      key: 'actions', header: 'Actions', accessor: (r) => (
+        <div className="flex items-center gap-2">
+          {!r.read && (
+            <button onClick={() => markAsRead(r.id)} className="px-2 py-1 border rounded text-gray-700">Mark read</button>
+          )}
+          {r.ticketId ? (
+            <button onClick={() => gotoRelated(r)} className="px-2 py-1 border rounded text-blue-700">Open</button>
+          ) : null}
+          <button onClick={() => deleteNotification(r.id)} className="px-2 py-1 border rounded text-gray-700">Delete</button>
+        </div>
+      )
+    },
   ];
 
   return (
@@ -230,8 +237,8 @@ const DynamicNotifications: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">Notifications</h3>
               <div className="flex gap-2">
-                <button onClick={() => setTab('all')} className={`px-3 py-1 rounded border text-sm ${tab==='all'?'bg-white text-gray-900':'text-gray-700'}`}>All</button>
-                <button onClick={() => setTab('unread')} className={`px-3 py-1 rounded border text-sm ${tab==='unread'?'bg-white text-gray-900':'text-gray-700'}`}>Unread</button>
+                <button onClick={() => setTab('all')} className={`px-3 py-1 rounded border text-sm ${tab === 'all' ? 'bg-white text-gray-900' : 'text-gray-700'}`}>All</button>
+                <button onClick={() => setTab('unread')} className={`px-3 py-1 rounded border text-sm ${tab === 'unread' ? 'bg-white text-gray-900' : 'text-gray-700'}`}>Unread</button>
               </div>
             </div>
             <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
@@ -272,7 +279,7 @@ const DynamicNotifications: React.FC = () => {
 
               {/* Mark All as Read */}
               {unreadCount > 0 && (
-                <button 
+                <button
                   onClick={markAllAsRead}
                   className="inline-flex items-center px-4 py-2 text-white text-sm font-semibold rounded-md transition-all duration-200 shadow"
                   style={{ backgroundColor: THEME.colors.primary }}

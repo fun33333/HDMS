@@ -16,10 +16,10 @@ import { Ticket } from '../../../../types';
 import { User } from '../../../../types';
 import { THEME } from '../../../../lib/theme';
 import { formatDate } from '../../../../lib/helpers';
-import { 
-  Play, 
-  CheckCircle, 
-  Clock, 
+import {
+  Play,
+  CheckCircle,
+  Clock,
   TrendingUp,
   Building2,
   User as UserIcon,
@@ -52,8 +52,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req1',
-      requesterName: 'John Doe',
+      requestorId: 'req1',
+      requestorName: 'John Doe',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -67,8 +67,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'assigned',
-      requesterId: 'req2',
-      requesterName: 'Jane Smith',
+      requestorId: 'req2',
+      requestorName: 'Jane Smith',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
@@ -82,8 +82,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'low',
       status: 'in_progress',
-      requesterId: 'req3',
-      requesterName: 'Bob Wilson',
+      requestorId: 'req3',
+      requestorName: 'Bob Wilson',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
@@ -97,8 +97,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'urgent',
       status: 'assigned',
-      requesterId: 'req4',
-      requesterName: 'Sarah Johnson',
+      requestorId: 'req4',
+      requestorName: 'Sarah Johnson',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
@@ -112,8 +112,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'high',
       status: 'in_progress',
-      requesterId: 'req5',
-      requesterName: 'Tom Brown',
+      requestorId: 'req5',
+      requestorName: 'Tom Brown',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -127,8 +127,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'resolved',
-      requesterId: 'req6',
-      requesterName: 'Alice Green',
+      requestorId: 'req6',
+      requestorName: 'Alice Green',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
@@ -144,8 +144,8 @@ const generateDemoTickets = (): Ticket[] => {
       department: 'IT',
       priority: 'medium',
       status: 'resolved',
-      requesterId: 'req7',
-      requesterName: 'Charlie Davis',
+      requestorId: 'req7',
+      requestorName: 'Charlie Davis',
       assigneeId: 'assignee1',
       assigneeName: 'Mike Assignee',
       submittedDate: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString(),
@@ -170,14 +170,14 @@ const AssigneeDashboardPage: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch assigned tickets
         if (user?.id) {
           let ticketsList: Ticket[] = [];
           try {
             const ticketsResponse = await ticketService.getTickets({ assigneeId: user.id });
-            ticketsList = Array.isArray(ticketsResponse) 
-              ? ticketsResponse 
+            ticketsList = Array.isArray(ticketsResponse)
+              ? ticketsResponse
               : (ticketsResponse?.results || []);
           } catch (error) {
             console.warn('API not available, using demo data');
@@ -193,18 +193,18 @@ const AssigneeDashboardPage: React.FC = () => {
           // Set department head
           if (user.department) {
             try {
-              const usersResponse = await userService.getUsers({ 
+              const usersResponse = await userService.getUsers({
                 department: user.department,
                 role: 'assignee'
               });
               const departmentUsers = Array.isArray(usersResponse)
                 ? usersResponse
                 : (usersResponse?.results || []);
-              
-              const head = departmentUsers.find(u => 
+
+              const head = departmentUsers.find(u =>
                 u.role === 'admin' || u.id === user.id
               ) || departmentUsers[0];
-              
+
               if (head) {
                 setDepartmentHead(head);
               } else {
@@ -246,7 +246,7 @@ const AssigneeDashboardPage: React.FC = () => {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
             const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            
+
             const completedTickets = ticketsList.filter(t => {
               if (t.resolvedDate || t.completedDate) {
                 const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
@@ -256,16 +256,16 @@ const AssigneeDashboardPage: React.FC = () => {
               }
               return false;
             });
-            
+
             const avgDays = completedTickets.length > 0
               ? completedTickets.reduce((sum, t) => {
-                  const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
-                  const createdDate = new Date(t.submittedDate);
-                  const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-                  return sum + diffDays;
-                }, 0) / completedTickets.length
+                const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
+                const createdDate = new Date(t.submittedDate);
+                const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+                return sum + diffDays;
+              }, 0) / completedTickets.length
               : 2.5 + (Math.random() - 0.5) * 1.5;
-            
+
             metricsData.push({
               date: dateStr,
               averageDays: Math.round(avgDays * 10) / 10 || 0,
@@ -306,43 +306,43 @@ const AssigneeDashboardPage: React.FC = () => {
   }, [user?.id, user?.department]);
 
   // Calculate KPIs
-  const activeTasks = tickets.filter(t => 
+  const activeTasks = tickets.filter(t =>
     t.status === 'in_progress'
   ).length;
-  
-  const pendingTasks = tickets.filter(t => 
+
+  const pendingTasks = tickets.filter(t =>
     t.status === 'assigned' || t.status === 'pending'
   ).length;
-  
+
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const completedThisMonth = tickets.filter(t => {
     if (t.completedDate || t.resolvedDate) {
       const completedDate = new Date(t.completedDate || t.resolvedDate || '');
-      return completedDate.getMonth() === currentMonth && 
-             completedDate.getFullYear() === currentYear &&
-             (t.status === 'resolved' || t.status === 'completed');
+      return completedDate.getMonth() === currentMonth &&
+        completedDate.getFullYear() === currentYear &&
+        (t.status === 'resolved' || t.status === 'completed');
     }
     return false;
   }).length;
 
   // Calculate average resolution time (department average)
-  const completedTickets = tickets.filter(t => 
-    (t.status === 'resolved' || t.status === 'completed') && 
+  const completedTickets = tickets.filter(t =>
+    (t.status === 'resolved' || t.status === 'completed') &&
     (t.resolvedDate || t.completedDate)
   );
-  
+
   const avgResolutionTime = completedTickets.length > 0
     ? completedTickets.reduce((sum, t) => {
-        const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
-        const createdDate = new Date(t.submittedDate);
-        const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-        return sum + diffDays;
-      }, 0) / completedTickets.length
+      const resolvedDate = new Date(t.resolvedDate || t.completedDate || '');
+      const createdDate = new Date(t.submittedDate);
+      const diffDays = (resolvedDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+      return sum + diffDays;
+    }, 0) / completedTickets.length
     : 0;
 
   // Active tasks for table (in progress or assigned)
-  const activeTasksList = tickets.filter(t => 
+  const activeTasksList = tickets.filter(t =>
     t.status === 'in_progress' || t.status === 'assigned'
   );
 
@@ -351,15 +351,15 @@ const AssigneeDashboardPage: React.FC = () => {
     const createdDate = new Date(ticket.submittedDate);
     const now = new Date();
     const daysSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-    
-    const slaDays = ticket.priority === 'urgent' || ticket.priority === 'high' 
-      ? 7 
-      : ticket.priority === 'medium' 
-      ? 14 
-      : 30;
-    
+
+    const slaDays = ticket.priority === 'urgent' || ticket.priority === 'high'
+      ? 7
+      : ticket.priority === 'medium'
+        ? 14
+        : 30;
+
     const daysRemaining = slaDays - daysSinceCreation;
-    
+
     if (daysRemaining < 0) {
       return `${Math.abs(Math.round(daysRemaining))} days overdue`;
     } else if (daysRemaining <= 1) {
@@ -377,7 +377,7 @@ const AssigneeDashboardPage: React.FC = () => {
       setTickets(ticketsList.length > 0 ? ticketsList : generateDemoTickets());
     } catch (error) {
       console.error('Error starting work:', error);
-      setTickets(prev => prev.map(t => 
+      setTickets(prev => prev.map(t =>
         t.id === ticketId ? { ...t, status: 'in_progress' } : t
       ));
     }
@@ -396,8 +396,8 @@ const AssigneeDashboardPage: React.FC = () => {
     } catch (error) {
       console.error('Error completing ticket:', error);
       const now = new Date();
-      setTickets(prev => prev.map(t => 
-        t.id === ticketId 
+      setTickets(prev => prev.map(t =>
+        t.id === ticketId
           ? { ...t, status: 'completed', completedDate: now.toISOString(), resolvedDate: now.toISOString() }
           : t
       ));
@@ -535,8 +535,8 @@ const AssigneeDashboardPage: React.FC = () => {
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: THEME.colors.background }}>
                       {activeTasksList.map((ticket) => (
-                        <tr 
-                          key={ticket.id} 
+                        <tr
+                          key={ticket.id}
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="py-4 px-4 text-xs md:text-sm font-medium whitespace-nowrap" style={{ color: THEME.colors.primary }}>
@@ -630,7 +630,7 @@ const AssigneeDashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="p-4 md:p-6 lg:p-8 pt-2 md:pt-4">
             <div className="w-full" style={{ minHeight: '300px' }}>
-              <DepartmentLoadChart 
+              <DepartmentLoadChart
                 data={departmentWorkload.length > 0 ? departmentWorkload : undefined}
                 height={300}
               />
@@ -647,7 +647,7 @@ const AssigneeDashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="p-4 md:p-6 lg:p-8 pt-2 md:pt-4">
             <div className="w-full" style={{ minHeight: '300px' }}>
-              <ResolutionTimeTrendChart 
+              <ResolutionTimeTrendChart
                 data={performanceMetrics.length > 0 ? performanceMetrics : []}
                 height={300}
               />

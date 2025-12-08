@@ -29,7 +29,7 @@ import {
   getStatusDistribution
 } from '../../lib/mockData';
 
-const RequesterDashboard: React.FC = () => {
+const requestorDashboard: React.FC = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -178,7 +178,7 @@ const RequesterDashboard: React.FC = () => {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/requester/request-detail/${ticket.id}`);
+            router.push(`/requestor/request-detail/${ticket.id}`);
           }}
           rightIcon={<ArrowRight className="w-3 h-3" />}
           className="text-xs"
@@ -216,7 +216,7 @@ const RequesterDashboard: React.FC = () => {
         ]}
         actionButton={{
           label: 'New Request',
-          onClick: () => router.push('/requester/new-request'),
+          onClick: () => router.push('/requestor/new-request'),
           icon: <Plus className="w-4 h-4" style={{ color: 'white' }} />
         }}
       />
@@ -230,7 +230,7 @@ const RequesterDashboard: React.FC = () => {
           color="#ffffff"
           backgroundColor="#365486"
           description="All tickets you've created"
-          onClick={() => router.push('/requester/requests')}
+          onClick={() => router.push('/requestor/requests')}
         />
 
         <KpiCard
@@ -246,7 +246,7 @@ const RequesterDashboard: React.FC = () => {
           } : undefined}
           onClick={() => {
             setActiveFilter('open');
-            router.push('/requester/requests?filter=open');
+            router.push('/requestor/requests?filter=open');
           }}
         />
 
@@ -263,7 +263,7 @@ const RequesterDashboard: React.FC = () => {
           }}
           onClick={() => {
             setActiveFilter('resolved');
-            router.push('/requester/requests?filter=resolved');
+            router.push('/requestor/requests?filter=resolved');
           }}
         />
 
@@ -334,7 +334,7 @@ const RequesterDashboard: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push('/requester/requests')}
+                onClick={() => router.push('/requestor/requests')}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
                 className="text-sm"
               >
@@ -356,4 +356,4 @@ const RequesterDashboard: React.FC = () => {
   );
 };
 
-export default RequesterDashboard;
+export default requestorDashboard;

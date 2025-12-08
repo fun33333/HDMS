@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
-import { 
-  Search, 
-  Bell, 
-  LogOut, 
+import {
+  Search,
+  Bell,
+  LogOut,
   ChevronDown,
   Menu
 } from 'lucide-react';
@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ role }) => {
 
     // Search through pages based on role
     const pages = getPagesByRole(role);
-    const filtered = pages.filter(page => 
+    const filtered = pages.filter(page =>
       page.name.toLowerCase().includes(query.toLowerCase()) ||
       page.description.toLowerCase().includes(query.toLowerCase())
     );
@@ -98,17 +98,17 @@ export const Navbar: React.FC<NavbarProps> = ({ role }) => {
 
   const getPagesByRole = (role: string) => {
     switch (role) {
-      case 'requester':
+      case 'requestor':
         return [
-          { name: 'Dashboard', url: '/requester/dashboard', description: 'Main dashboard with analytics' },
-          { name: 'My Requests', url: '/requester/requests', description: 'View all your requests' },
-          { name: 'New Request', url: '/requester/new-request', description: 'Create a new request' },
-          { name: 'Profile', url: '/requester/profile', description: 'Manage your profile' },
-          { name: 'Total Requests', url: '/requester/total-requests', description: 'View all requests' },
-          { name: 'Pending Requests', url: '/requester/pending-requests', description: 'View pending requests' },
-          { name: 'Resolved Requests', url: '/requester/resolved-requests', description: 'View resolved requests' },
-          { name: 'Rejected Requests', url: '/requester/rejected-requests', description: 'View rejected requests' },
-          { name: 'Notifications', url: '/requester/notifications', description: 'View notifications' }
+          { name: 'Dashboard', url: '/requestor/dashboard', description: 'Main dashboard with analytics' },
+          { name: 'My Requests', url: '/requestor/requests', description: 'View all your requests' },
+          { name: 'New Request', url: '/requestor/new-request', description: 'Create a new request' },
+          { name: 'Profile', url: '/requestor/profile', description: 'Manage your profile' },
+          { name: 'Total Requests', url: '/requestor/total-requests', description: 'View all requests' },
+          { name: 'Pending Requests', url: '/requestor/pending-requests', description: 'View pending requests' },
+          { name: 'Resolved Requests', url: '/requestor/resolved-requests', description: 'View resolved requests' },
+          { name: 'Rejected Requests', url: '/requestor/rejected-requests', description: 'View rejected requests' },
+          { name: 'Notifications', url: '/requestor/notifications', description: 'View notifications' }
         ];
       case 'moderator':
         return [
@@ -161,15 +161,15 @@ export const Navbar: React.FC<NavbarProps> = ({ role }) => {
   };
 
   return (
-    <nav 
+    <nav
       className="fixed top-0 left-0 right-0 z-50 px-4 md:px-6 py-3 md:py-4 flex items-center justify-end gap-2 sm:gap-3"
-      style={{ 
+      style={{
         backgroundColor: '#e7ecef',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       }}
     >
       {/* Notification Bell - SIS Style */}
-      <button 
+      <button
         onClick={() => {
           const targetRole = user?.role || role;
           router.push(`/${targetRole}/notifications`);

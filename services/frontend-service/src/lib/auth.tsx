@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const storedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
-        
+
         if (storedUser && storedToken) {
           setUserState(JSON.parse(storedUser));
         }
@@ -60,16 +60,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Check if we're in browser and allow mock login
       const isBrowser = typeof window !== 'undefined';
       const isDevelopment = isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-      
+
       // Allow mock login in development (any password works)
       if (isDevelopment) {
         // Mock user data based on role
         const mockUsers: Record<string, User> = {
-          requester: {
+          requestor: {
             id: '1',
-            name: 'John Requester',
-            email: email || 'requester@test.com',
-            role: 'requester',
+            name: 'John requestor',
+            email: email || 'requestor@test.com',
+            role: 'requestor',
             department: 'IT',
             employeeCode: 'EMP001',
           },
@@ -124,7 +124,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         const data = await response.json();
-        
+
         // Store user and token
         const userData: User = {
           id: data.user.id,
@@ -145,11 +145,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Fallback to mock login if API fails in development
         if (isDevelopment) {
           const mockUsers: Record<string, User> = {
-            requester: {
+            requestor: {
               id: '1',
-              name: 'John Requester',
-              email: email || 'requester@test.com',
-              role: 'requester',
+              name: 'John requestor',
+              email: email || 'requestor@test.com',
+              role: 'requestor',
               department: 'IT',
               employeeCode: 'EMP001',
             },

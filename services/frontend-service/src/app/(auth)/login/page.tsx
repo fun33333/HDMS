@@ -2,25 +2,25 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../lib/auth';
-import { Mail, Lock, User, Shield, Wrench, Settings, ChevronDown } from 'lucide-react';
+import { authService, LoginResult } from '../../../services/api/authService';
+import { useAuthStore } from '../../../store/authStore';
+import { BadgeCheck, Lock, User, Shield, Wrench, Settings, ChevronDown } from 'lucide-react';
 import { THEME } from '../../../lib/theme';
 import { Logo } from '../../../components/ui/logo';
 
 const LoginPage: React.FC = () => {
-  const [selectedRole, setSelectedRole] = useState<string>('requester');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('test');
-  const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>('requestor');
+  const [employeeCode, setEmployeeCode] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  const { login } = useAuth();
+
+  const { login: storeLogin, loading, setLoading } = useAuthStore();
   const router = useRouter();
 
   const roles = [
-    { id: 'requester', name: 'Requester', icon: User },
+    { id: 'requestor', name: 'Requestor', icon: User },
     { id: 'moderator', name: 'Moderator', icon: Shield },
     { id: 'assignee', name: 'Department Staff', icon: Wrench },
     { id: 'admin', name: 'Admin', icon: Settings }
@@ -51,29 +51,80 @@ const LoginPage: React.FC = () => {
       setError('Please select a role');
       return;
     }
-    
+
+    if (!employeeCode.trim()) {
+      setError('Please enter your employee code');
+      return;
+    }
+
     setLoading(true);
     setError('');
-    
+
     try {
-      const success = await login(email, password, selectedRole);
-      if (success) {
-        router.push(`/${selectedRole}/dashboard`);
+      const result: LoginResult = await authService.login({
+        employeeCode: employeeCode.trim(),
+        password,
+        role: selectedRole as 'admin' | 'moderator' | 'assignee' | 'requestor',
+      });
+
+      if (result.success && result.user && result.accessToken) {
+        // Store in localStorage and auth store
+        localStorage.setItem('token', result.accessToken);
+        localStorage.setItem('refreshToken', result.refreshToken || '');
+        localStorage.setItem('user', JSON.stringify(result.user));
+
+        // Update auth store with user in expected format
+        storeLogin({
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role,
+          department: result.user.department,
+          employeeCode: result.user.employeeCode,
+        } as any, result.accessToken);
+
+        // Navigate to role-specific dashboard
+        router.push(`/${result.user.role}/dashboard`);
       } else {
-        setError('Invalid credentials or role mismatch');
+        // Handle specific error types
+        const errorData = result.error;
+        if (errorData) {
+          switch (errorData.error) {
+            case 'role_mismatch':
+              setError(`You are assigned as ${errorData.assigned_role?.replace('requestor', 'Requestor').replace('moderator', 'Moderator').replace('assignee', 'Assignee').replace('admin', 'Admin')}. Please select the correct role.`);
+              break;
+            case 'no_hdms_access':
+              setError('You don\'t have HDMS access. Contact your administrator.');
+              break;
+            case 'no_hdms_role':
+              setError('No role assigned. Contact your administrator.');
+              break;
+            case 'account_locked':
+              setError('Account locked due to too many failed attempts. Please try again later.');
+              break;
+            case 'invalid_credentials':
+              setError(errorData.detail || 'Invalid employee code or password');
+              break;
+            default:
+              setError(errorData.detail || 'Login failed. Please try again.');
+          }
+        } else {
+          setError('Login failed. Please try again.');
+        }
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
+      console.error('Login error:', err);
+      setError('Login failed. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div 
+    <div
       key="login-page-wrapper"
-      className="login-page-wrapper min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in" 
-      style={{ 
+      className="login-page-wrapper min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in"
+      style={{
         backgroundColor: THEME.colors.background,
         position: 'relative',
         zIndex: 1
@@ -81,11 +132,11 @@ const LoginPage: React.FC = () => {
     >
       <div className="max-w-md w-full space-y-8">
         {/* Icon and Title - Single Header - Render Once - No Background */}
-        <div 
-          key="login-header" 
-          className="login-header text-center animate-slide-in" 
-          style={{ 
-            position: 'relative', 
+        <div
+          key="login-header"
+          className="login-header text-center animate-slide-in"
+          style={{
+            position: 'relative',
             zIndex: 2,
             backgroundColor: 'transparent',
             background: 'none'
@@ -100,9 +151,9 @@ const LoginPage: React.FC = () => {
         </div>
 
         {/* Login Card */}
-        <div 
+        <div
           className="rounded-2xl p-8 shadow-xl animate-scale-in"
-          style={{ 
+          style={{
             backgroundColor: THEME.colors.light,
             borderRadius: '16px',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
@@ -110,7 +161,7 @@ const LoginPage: React.FC = () => {
         >
           {/* Role Selection Dropdown */}
           <div className="mb-6">
-            <label 
+            <label
               className="block mb-3 font-semibold"
               style={{ color: THEME.colors.primary }}
             >
@@ -121,7 +172,7 @@ const LoginPage: React.FC = () => {
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="w-full flex items-center justify-between p-4 border rounded-lg bg-white focus:outline-none transition-all"
-                style={{ 
+                style={{
                   borderColor: '#D1D5DB',
                   borderWidth: '1px'
                 }}
@@ -129,11 +180,11 @@ const LoginPage: React.FC = () => {
                 <div className="flex items-center">
                   {selectedRoleData && (
                     <>
-                      <selectedRoleData.icon 
-                        className="w-5 h-5 mr-3" 
-                        style={{ color: THEME.colors.gray }} 
+                      <selectedRoleData.icon
+                        className="w-5 h-5 mr-3"
+                        style={{ color: THEME.colors.gray }}
                       />
-                      <span 
+                      <span
                         className="font-medium text-base"
                         style={{ color: THEME.colors.primary }}
                       >
@@ -142,16 +193,16 @@ const LoginPage: React.FC = () => {
                     </>
                   )}
                 </div>
-                <ChevronDown 
-                  className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
-                  style={{ color: THEME.colors.gray }} 
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  style={{ color: THEME.colors.gray }}
                 />
               </button>
-              
+
               {isDropdownOpen && (
-                <div 
+                <div
                   className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-lg overflow-hidden"
-                  style={{ 
+                  style={{
                     borderColor: '#D1D5DB',
                     borderWidth: '1px'
                   }}
@@ -168,11 +219,11 @@ const LoginPage: React.FC = () => {
                         }}
                         className="w-full flex items-center p-4 hover:bg-gray-50 transition-colors"
                       >
-                        <IconComponent 
-                          className="w-5 h-5 mr-3" 
-                          style={{ color: THEME.colors.gray }} 
+                        <IconComponent
+                          className="w-5 h-5 mr-3"
+                          style={{ color: THEME.colors.gray }}
                         />
-                        <span 
+                        <span
                           className="font-medium text-base"
                           style={{ color: THEME.colors.primary }}
                         >
@@ -188,19 +239,19 @@ const LoginPage: React.FC = () => {
 
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Email Field */}
+            {/* Employee Code Field */}
             <div className="relative">
-              <Mail 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10" 
-                style={{ color: THEME.colors.gray }} 
+              <BadgeCheck
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10"
+                style={{ color: THEME.colors.gray }}
               />
               <input
-                type="email"
-                placeholder="Username/Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Employee Code (e.g., C06-M-24-T-0001)"
+                value={employeeCode}
+                onChange={(e) => setEmployeeCode(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all shadow-sm hover:shadow-md"
-                style={{ 
+                style={{
                   borderColor: '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -209,12 +260,12 @@ const LoginPage: React.FC = () => {
                 required
               />
             </div>
-            
+
             {/* Password Field */}
             <div className="relative">
-              <Lock 
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10" 
-                style={{ color: THEME.colors.gray }} 
+              <Lock
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10"
+                style={{ color: THEME.colors.gray }}
               />
               <input
                 type="password"
@@ -222,7 +273,7 @@ const LoginPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all shadow-sm hover:shadow-md"
-                style={{ 
+                style={{
                   borderColor: '#D1D5DB',
                   backgroundColor: 'white',
                   color: '#111827',
@@ -243,7 +294,7 @@ const LoginPage: React.FC = () => {
               type="submit"
               disabled={loading}
               className="w-full text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
+              style={{
                 backgroundColor: THEME.colors.primary,
                 borderRadius: '10px'
               }}
@@ -262,8 +313,8 @@ const LoginPage: React.FC = () => {
 
           {/* Forgot Password Link */}
           <div className="text-center mt-6">
-            <a 
-              href="/forgot-password" 
+            <a
+              href="/forgot-password"
               className="text-base underline font-medium hover:opacity-80 transition-opacity"
               style={{ color: THEME.colors.primary }}
             >

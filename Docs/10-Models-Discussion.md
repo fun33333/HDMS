@@ -50,11 +50,11 @@ Based on documentation review, here are ALL expected models:
 **Question:**
 - Is `TicketParticipant` a junction table for many-to-many (Ticket ↔ User)?
 - Should it track `joined_at` timestamp for chat visibility?
-- Who are default participants? (Requester, Assignee, Moderator?)
+- Who are default participants? (requestor, Assignee, Moderator?)
 
 **My Understanding:**
 - `TicketParticipant`: Junction table with `ticket_id`, `user_id`, `joined_at`
-- Default participants: Requester, Assignee (when assigned), Moderator (always)
+- Default participants: requestor, Assignee (when assigned), Moderator (always)
 - Chat visibility: Messages after `joined_at` for new participants
 
 **Recommendation:** Confirm this logic.
@@ -225,7 +225,7 @@ Based on documentation review, here are ALL expected models:
 
 ```
 User
-├── One-to-Many: created_tickets (as requester)
+├── One-to-Many: created_tickets (as requestor)
 ├── One-to-Many: assigned_tickets (as assignee)
 ├── Many-to-One: department (belongs to)
 ├── One-to-Many: sent_messages (chat messages)
@@ -241,7 +241,7 @@ Department
 └── One-to-Many: sub_tickets (assigned sub-tickets)
 
 Ticket
-├── Many-to-One: requester (User)
+├── Many-to-One: requestor (User)
 ├── Many-to-One: assignee (User, nullable)
 ├── Many-to-One: department (Department)
 ├── Many-to-One: sla_template (SLATemplate, nullable)

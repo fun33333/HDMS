@@ -50,8 +50,8 @@ const generateMockParentTicket = (ticketId: string): Ticket => {
     department: 'IT',
     priority: 'high',
     status: 'submitted',
-    requesterId: 'req-1',
-    requesterName: 'Ahmed Khan',
+    requestorId: 'req-1',
+    requestorName: 'Ahmed Khan',
     submittedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   };
 };
@@ -91,7 +91,7 @@ const getMockAssignees = (department: string): Array<{ id: string; name: string;
       { id: 'assignee-admin-2', name: 'Sana Ahmed', department: 'Administration' },
     ],
   };
-  
+
   return mockAssignees[department] || [{ id: `assignee-${department}-1`, name: `${department} Head`, department }];
 };
 
@@ -100,7 +100,7 @@ const CreateSubticketsPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const parentTicketId = searchParams.get('parent');
-  
+
   const [parentTicket, setParentTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -142,7 +142,7 @@ const CreateSubticketsPage: React.FC = () => {
         const ticket = await ticketService.getTicketById(parentTicketId);
         setParentTicket(ticket);
         setUseMockData(false);
-        
+
         // Initialize first form with parent department
         setSubticketForms([{
           id: `form-${Date.now()}`,
@@ -159,7 +159,7 @@ const CreateSubticketsPage: React.FC = () => {
           const mockTicket = generateMockParentTicket(parentTicketId);
           setParentTicket(mockTicket);
           setUseMockData(true);
-          
+
           setSubticketForms([{
             id: `form-${Date.now()}`,
             subject: '',
@@ -192,7 +192,7 @@ const CreateSubticketsPage: React.FC = () => {
       try {
         const response = await userService.getUsers({ role: 'assignee' });
         const usersList = Array.isArray(response) ? response : (response?.results || []);
-        
+
         // Group by department
         const grouped: Record<string, Array<{ id: string; name: string; department: string }>> = {};
         usersList.forEach((user: any) => {
@@ -270,7 +270,7 @@ const CreateSubticketsPage: React.FC = () => {
       });
       return;
     }
-    
+
     setSubticketForms(prev => prev.filter(form => form.id !== formId));
     // Clear errors for removed form
     setErrors(prev => {
@@ -388,7 +388,7 @@ const CreateSubticketsPage: React.FC = () => {
       // Call API to create subtickets
       try {
         await ticketService.splitTicket(parentTicket.id, subticketsData);
-        
+
         setAlertModal({
           isOpen: true,
           type: 'success',
@@ -398,11 +398,11 @@ const CreateSubticketsPage: React.FC = () => {
         });
       } catch (splitError: any) {
         const isNetworkError = splitError?.isNetworkError || !splitError?.response;
-        
+
         if (isNetworkError) {
           // Demo mode - simulate success
           console.warn('API not available, simulating subticket creation (Demo Mode)');
-          
+
           setAlertModal({
             isOpen: true,
             type: 'info',
@@ -553,8 +553,8 @@ const CreateSubticketsPage: React.FC = () => {
               {parentTicket.priority && <PriorityBadge priority={parentTicket.priority} />}
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-1">Requester</p>
-              <p className="text-sm text-gray-700">{parentTicket.requesterName}</p>
+              <p className="text-xs text-gray-500 mb-1">requestor</p>
+              <p className="text-sm text-gray-700">{parentTicket.requestorName}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-1">Submitted</p>

@@ -1,5 +1,5 @@
 export const ROLES = {
-  REQUESTER: 'requester',
+  REQUESTOR: 'requestor',
   MODERATOR: 'moderator',
   ASSIGNEE: 'assignee',
   ADMIN: 'admin',

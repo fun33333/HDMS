@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                 ('status', django_fsm.FSMField(db_index=True, default='draft', max_length=50, protected=True)),
                 ('priority', models.CharField(choices=[('high', 'High'), ('medium', 'Medium'), ('low', 'Low')], db_index=True, default='medium', max_length=20)),
                 ('category', models.CharField(blank=True, max_length=100)),
-                ('requester_id', models.UUIDField(db_index=True)),
+                ('requestor_id', models.UUIDField(db_index=True)),
                 ('department_id', models.UUIDField(blank=True, db_index=True, null=True)),
                 ('assignee_id', models.UUIDField(blank=True, db_index=True, null=True)),
                 ('due_at', models.DateTimeField(blank=True, null=True)),
@@ -98,7 +98,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Tickets',
                 'db_table': 'tickets',
                 'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['status'], name='tickets_status_fbbf05_idx'), models.Index(fields=['requester_id'], name='tickets_request_113b07_idx'), models.Index(fields=['department_id'], name='tickets_departm_f04f72_idx'), models.Index(fields=['assignee_id'], name='tickets_assigne_e810be_idx'), models.Index(fields=['is_deleted', 'status'], name='tickets_is_dele_a268d6_idx'), models.Index(fields=['created_at'], name='tickets_created_ed60df_idx')],
+                'indexes': [models.Index(fields=['status'], name='tickets_status_fbbf05_idx'), models.Index(fields=['requestor_id'], name='tickets_request_113b07_idx'), models.Index(fields=['department_id'], name='tickets_departm_f04f72_idx'), models.Index(fields=['assignee_id'], name='tickets_assigne_e810be_idx'), models.Index(fields=['is_deleted', 'status'], name='tickets_is_dele_a268d6_idx'), models.Index(fields=['created_at'], name='tickets_created_ed60df_idx')],
             },
         ),
     ]

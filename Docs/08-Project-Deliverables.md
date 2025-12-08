@@ -51,7 +51,7 @@ At the end of 1 month, Idara Al-Khair will have a **fully functional internal He
 ### **MVP Features Checklist**
 
 #### **Core Features**
-- [x] Role-based authentication (Requester, Moderator, Assignee, Admin)
+- [x] Role-based authentication (requestor, Moderator, Assignee, Admin)
 - [x] Ticket creation and submission
 - [x] Draft saving (soft-deleted after 7 days)
 - [x] Ticket assignment to departments
@@ -69,7 +69,7 @@ At the end of 1 month, Idara Al-Khair will have a **fully functional internal He
 #### **Dashboard Features**
 - [x] Department dashboard
 - [x] CEO/Management dashboard
-- [x] Personal analytics (Requester)
+- [x] Personal analytics (requestor)
 - [x] Department metrics (Assignee)
 - [x] System-wide analytics (Admin/Moderator)
 
@@ -87,7 +87,7 @@ These will be part of **Phase 2** or later versions:
 * AI-powered ticket classification and priority tagging
 * SLA tracking and automated escalation
 * Voice-based ticket interaction
-* Requester satisfaction surveys
+* requestor satisfaction surveys
 * Organization-wide analytics dashboard
 * Mobile application version
 * Advanced reporting and exports

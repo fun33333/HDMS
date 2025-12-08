@@ -307,7 +307,7 @@ const ModeratorDashboard: React.FC = () => {
           title: 'Ticket Resolved',
           description: `${ticket.ticketId}: ${ticket.subject}`,
           timestamp: ticket.resolvedDate,
-          user: ticket.requesterName,
+          user: ticket.requestorName,
           ticketId: ticket.id
         });
       }
@@ -322,7 +322,7 @@ const ModeratorDashboard: React.FC = () => {
           title: 'Ticket Created',
           description: `${ticket.ticketId}: ${ticket.subject}`,
           timestamp: ticket.submittedDate,
-          user: ticket.requesterName,
+          user: ticket.requestorName,
           ticketId: ticket.id
         });
       }

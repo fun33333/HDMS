@@ -71,7 +71,7 @@ The system supports **role-based access control** and promotes efficient request
 | **Helpdesk Admin** | Manages system, roles, and access control. | Full configuration and monitoring rights. |
 | **Moderator (Helpdesk Officer)** | Operational workflow manager. | Controls ticket flow, approvals, and quality checks. |
 | **Assignees (Department Heads)** | Department-level executors of tasks. | Manage progress, team updates, and completion. |
-| **Requesters (Principals / Heads / Employees)** | Initiators and collaborators. | Raise tickets and confirm resolution. |
+| **requestors (Principals / Heads / Employees)** | Initiators and collaborators. | Raise tickets and confirm resolution. |
 
 ---
 
@@ -119,7 +119,7 @@ To develop an **internal help desk management system** that centralizes all orga
     Support **interconnected tickets**, where a primary ticket (e.g., IT request) can trigger **sub-tickets** (e.g., Accounts approval, Procurement action), enabling multi-department collaboration within a single workflow. **Note:** Only Moderator can create sub-tickets; Assignees can request them via chat.
 
 4. **Centralize Communication:**  
-    Build an in-system **comment and discussion section** to connect all involved stakeholders (from requester to approver to CEO) within the same ticket — ensuring transparency and accountability.
+    Build an in-system **comment and discussion section** to connect all involved stakeholders (from requestor to approver to CEO) within the same ticket — ensuring transparency and accountability.
 
 5. **Implement Analytics & Insights:**  
     Provide an **analytics dashboard** showing:
@@ -130,7 +130,7 @@ To develop an **internal help desk management system** that centralizes all orga
 
    * Staff performance metrics
 
-   * Requester satisfaction scores
+   * requestor satisfaction scores
 
 6. **Establish a Foundation for AI Automation:**  
     Lay the groundwork for future integrations like:
@@ -243,7 +243,7 @@ These will be part of **Phase 2** or later versions:
 
 * Voice-based ticket interaction
 
-* Requester satisfaction surveys
+* requestor satisfaction surveys
 
 * Organization-wide analytics dashboard
 

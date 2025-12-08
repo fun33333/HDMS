@@ -25,7 +25,7 @@ export interface UpdateUserData {
   email?: string;
   department?: string;
   avatar?: File;
-  role?: 'requester' | 'moderator' | 'assignee' | 'admin';
+  role?: 'requestor' | 'moderator' | 'assignee' | 'admin';
   status?: 'active' | 'inactive' | 'pending';
 }
 
@@ -63,7 +63,7 @@ class UserService {
   // Get all users
   async getUsers(filters?: UserFilters): Promise<UserListResponse> {
     const params = new URLSearchParams();
-    
+
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -71,8 +71,29 @@ class UserService {
         }
       });
     }
-    
-    return apiClient.get<UserListResponse>(`/api/users/?${params.toString()}`);
+
+    const response = await apiClient.get<any>(`/api/permissions/hdms-users?${params.toString()}`);
+
+    // Map backend snake_case to frontend camelCase
+    const mappedResults = (response.results || []).map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department, // Backend sends dept_name as 'department'
+      status: user.status,
+      employeeCode: user.employee_code,
+      phone: user.phone,
+      lastLogin: user.last_login,
+      joinDate: user.join_date,
+    }));
+
+    return {
+      results: mappedResults,
+      count: response.count,
+      next: null,
+      previous: null
+    };
   }
 
   // Get user by ID
@@ -83,7 +104,7 @@ class UserService {
   // Update user
   async updateUser(id: string, data: UpdateUserData): Promise<User> {
     const formData = new FormData();
-    
+
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         if (value instanceof File) {
@@ -93,7 +114,7 @@ class UserService {
         }
       }
     });
-    
+
     return apiClient.patch<User>(`/api/users/${id}/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

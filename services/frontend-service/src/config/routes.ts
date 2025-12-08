@@ -8,12 +8,12 @@ export interface RouteConfig {
 }
 
 export const ROUTE_CONFIG: Record<string, RouteConfig[]> = {
-  [ROLES.REQUESTER]: [
-    { path: '/requester/dashboard', label: 'Dashboard', roles: [ROLES.REQUESTER] },
-    { path: '/requester/requests', label: 'My Requests', roles: [ROLES.REQUESTER] },
-    { path: '/requester/new-request', label: 'New Request', roles: [ROLES.REQUESTER] },
-    { path: '/requester/profile', label: 'Profile', roles: [ROLES.REQUESTER] },
-    { path: '/requester/notifications', label: 'Notifications', roles: [ROLES.REQUESTER] },
+  [ROLES.REQUESTOR]: [
+    { path: '/requestor/dashboard', label: 'Dashboard', roles: [ROLES.REQUESTOR] },
+    { path: '/requestor/requests', label: 'My Requests', roles: [ROLES.REQUESTOR] },
+    { path: '/requestor/new-request', label: 'New Request', roles: [ROLES.REQUESTOR] },
+    { path: '/requestor/profile', label: 'Profile', roles: [ROLES.REQUESTOR] },
+    { path: '/requestor/notifications', label: 'Notifications', roles: [ROLES.REQUESTOR] },
   ],
   [ROLES.MODERATOR]: [
     { path: '/moderator/review', label: 'Review Tickets', roles: [ROLES.MODERATOR] },

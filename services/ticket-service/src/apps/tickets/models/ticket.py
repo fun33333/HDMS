@@ -55,7 +55,7 @@ class Ticket(BaseModel):
     category = models.CharField(max_length=100, blank=True)
     
     # Relationships (UUID references, not ForeignKeys)
-    requester_id = models.UUIDField(db_index=True)
+    requestor_id = models.UUIDField(db_index=True)
     department_id = models.UUIDField(null=True, blank=True, db_index=True)
     assignee_id = models.UUIDField(null=True, blank=True, db_index=True)
     
@@ -79,7 +79,7 @@ class Ticket(BaseModel):
         verbose_name_plural = 'Tickets'
         indexes = [
             models.Index(fields=['status']),
-            models.Index(fields=['requester_id']),
+            models.Index(fields=['requestor_id']),
             models.Index(fields=['department_id']),
             models.Index(fields=['assignee_id']),
             models.Index(fields=['is_deleted', 'status']),

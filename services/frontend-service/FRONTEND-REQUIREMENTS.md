@@ -25,7 +25,7 @@ This document provides a comprehensive guide for building the HDMS frontend base
 - **Business requirements** from project documentation (Docs folder)
 - **IAK Design System** for consistent UI/UX across all IAK products
 - **Current implementation status** and what remains to be built
-- **Role-based user journeys** (Requester, Moderator, Assignee, Admin)
+- **Role-based user journeys** (requestor, Moderator, Assignee, Admin)
 
 **Key Goals:**
 - Create a unified, professional UI that feels like part of the IAK family
@@ -161,7 +161,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 - ✅ PageWrapper (`components/layout/PageWrapper.tsx`)
 
 #### Dashboard Components
-- ✅ RequesterDashboard (`components/dashboards/RequesterDashboard.tsx`)
+- ✅ requestorDashboard (`components/dashboards/requestorDashboard.tsx`)
 - ✅ ModeratorDashboard (`components/dashboards/ModeratorDashboard.tsx`)
 - ✅ AssigneeDashboard (`components/dashboards/AssigneeDashboard.tsx`)
 - ✅ AdminDashboard (`components/dashboards/AdminDashboard.tsx`)
@@ -279,7 +279,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 
 ### Overview: What Each User Sees
 
-#### **Requester** (Principals, Department Heads, Staff)
+#### **requestor** (Principals, Department Heads, Staff)
 - **Dashboard**: Personal ticket overview, statistics
 - **My Requests**: List of created tickets (all statuses)
 - **New Request**: Create new ticket form
@@ -349,9 +349,9 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 
 ---
 
-### Requester Pages
+### requestor Pages
 
-#### 1. Requester Dashboard (`/requester/dashboard`)
+#### 1. requestor Dashboard (`/requestor/dashboard`)
 
 **Layout Structure:**
 ```
@@ -409,12 +409,12 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
   - Resolution Time Trend (Line chart over last 30 days)
 
 **Actions:**
-- "New Request" button (top-right) → `/requester/new-request`
+- "New Request" button (top-right) → `/requestor/new-request`
 - Quick filters: All, Open, Resolved, Drafts
 
 ---
 
-#### 2. My Requests (`/requester/requests`)
+#### 2. My Requests (`/requestor/requests`)
 
 **Layout:**
 ```
@@ -470,7 +470,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 
 ---
 
-#### 3. New Request (`/requester/new-request`)
+#### 3. New Request (`/requestor/new-request`)
 
 **Layout:**
 ```
@@ -560,10 +560,10 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
   - Redirects to ticket detail page
 
 **Business Rules:**
-- Requester can only edit **before submission**
+- requestor can only edit **before submission**
 - After submission, editing disabled (show message)
-- Maximum 10 open tickets per requester (warning shown if exceeded)
-- Drafts visible only to requester
+- Maximum 10 open tickets per requestor (warning shown if exceeded)
+- Drafts visible only to requestor
 
 **Validation Messages:**
 - Field-level errors below each input
@@ -572,7 +572,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 
 ---
 
-#### 4. Request Detail (`/requester/request-detail/[id]`)
+#### 4. Request Detail (`/requestor/request-detail/[id]`)
 
 **Layout:**
 ```
@@ -586,7 +586,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 │ Ticket Info  │ Participants │
 │ Card         │ Card         │
 │              │              │
-│ - Department │ - Requester  │
+│ - Department │ - requestor  │
 │ - Category   │ - Moderator  │
 │ - Assignee   │ - Assignee   │
 │ - SLA        │ (if assigned)│
@@ -647,7 +647,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 
 **Participants Card:**
 - List of all participants:
-  - Requester (always visible)
+  - requestor (always visible)
   - Moderator (if ticket reviewed)
   - Assignee/Department Head (if assigned)
   - Sub-ticket participants (if exists)
@@ -715,15 +715,15 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
   - Soft deletes the ticket
 
 **Business Rules:**
-- Requester can only see messages after their join timestamp
+- requestor can only see messages after their join timestamp
 - Admin/Moderator can see full chat history
-- Requester cannot edit after submission
+- requestor cannot edit after submission
 - Reopen limit: Maximum 2 times (show error if exceeded)
 - Auto-close countdown visible if ticket is `Resolved` (e.g., "Will auto-close in 2 days")
 
 ---
 
-#### 5. Notifications (`/requester/notifications`)
+#### 5. Notifications (`/requestor/notifications`)
 
 **Layout:**
 ```
@@ -855,7 +855,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 └─────────────────────────────────────────┘
 ┌─────────────────────────────────────────┐
 │ Tickets Table                           │
-│ ID | Title | Requester | Status | ...   │
+│ ID | Title | requestor | Status | ...   │
 │ [Bulk Actions Dropdown]                 │
 └─────────────────────────────────────────┘
 ```
@@ -864,7 +864,7 @@ Use chart tokens (`chart-1` through `chart-6`) for all analytics:
 1. **Checkbox** - For bulk selection
 2. **Ticket ID** - Clickable
 3. **Title** - Truncated
-4. **Requester** - Name and avatar
+4. **requestor** - Name and avatar
 5. **Department** - Department name
 6. **Status** - Status badge
 7. **Priority** - Priority badge
@@ -932,7 +932,7 @@ Similar to Ticket Detail page but with **Moderator Actions** section:
 
 3. **Request Clarification**
    - Reason/Comment (required)
-   - Submit → Status stays `Under_Review`, notifies requester
+   - Submit → Status stays `Under_Review`, notifies requestor
 
 **Additional Features:**
 - **Load-Based Assignment**: Shows department workload before assignment
@@ -1090,12 +1090,12 @@ Similar to Ticket Detail page but with **Moderator Actions** section:
 #### 2. My Tasks (`/assignee/tasks`)
 
 **Layout:**
-Similar to Requester's "My Requests" but for assigned tickets
+Similar to requestor's "My Requests" but for assigned tickets
 
 **Table Columns:**
 1. Ticket ID
 2. Title
-3. Requester
+3. requestor
 4. Priority
 5. Status
 6. Created Date
@@ -1106,7 +1106,7 @@ Similar to Requester's "My Requests" but for assigned tickets
 - **Acknowledge**: Confirm receipt of assignment
 - **Start Work**: Change status to `In_Progress`
 - **Update Progress**: Add progress notes
-- **Mark Complete**: Submit for requester verification
+- **Mark Complete**: Submit for requestor verification
 - **Request Sub-Ticket**: Request moderator to create sub-ticket (via chat)
 - **Request Postponement**: Request postpone with reason
 
@@ -1120,7 +1120,7 @@ Similar to Requester's "My Requests" but for assigned tickets
 #### 3. Task Detail (`/assignee/task-detail/[id]`)
 
 **Layout:**
-Similar to Requester's Request Detail but with **Assignee Actions**:
+Similar to requestor's Request Detail but with **Assignee Actions**:
 
 ```
 ┌─────────────────────────────────────────┐
@@ -1149,12 +1149,12 @@ Similar to Requester's Request Detail but with **Assignee Actions**:
    - Status → `Completed`
    - Add completion notes (required)
    - Attach proof files (optional)
-   - Notifies requester to verify
+   - Notifies requestor to verify
 5. **Request Sub-Ticket**: 
    - Opens chat interface
    - Flag message as `request_subticket`
    - Describes need for other department
-   - Only Assignee can request (not Requester)
+   - Only Assignee can request (not requestor)
 6. **Request Approval** (Finance Assignee only):
    - Creates approval request
    - Status → `Waiting_Approval`
@@ -1250,7 +1250,7 @@ Similar to Requester's Request Detail but with **Assignee Actions**:
   - Sets initial role
 - **Grant HDMS Access**: Enable helpdesk access for SMS user
 - **Revoke Access**: Disable helpdesk access (soft delete)
-- **Assign Role**: Change user role (Requester, Moderator, Assignee, Admin)
+- **Assign Role**: Change user role (requestor, Moderator, Assignee, Admin)
 - **Assign to Department**: Add user to department
 - **Deactivate**: Mark user as inactive (soft delete)
 

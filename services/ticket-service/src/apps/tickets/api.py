@@ -17,13 +17,13 @@ def create_ticket(request, payload: TicketIn):
     """Create a new ticket."""
     # Validate user exists
     user_client = UserClient()
-    if not user_client.validate_user_exists(payload.requester_id):
-        return {"error": "Requester not found"}, 404
+    if not user_client.validate_user_exists(payload.requestor_id):
+        return {"error": "requestor not found"}, 404
     
     ticket = Ticket.objects.create(
         title=payload.title,
         description=payload.description,
-        requester_id=payload.requester_id,
+        requestor_id=payload.requestor_id,
         department_id=payload.department_id,
         priority=payload.priority,
         category=payload.category,
@@ -33,14 +33,14 @@ def create_ticket(request, payload: TicketIn):
 
 
 @router.get("/", response=List[TicketOut])
-def list_tickets(request, status: Optional[str] = None, requester_id: Optional[str] = None):
+def list_tickets(request, status: Optional[str] = None, requestor_id: Optional[str] = None):
     """List tickets with optional filters."""
     queryset = Ticket.objects.all()
     
     if status:
         queryset = queryset.filter(status=status)
-    if requester_id:
-        queryset = queryset.filter(requester_id=requester_id)
+    if requestor_id:
+        queryset = queryset.filter(requestor_id=requestor_id)
     
     return [TicketOut.from_orm(ticket) for ticket in queryset]
 

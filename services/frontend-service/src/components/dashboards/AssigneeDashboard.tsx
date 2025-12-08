@@ -7,9 +7,9 @@ import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/Button';
 import { PriorityBadge } from '../common/PriorityBadge';
 import { StatusBadge } from '../common/StatusBadge';
-import { 
-  FileText, 
-  User, 
+import {
+  FileText,
+  User,
   CheckCircle,
   Clock,
   PlayCircle,
@@ -80,9 +80,9 @@ const AssigneeDashboard: React.FC = () => {
     console.log('Viewing task:', taskId);
   };
 
-  const filteredTasks = myTasks.filter(task => 
+  const filteredTasks = myTasks.filter(task =>
     task.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.requesterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.requestorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -151,7 +151,7 @@ const AssigneeDashboard: React.FC = () => {
               </div>
               <h3 className="text-2xl font-bold" style={{ color: THEME.colors.primary }}>Performance Overview</h3>
             </div>
-            
+
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -159,9 +159,9 @@ const AssigneeDashboard: React.FC = () => {
                   <span className="text-lg font-bold" style={{ color: THEME.colors.primary }}>{completionRate}%</span>
                 </div>
                 <div className="w-full rounded-full h-4 overflow-hidden" style={{ backgroundColor: THEME.colors.background }}>
-                  <div 
-                    className="h-4 rounded-full transition-all duration-1000 ease-out shadow-lg" 
-                    style={{ 
+                  <div
+                    className="h-4 rounded-full transition-all duration-1000 ease-out shadow-lg"
+                    style={{
                       width: `${completionRate}%`,
                       backgroundColor: THEME.colors.primary
                     }}
@@ -176,9 +176,9 @@ const AssigneeDashboard: React.FC = () => {
                   <span className="text-lg font-bold" style={{ color: THEME.colors.medium }}>{activeTasks}</span>
                 </div>
                 <div className="w-full rounded-full h-4 overflow-hidden" style={{ backgroundColor: THEME.colors.background }}>
-                  <div 
-                    className="h-4 rounded-full transition-all duration-1000 ease-out shadow-lg" 
-                    style={{ 
+                  <div
+                    className="h-4 rounded-full transition-all duration-1000 ease-out shadow-lg"
+                    style={{
                       width: `${myTasks.length > 0 ? (activeTasks / myTasks.length) * 100 : 0}%`,
                       backgroundColor: THEME.colors.medium
                     }}
@@ -213,7 +213,7 @@ const AssigneeDashboard: React.FC = () => {
               </div>
               <h3 className="text-2xl font-bold" style={{ color: THEME.colors.primary }}>Quick Actions</h3>
             </div>
-            
+
             <div className="space-y-4">
               <Link href="/assignee/tasks" className="block">
                 <Button variant="primary" className="w-full justify-start h-16 text-left rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
@@ -224,7 +224,7 @@ const AssigneeDashboard: React.FC = () => {
                   </div>
                 </Button>
               </Link>
-              
+
               <Link href="/assignee/profile" className="block">
                 <Button variant="secondary" className="w-full justify-start h-16 text-left rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group">
                   <User className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-300" />
@@ -234,7 +234,7 @@ const AssigneeDashboard: React.FC = () => {
                   </div>
                 </Button>
               </Link>
-              
+
               <Button variant="secondary" className="w-full justify-start h-16 text-left rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group">
                 <Award className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-300" />
                 <div className="flex flex-col items-start">
@@ -242,7 +242,7 @@ const AssigneeDashboard: React.FC = () => {
                   <div className="text-sm opacity-75 mt-0.5">Track your progress</div>
                 </div>
               </Button>
-              
+
               <Button variant="secondary" className="w-full justify-start h-16 text-left rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group" onClick={() => router.push('/assignee/reports')}>
                 <BarChart3 className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-300" />
                 <div className="flex flex-col items-start">
@@ -291,13 +291,13 @@ const AssigneeDashboard: React.FC = () => {
                         <PriorityBadge priority={task.priority} withBorder={true} />
                         <StatusBadge status={task.status} withIcon={true} withBorder={true} />
                       </div>
-                      
+
                       <p className="mb-4 leading-relaxed" style={{ color: THEME.colors.gray }}>{task.description}</p>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm" style={{ color: THEME.colors.gray }}>
                         <div className="flex items-center space-x-2">
                           <User className="w-4 h-4" style={{ color: THEME.colors.primary }} />
-                          <span><strong>Requester:</strong> {task.requesterName}</span>
+                          <span><strong>requestor:</strong> {task.requestorName}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Building className="w-4 h-4" style={{ color: THEME.colors.primary }} />
@@ -309,18 +309,18 @@ const AssigneeDashboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 ml-6">
                       <Button variant="primary" size="sm" leftIcon={<Eye className="w-4 h-4" />} onClick={() => handleViewTask(task.id)}>
                         View
                       </Button>
-                      
+
                       {task.status === 'assigned' && (
                         <Button variant="success" size="sm" leftIcon={<Play className="w-4 h-4" />} onClick={() => handleStartTask(task.id)}>
                           Start
                         </Button>
                       )}
-                      
+
                       {task.status === 'in_progress' && (
                         <Button variant="success" size="sm" leftIcon={<Check className="w-4 h-4" />} onClick={() => handleCompleteTask(task.id)}>
                           Complete

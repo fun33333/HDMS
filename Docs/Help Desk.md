@@ -71,7 +71,7 @@ The system supports **role-based access control** and promotes efficient request
 | **Helpdesk Admin** | Manages system, roles, and access control. | Full configuration and monitoring rights. |
 | **Moderator (Helpdesk Officer)** | Operational workflow manager. | Controls ticket flow, approvals, and quality checks. |
 | **Assignees (Department Heads)** | Department-level executors of tasks. | Manage progress, team updates, and completion. |
-| **Requesters (Principals / Heads / Employees)** | Initiators and collaborators. | Raise tickets and confirm resolution. |
+| **requestors (Principals / Heads / Employees)** | Initiators and collaborators. | Raise tickets and confirm resolution. |
 
 ---
 
@@ -119,7 +119,7 @@ This document defines all **stakeholders, their roles, authorities, and responsi
 | **Helpdesk Administrator (Admin)** | Technical | System-level user and configuration management. |
 | **Moderator (Helpdesk Officer)** | Operational | Workflow management, ticket validation, and progress control. |
 | **Assignees (Department Heads / Leads)** | Operational | Departmental execution of assigned tasks. |
-| **Requesters (Principals / Staff)** | Functional | Initiate and track service requests. |
+| **requestors (Principals / Staff)** | Functional | Initiate and track service requests. |
 
 ---
 
@@ -127,7 +127,7 @@ This document defines all **stakeholders, their roles, authorities, and responsi
 
 ---
 
-## **🧍‍♂️ Requester**
+## **🧍‍♂️ requestor**
 
 *(Principals, Department Heads, or Authorized Staff Members)*
 
@@ -175,7 +175,7 @@ Initiate, collaborate, and finalize internal service or maintenance requests wit
 
 #### **Key Value:**
 
-Makes the requester an *active participant* in the lifecycle rather than a passive initiator — improving engagement and faster resolutions.
+Makes the requestor an *active participant* in the lifecycle rather than a passive initiator — improving engagement and faster resolutions.
 
 ---
 
@@ -219,7 +219,7 @@ Serve as the **workflow controller**, ensuring all tickets are valid, properly c
 
   * Track dependencies between departments.
 
-* **Communication:** Maintain open dialogue with both Requesters and Assignees to resolve delays or missing details.
+* **Communication:** Maintain open dialogue with both requestors and Assignees to resolve delays or missing details.
 
 #### **Access & Visibility:**
 
@@ -257,7 +257,7 @@ Execute and oversee ticket resolution for their respective department.
 
 #### **Enhanced Capabilities:**
 
-* Participate in **real-time chat** with Moderator and Requester.
+* Participate in **real-time chat** with Moderator and requestor.
 
 * Request Moderator to create **linked sub-tickets** for other departments if the task extends beyond their scope.
 
@@ -289,7 +289,7 @@ Govern overall system structure, access control, and configuration management.
 
 * Create, modify, or remove user accounts via integration with SMS.
 
-* Assign appropriate roles (Requester, Moderator, Assignee).
+* Assign appropriate roles (requestor, Moderator, Assignee).
 
 * Configure departments, categories, SLA durations, and notifications.
 
@@ -379,7 +379,7 @@ Provide executive oversight and approve major, cross-departmental, or financial 
 
 | Role | System Access | Operational Authority | Configuration Rights |
 | ----- | ----- | ----- | ----- |
-| Requester | Own Tickets Only | Create & Resolve | ❌ |
+| requestor | Own Tickets Only | Create & Resolve | ❌ |
 | Moderator | All Tickets | Manage Workflows | ❌ |
 | Assignee | Department Tickets | Execute Tasks | ❌ |
 | Admin | All System Data | Supervise & Configure | ✅ |
@@ -448,7 +448,7 @@ To develop an **internal help desk management system** that centralizes all orga
     Support **interconnected tickets**, where a primary ticket (e.g., IT request) can trigger **sub-tickets** (e.g., Accounts approval, Procurement action), enabling multi-department collaboration within a single workflow.
 
 4. **Centralize Communication:**  
-    Build an in-system **comment and discussion section** to connect all involved stakeholders (from requester to approver to CEO) within the same ticket — ensuring transparency and accountability.
+    Build an in-system **comment and discussion section** to connect all involved stakeholders (from requestor to approver to CEO) within the same ticket — ensuring transparency and accountability.
 
 5. **Implement Analytics & Insights:**  
     Provide an **analytics dashboard** showing:
@@ -459,7 +459,7 @@ To develop an **internal help desk management system** that centralizes all orga
 
    * Staff performance metrics
 
-   * Requester satisfaction scores
+   * requestor satisfaction scores
 
 6. **Establish a Foundation for AI Automation:**  
     Lay the groundwork for future integrations like:
@@ -574,7 +574,7 @@ These will be part of **Phase 2** or later versions:
 
 * Voice-based ticket interaction
 
-* Requester satisfaction surveys
+* requestor satisfaction surveys
 
 * Organization-wide analytics dashboard
 
@@ -691,7 +691,7 @@ The Help Desk Management System (HDMS) aims to digitize and centralize the inter
 
 * Centralized **user authentication** integrated with the existing **School Management System (SMS)**.
 
-* Role-based dashboard and analytics for **Requester**, **Moderator**, **Assignee**, and **Admin** roles.
+* Role-based dashboard and analytics for **requestor**, **Moderator**, **Assignee**, and **Admin** roles.
 
 * **Real-time chat and notifications** for each ticket and sub-ticket.
 
@@ -821,7 +821,7 @@ This ensures clean separation of logic while keeping the MVP lightweight and eas
 | Component | Purpose | Stack |
 | ----- | ----- | ----- |
 | **WebSocket Server** | Manages real-time communication between users, moderators, and assignees. | Django Channels \+ Redis |
-| **Client Integration** | Connects users (Requester, Moderator, Assignee) with live updates. | Socket.IO (React client) |
+| **Client Integration** | Connects users (requestor, Moderator, Assignee) with live updates. | Socket.IO (React client) |
 | **Use Cases** | Ticket chat, live status updates, typing indicators, sub-ticket creation events, notifications. |  |
 
 **Design Considerations:**
@@ -1575,13 +1575,13 @@ This document outlines the **end-to-end lifecycle of tickets**, the **real-time 
 ### **2\. Ticket Lifecycle Flow**
 
 **Primary Flow:**  
- `Requester → Moderator → Assignee → Requester (Resolve Confirmation) → Moderator (Verify/Override)`
+ `requestor → Moderator → Assignee → requestor (Resolve Confirmation) → Moderator (Verify/Override)`
 
 #### **Phase Descriptions:**
 
-1. **Ticket Creation (Requester)**
+1. **Ticket Creation (requestor)**
 
-   * Requester drafts and submits a new request.
+   * requestor drafts and submits a new request.
 
    * System validates form completeness.
 
@@ -1603,13 +1603,13 @@ This document outlines the **end-to-end lifecycle of tickets**, the **real-time 
 
    * Collaborates with other departments if dependencies exist.
 
-4. **Resolution (Assignee → Requester)**
+4. **Resolution (Assignee → requestor)**
 
    * Task marked *Completed* by Assignee.
 
-   * The requester receives notification and reviews the result.
+   * The requestor receives notification and reviews the result.
 
-   * Requester marks *Resolved* or requests rework via chat.
+   * requestor marks *Resolved* or requests rework via chat.
 
 5. **Closure Verification (Moderator)**
 
@@ -1629,7 +1629,7 @@ This document outlines the **end-to-end lifecycle of tickets**, the **real-time 
 
 | Feature | Description |
 | ----- | ----- |
-| **Participants** | Requester, Moderator, Assignee(s), and Sub-ticket members. |
+| **Participants** | requestor, Moderator, Assignee(s), and Sub-ticket members. |
 | **Visibility Rules** | Only linked users can view chat. Admin has read-only audit access. |
 | **Technology** | Implemented using WebSocket or Socket.IO for instant updates. |
 | **Moderator Controls** | Can add/remove users, create sub-tickets directly from chat, and merge discussions. |
@@ -1666,7 +1666,7 @@ This document outlines the **end-to-end lifecycle of tickets**, the **real-time 
 
 * **Assignee → Marks Completed**
 
-* **Requester → Confirms Resolution**
+* **requestor → Confirms Resolution**
 
 * **Moderator → Finalizes & Closes Ticket**  
    Each closed ticket contributes to satisfaction analytics and performance dashboards.
@@ -1679,14 +1679,14 @@ This document outlines the **end-to-end lifecycle of tickets**, the **real-time 
 
 * **Assignee closes, Moderator verifies:** prevents self-approval bias.
 
-* **Requester confirmation mandatory:** ensures satisfaction-based closure.
+* **requestor confirmation mandatory:** ensures satisfaction-based closure.
 
 * **All actions logged:** guarantees transparency and traceability.
 
 # Requestor Scenarios
 
 Nice — chalo seedha aur kaam ki cheez banate hain. 👊  
-Below you’ll find a **complete, deeply thought-through set of scenarios** that a **Requester** (principals / department heads / authorized staff) can trigger or experience in the HDMS. For each scenario I give:
+Below you’ll find a **complete, deeply thought-through set of scenarios** that a **requestor** (principals / department heads / authorized staff) can trigger or experience in the HDMS. For each scenario I give:
 
 * **Short name \+ purpose**
 
@@ -1718,18 +1718,18 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ### **1\) Create Ticket (Quick)**
 
-**Purpose:** Requester files a new problem/request.  
- **Actors:** Requester, Moderator.  
- **Preconditions:** Requester logged in and authorized for that department.  
+**Purpose:** requestor files a new problem/request.  
+ **Actors:** requestor, Moderator.  
+ **Preconditions:** requestor logged in and authorized for that department.  
  **Flow:**
 
 1. Frontend validates form → POST `/api/tickets` with `{title, desc, dept_id, priority, category}`.
 
-2. Backend creates `Ticket(status=PendingReview)` and `TicketParticipant` for the requester.
+2. Backend creates `Ticket(status=PendingReview)` and `TicketParticipant` for the requestor.
 
 3. Create `AuditLog(action=create_ticket, user_id, ticket_id)`.
 
-4. Emit WS `ticket:created` to `moderator:pool` and `ticket:{id}` room for requester.
+4. Emit WS `ticket:created` to `moderator:pool` and `ticket:{id}` room for requestor.
 
 5. Create `Notification(to=moderator, type=new_ticket)`.  
     **DB:** `Ticket`, `TicketParticipant`, `AuditLog`.  
@@ -1741,7 +1741,7 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 ### **2\) Save Draft / Resume Draft**
 
 **Purpose:** Save half-composed ticket and submit later.  
- **Actors:** Requester.  
+ **Actors:** requestor.  
  **Flow:**
 
 1. POST `/api/tickets` with `is_draft=true` (or PATCH `/api/tickets/{id}` to toggle).
@@ -1768,7 +1768,7 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 3. Backend verifies file metadata, runs async virus/size scan (Celery).
 
-4. If scan fails, notification to requester and moderator; ticket flagged.  
+4. If scan fails, notification to requestor and moderator; ticket flagged.  
     **DB:** `Attachment(status=processing/ok/failed)`.  
     **Edge cases:** upload interrupted → retry token; attachment scan failure → auto-remove or quarantine.  
     **Diagram:** swimlane including frontend, S3, backend worker.
@@ -1779,8 +1779,8 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ### **4\) Post Comment / Chat Message (real-time)**
 
-**Purpose:** Requester converses with Moderator/Assignee in ticket chat.  
- **Actors:** Requester \+ participants.  
+**Purpose:** requestor converses with Moderator/Assignee in ticket chat.  
+ **Actors:** requestor \+ participants.  
  **Flow:**
 
 1. WebSocket `chat:send` to room `ticket:{id}` with message payload.
@@ -1796,12 +1796,12 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ---
 
-### **5\) Requester requests Moderator to add a sub-ticket (via chat)**
+### **5\) requestor requests Moderator to add a sub-ticket (via chat)**
 
-**Purpose:** Requester asks for additional department involvement.  
+**Purpose:** requestor asks for additional department involvement.  
  **Flow:**
 
-1. Requester posts chat message: “Please create sub-ticket for Accounts — details…” with flag `request_subticket`.
+1. requestor posts chat message: “Please create sub-ticket for Accounts — details…” with flag `request_subticket`.
 
 2. Server stores message \+ creates `SubTicketRequest` record (pending moderator action).
 
@@ -1812,9 +1812,9 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ---
 
-### **6\) Requester added/removed from ticket chat**
+### **6\) requestor added/removed from ticket chat**
 
-**Purpose:** Admin/Moderator adjusts participants; requester nhậns/loses visibility.  
+**Purpose:** Admin/Moderator adjusts participants; requestor nhậns/loses visibility.  
  **Flow:**
 
 1. Moderator calls `/api/tickets/{id}/participants/add` or `/remove`.
@@ -1831,9 +1831,9 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ## **Group C — Approvals & sub-ticket workflows**
 
-### **7\) Requester triggers Approval Flow (e.g., cheque)**
+### **7\) requestor triggers Approval Flow (e.g., cheque)**
 
-**Purpose:** Requester marks ticket as needing financial approval.  
+**Purpose:** requestor marks ticket as needing financial approval.  
  **Flow:**
 
 1. On ticket creation/edit: `requires_approval=true` → backend creates `ApprovalRequest` linked to ticket.
@@ -1849,48 +1849,48 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ---
 
-### **8\) Requester views sub-ticket linkage and status**
+### **8\) requestor views sub-ticket linkage and status**
 
-**Purpose:** Requester monitors all related subtickets from main ticket.  
+**Purpose:** requestor monitors all related subtickets from main ticket.  
  **Flow:**
 
 1. GET `/api/tickets/{id}/details?include_subtickets=true` → returns parent \+ subtickets statuses and participants.
 
 2. Frontend shows consolidated timeline.  
     **DB:** reads from `Ticket` where `parent_id` or `ticket_relations`.  
-    **Edge cases:** permission filter — ensure requester sees only linked subtickets where they are participant or it’s allowed.  
+    **Edge cases:** permission filter — ensure requestor sees only linked subtickets where they are participant or it’s allowed.  
     **Diagram:** data aggregation diagram.
 
 ---
 
 ## **Group D — Status changes, resolve, reopen**
 
-### **9\) Assignee marks Completed → Requester verifies & marks Resolved**
+### **9\) Assignee marks Completed → requestor verifies & marks Resolved**
 
-**Purpose:** Ensure requester confirmation before final close.  
+**Purpose:** Ensure requestor confirmation before final close.  
  **Flow:**
 
-1. Assignee sets status `Completed` → notify requester via WS & email.
+1. Assignee sets status `Completed` → notify requestor via WS & email.
 
-2. Requester opens details and clicks **Resolve** or **Request Rework**.
+2. requestor opens details and clicks **Resolve** or **Request Rework**.
 
-   * If **Resolve**: PATCH `/api/tickets/{id}/resolve_by_requester` → status `Pending Moderator Verification`.
+   * If **Resolve**: PATCH `/api/tickets/{id}/resolve_by_requestor` → status `Pending Moderator Verification`.
 
    * If **Request Rework**: comment \+ status `Reopened`/`In Progress`.
 
 3. Moderator verifies, then `Closed`.  
     **DB:** `Ticket.history`, `AuditLog`.  
-    **Edge cases:** requester doesn’t respond → auto-verify after SLA expiry (configurable).  
+    **Edge cases:** requestor doesn’t respond → auto-verify after SLA expiry (configurable).  
     **Diagram:** status transition chart.
 
 ---
 
-### **10\) Requester reopens a closed ticket**
+### **10\) requestor reopens a closed ticket**
 
 **Purpose:** If result unsatisfactory.  
  **Flow:**
 
-1. Requester clicks `Reopen` and provides reason → create `TicketReopen` record.
+1. requestor clicks `Reopen` and provides reason → create `TicketReopen` record.
 
 2. Backend sets status `Reopened`, notifies assignee & moderator.
 
@@ -1902,7 +1902,7 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ## **Group E — Visibility, reporting & dashboards**
 
-### **11\) Requester views personal dashboard / history**
+### **11\) requestor views personal dashboard / history**
 
 **Purpose:** See own tickets, stats, drafts.  
  **Flow:**
@@ -1916,12 +1916,12 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ---
 
-### **12\) Requester downloads attachments / reports**
+### **12\) requestor downloads attachments / reports**
 
 **Purpose:** Retrieve proof documents or export data.  
  **Flow:**
 
-1. Requester clicks download → GET signed URL `/api/uploads/{key}/download` or direct signed S3 link.
+1. requestor clicks download → GET signed URL `/api/uploads/{key}/download` or direct signed S3 link.
 
 2. Audit log download action.  
     **Edge cases:** permission check; expired signed URL; large export → async CSV via Celery.  
@@ -1936,7 +1936,7 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 **Purpose:** New SMS user tries to access HDMS.  
  **Flow A (SSO / API):**
 
-1. Requester tries login using SMS credentials → HDMS delegates auth to SMS via API or SSO.
+1. requestor tries login using SMS credentials → HDMS delegates auth to SMS via API or SSO.
 
 2. On success, HDMS upserts user, `is_active` may be false until admin authorizes.
 
@@ -1945,13 +1945,13 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 4. Admin runs sync job or scheduled sync populates `User`.
 
-5. Admin authorizes specific employees to be Requesters.  
+5. Admin authorizes specific employees to be requestors.  
     **DB:** `User`, `AccessRequest`.  
     **Diagram:** auth & sync flow.
 
 ---
 
-### **14\) Requester requests access (if not provisioned)**
+### **14\) requestor requests access (if not provisioned)**
 
 **Purpose:** Non-authorized user asks for helpdesk account.  
  **Flow:**
@@ -1960,18 +1960,18 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 2. Admin sees request in `/admin/access-requests` and approves/denies.
 
-3. On approval, notification and email sent to requester.  
+3. On approval, notification and email sent to requestor.  
     **Audit:** Access request and approval action logged.  
     **Diagram:** approval flow.
 
 ---
 
-### **15\) Requester requests role change (e.g., to Moderator)**
+### **15\) requestor requests role change (e.g., to Moderator)**
 
 **Purpose:** Elevated privileges request.  
  **Flow:**
 
-1. Requester files role-change request → POST `/api/roles/requests`.
+1. requestor files role-change request → POST `/api/roles/requests`.
 
 2. Admin reviews; may require justification. On approval, role updated and cache invalidated.  
     **Edge cases:** if currently has open tickets, system may block role downgrade until reassigned.  
@@ -1983,14 +1983,14 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ### **16\) Notification: status change, mention, assignment**
 
-**Purpose:** Keep requester informed.  
+**Purpose:** Keep requestor informed.  
  **Flow:**
 
 1. System creates `Notification` row on events: `ticket_assigned`, `status_changed`, `mentioned`, `approval_requested`.
 
 2. Emit `notification:new` via WS; also enqueue email.
 
-3. Frontend shows to requester; clicking notification navigates to ticket.  
+3. Frontend shows to requestor; clicking notification navigates to ticket.  
     **Edge cases:** notification burst → grouping & throttle.  
     **Diagram:** notification flow.
 
@@ -2001,7 +2001,7 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 **Purpose:** call attention to specific person(s).  
  **Flow:**
 
-1. When requester includes `@employee_code` in chat, backend resolves to user IDs, creates `Notification` for each, sends WS & email.
+1. When requestor includes `@employee_code` in chat, backend resolves to user IDs, creates `Notification` for each, sends WS & email.
 
 2. Audit mention.  
     **Edge cases:** mention non-authorized user — create access request? Or notify admin.  
@@ -2011,7 +2011,7 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ## **Group H — Errors, constraints & governance**
 
-### **18\) Requester encounters validation / permission errors**
+### **18\) requestor encounters validation / permission errors**
 
 **Purpose:** Maintain integrity.  
  **Examples/Rules:**
@@ -2020,14 +2020,14 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 * Attachment exceeds max size → client error \+ hint.
 
-* Too many open tickets from same requester → rate limiting or moderator review.  
+* Too many open tickets from same requestor → rate limiting or moderator review.  
    **Diagram:** error branch flows.
 
 ---
 
-### **19\) Requester uses bulk-create (if allowed)**
+### **19\) requestor uses bulk-create (if allowed)**
 
-**Purpose:** Requester files multiple similar tickets (e.g., asset requests).  
+**Purpose:** requestor files multiple similar tickets (e.g., asset requests).  
  **Flow:**
 
 1. POST `/api/tickets/bulk` with array. Server validates per-item; if heavy, accept 202 and process via Celery.
@@ -2038,14 +2038,14 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ---
 
-### **20\) Requester accepts/acknowledges SLA/custom time change**
+### **20\) requestor accepts/acknowledges SLA/custom time change**
 
-**Purpose:** Moderator adjusts deadline; notify requester for acknowledgement.  
+**Purpose:** Moderator adjusts deadline; notify requestor for acknowledgement.  
  **Flow:**
 
 1. Moderator updates SLA → system PATCH `/api/tickets/{id}/sla` and sends `sla:update` notification.
 
-2. Requester sees new deadline and can `acknowledge` or `dispute` via `/api/tickets/{id}/sla/ack`.
+2. requestor sees new deadline and can `acknowledge` or `dispute` via `/api/tickets/{id}/sla/ack`.
 
 3. Dispute opens a small workflow routed to Moderator.  
     **Edge cases:** no acknowledgement → auto-ack after X hours (configurable).  
@@ -2053,32 +2053,32 @@ Use these as canonical blueprints — we’ll turn any of them into Mermaid diag
 
 ---
 
-## **Quick Mermaid snippets you can paste (Requester-centric)**
+## **Quick Mermaid snippets you can paste (requestor-centric)**
 
 ### **Create ticket \+ notify moderator**
 
 flowchart TD  
-  A\[Requester fills form\] \--\> B\[POST /api/tickets\]  
+  A\[requestor fills form\] \--\> B\[POST /api/tickets\]  
   B \--\> C\[Create Ticket (PendingReview)\]  
   C \--\> D\[AuditLog:create\_ticket\]  
   C \--\> E\[Emit WS ticket:created \-\> moderator\_pool\]  
   C \--\> F\[Create Notification (moderator)\]
 
-### **Requester posts chat message & mention**
+### **requestor posts chat message & mention**
 
 flowchart TD  
-  A\[Requester sends WS chat:send\] \--\> B\[Server validates & saves ChatMessage\]  
+  A\[requestor sends WS chat:send\] \--\> B\[Server validates & saves ChatMessage\]  
   B \--\> C\[Emit WS chat:message \-\> ticket:{id}\]  
   B \--\> D{contains @mention?}  
   D \-- yes \--\> E\[Create Notification for mentioned users\]  
   E \--\> F\[Emit WS notification:new\]
 
-### **Assignee completes \-\> Requester resolves \-\> Moderator verifies**
+### **Assignee completes \-\> requestor resolves \-\> Moderator verifies**
 
 flowchart TD  
-  A\[Assignee marks Completed\] \--\> B\[Emit WS ticket:completed \-\> requester\]  
-  B \--\> C\[Requester reviews \-\> Resolve or Rework\]  
-  C \-- Resolve \--\> D\[PATCH /api/tickets/{id}/resolve\_by\_requester\]  
+  A\[Assignee marks Completed\] \--\> B\[Emit WS ticket:completed \-\> requestor\]  
+  B \--\> C\[requestor reviews \-\> Resolve or Rework\]  
+  C \-- Resolve \--\> D\[PATCH /api/tickets/{id}/resolve\_by\_requestor\]  
   D \--\> E\[Moderator verifies \-\> Close ticket\]  
   C \-- Rework \--\> F\[Reopen ticket \-\> In Progress\]
 
@@ -2090,11 +2090,11 @@ flowchart TD
 
 ![][image1]
 
-`%% Requester creates a new help-desk ticket`
+`%% requestor creates a new help-desk ticket`
 
 `sequenceDiagram`
 
-    `participant R as Requester (UI)`
+    `participant R as requestor (UI)`
 
     `participant API as /api/tickets (Django Ninja)`
 
@@ -2110,7 +2110,7 @@ flowchart TD
 
     `API->>DB: INSERT Ticket(status=PendingReview, is_draft=False)`
 
-    `API->>DB: INSERT TicketParticipant (Requester)`
+    `API->>DB: INSERT TicketParticipant (requestor)`
 
     `API->>DB: INSERT AuditLog(create_ticket)`
 
@@ -2128,7 +2128,7 @@ flowchart TD
 
 `sequenceDiagram`
 
-    `participant R as Requester`
+    `participant R as requestor`
 
     `participant API as /api/tickets`
 
@@ -2154,7 +2154,7 @@ flowchart TD
 
 `sequenceDiagram`
 
-    `participant R as Requester (UI)`
+    `participant R as requestor (UI)`
 
     `participant API as /api/tickets (multipart)`
 
@@ -2186,11 +2186,11 @@ flowchart TD
 
 ---
 
-### **🟢 A4 – Requester Edits Draft → Submit**  **![][image4]**
+### **🟢 A4 – requestor Edits Draft → Submit**  **![][image4]**
 
 `sequenceDiagram`
 
-    `participant R as Requester`
+    `participant R as requestor`
 
     `participant API as /api/tickets/{id}`
 
@@ -2220,7 +2220,7 @@ flowchart TD
 
 `flowchart TD`
 
-    `A[Requester clicks Submit] --> B{Has <10 open tickets?}`
+    `A[requestor clicks Submit] --> B{Has <10 open tickets?}`
 
     `B -- No --> C[Show warning 'Too many open tickets']`
 
@@ -2248,9 +2248,9 @@ flowchart TD
 
     `InProgress --> Completed : Assignee marks done`
 
-    `Completed --> Closed : Requester marks Resolved (auto close)`
+    `Completed --> Closed : requestor marks Resolved (auto close)`
 
-    `Closed --> Reopened : Requester requests reopen (≤2x)`
+    `Closed --> Reopened : requestor requests reopen (≤2x)`
 
     `Reopened --> InProgress`
 
@@ -2278,7 +2278,7 @@ flowchart TD
 
 `sequenceDiagram`
 
-    `participant R as Requester (UI)`
+    `participant R as requestor (UI)`
 
     `participant WS as WebSocket Gateway`
 
@@ -2308,7 +2308,7 @@ flowchart TD
 
 `sequenceDiagram`
 
-    `participant R as Requester`
+    `participant R as requestor`
 
     `participant WS as WebSocket`
 
@@ -2332,7 +2332,7 @@ flowchart TD
 
 `flowchart TD`
 
-    `A[Requester types @name] --> B{Is user<br>participant in ticket?}`
+    `A[requestor types @name] --> B{Is user<br>participant in ticket?}`
 
     `B -- No --> C[Show warning:<br>Cannot mention user not in room]`
 
@@ -2344,7 +2344,7 @@ flowchart TD
 
 ---
 
-### **🟣 B4 — Moderator Adds/Removes Participants (Requester impacted)**  **![][image11]**
+### **🟣 B4 — Moderator Adds/Removes Participants (requestor impacted)**  **![][image11]**
 
 `sequenceDiagram`
 
@@ -2358,7 +2358,7 @@ flowchart TD
 
     `participant WS as WebSocket`
 
-    `M->>API: Add/Remove Participant(Requester or Others)`
+    `M->>API: Add/Remove Participant(requestor or Others)`
 
     `API->>DB: UPDATE participant list`
 
@@ -2368,7 +2368,7 @@ flowchart TD
 
     `API->>WS: Push update event`
 
-    `alt removed user == Requester`
+    `alt removed user == requestor`
 
         `WS-->>R: Force leave room + revoke ticket access`
 
@@ -2378,7 +2378,7 @@ flowchart TD
 
     `end`
 
-📌 **Requester kicked \= loses ALL chat/ticket visibility instantly**
+📌 **requestor kicked \= loses ALL chat/ticket visibility instantly**
 
 ---
 
@@ -2386,7 +2386,7 @@ flowchart TD
 
 `flowchart TD`
 
-    `A[Requester opens Ticket Chat] --> B[Join WS room]`
+    `A[requestor opens Ticket Chat] --> B[Join WS room]`
 
     `B --> C[Broadcast 'user_joined']`
 
@@ -2424,7 +2424,7 @@ flowchart TD
 
 `flowchart TD`
 
-    `A[Requester sends attachment] --> B{File Size OK?}`
+    `A[requestor sends attachment] --> B{File Size OK?}`
 
     `B -- No --> C[Skip file + alert user]`
 
@@ -2448,7 +2448,7 @@ flowchart TD
 
 `sequenceDiagram`
 
-    `participant R as Requester`
+    `participant R as requestor`
 
     `participant API as /api/tickets/create`
 
@@ -2478,7 +2478,7 @@ flowchart TD
 
 **Highlights**
 
-* Requester cannot edit after submission.
+* requestor cannot edit after submission.
 
 * Moderator has **sole routing control**.
 
@@ -2500,7 +2500,7 @@ flowchart TD
 
     `E --> F[Moderator notified of sub-ticket creation + status]`
 
-    `F --> G[Requester sees read-only status of sub-tasks]`
+    `F --> G[requestor sees read-only status of sub-tasks]`
 
 **Key logic**
 
@@ -2522,7 +2522,7 @@ flowchart TD
 
     `participant CEO as CEO`
 
-    `participant R as Requester`
+    `participant R as requestor`
 
     `M->>F: Assign Ticket(category: Finance)`
 
@@ -2552,11 +2552,11 @@ flowchart TD
 
 ---
 
-### **🟢 C4 — Moderator Creates Sub-Ticket (on Requester’s Chat Suggestion)**  **![][image18]**
+### **🟢 C4 — Moderator Creates Sub-Ticket (on requestor’s Chat Suggestion)**  **![][image18]**
 
 `flowchart TD`
 
-    `A[Requester suggests new task in chat] --> B[Moderator reviews feasibility]`
+    `A[requestor suggests new task in chat] --> B[Moderator reviews feasibility]`
 
     `B -->|Accept| C[Moderator creates sub-ticket directly]`
 
@@ -2565,7 +2565,7 @@ flowchart TD
     `B -->|Reject| E[Reply in chat with reason]`
 
 **Purpose:**  
- Requester may *inspire* new sub-tasks, but Moderator controls creation.
+ requestor may *inspire* new sub-tasks, but Moderator controls creation.
 
 ---
 
@@ -2667,7 +2667,7 @@ Each status/sub-ticket change \= audit event (for compliance).
 
     `[*] --> Draft`
 
-    `Draft --> Submitted : Requester submits`
+    `Draft --> Submitted : requestor submits`
 
     `Submitted --> Under_Review : Moderator reviews`
 
@@ -2685,13 +2685,13 @@ Each status/sub-ticket change \= audit event (for compliance).
 
     `Rejected --> Reopened : Moderator reopens for rework`
 
-    `Resolved --> Closed : Requester confirms resolution`
+    `Resolved --> Closed : requestor confirms resolution`
 
 **Rules**
 
 * Only Moderator can move a ticket from “Under Review → Assigned.”
 
-* Requester → only “Submit” or “Confirm Resolved.”
+* requestor → only “Submit” or “Confirm Resolved.”
 
 * Department Head → change to “In Progress.”
 
@@ -2711,7 +2711,7 @@ Each status/sub-ticket change \= audit event (for compliance).
 
     `participant M as Moderator`
 
-    `participant R as Requester`
+    `participant R as requestor`
 
     `E->>D: Marks ticket completed`
 
@@ -2735,11 +2735,11 @@ Each status/sub-ticket change \= audit event (for compliance).
 
 **Logic**
 
-* Final closure \= Requester’s confirmation.
+* Final closure \= requestor’s confirmation.
 
 * Moderator’s verification \= mandatory before close.
 
-* If Requester rejects resolution → ticket reopens.
+* If requestor rejects resolution → ticket reopens.
 
 ---
 
@@ -2747,7 +2747,7 @@ Each status/sub-ticket change \= audit event (for compliance).
 
 `flowchart TD`
 
-    `A[Ticket Closed] --> B[Requester requests reopen]`
+    `A[Ticket Closed] --> B[requestor requests reopen]`
 
     `B --> C{Reopen limit reached?}`
 
@@ -2795,7 +2795,7 @@ Each status/sub-ticket change \= audit event (for compliance).
 
 `flowchart TD`
 
-    `A[Ticket in Resolved State] --> B{Requester confirms within 3 days?}`
+    `A[Ticket in Resolved State] --> B{requestor confirms within 3 days?}`
 
     `B -- Yes --> C[Closed]`
 
@@ -2927,7 +2927,7 @@ Every status change \= immutable audit record.
 
     `A[Successful Login] --> B{Role?}`
 
-    `B -->|Requester| C[Redirect → /requester/dashboard]`
+    `B -->|requestor| C[Redirect → /requestor/dashboard]`
 
     `B -->|Moderator| D[Redirect → /moderator/dashboard]`
 
@@ -3050,9 +3050,9 @@ Every status change \= immutable audit record.
 
 ###  **Closure & Reopen**
 
-* Requester confirms first → Auto-close after 3 days if no feedback.
+* requestor confirms first → Auto-close after 3 days if no feedback.
 
-* Moderator can reopen any closed ticket (no requester-only restriction).
+* Moderator can reopen any closed ticket (no requestor-only restriction).
 
 * Reopen creates a **new version (Ticket v2)** while retaining same ID for traceability.
 
@@ -3106,7 +3106,7 @@ Every status change \= immutable audit record.
 
 * When a Moderator reopens a closed ticket:
 
-  * Only the **last involved participants** (Moderator, Requester, Assignee) will rejoin automatically.
+  * Only the **last involved participants** (Moderator, requestor, Assignee) will rejoin automatically.
 
   * Moderator can then manually add or remove any of them.
 
@@ -3120,13 +3120,13 @@ Every status change \= immutable audit record.
 
 #### **3\. Auto-Close Reminder**
 
-* 24 hours before auto-close, system sends a **final reminder** to requester (and Moderator gets copy in dashboard).
+* 24 hours before auto-close, system sends a **final reminder** to requestor (and Moderator gets copy in dashboard).
 
-* If requester doesn’t respond, ticket auto-closes.
+* If requestor doesn’t respond, ticket auto-closes.
 
 * Moderator is notified when closure happens automatically.
 
-🧩 Diagram effect → a timed loop node from “Await Requester Confirmation” to “Reminder → Auto-Close.”
+🧩 Diagram effect → a timed loop node from “Await requestor Confirmation” to “Reminder → Auto-Close.”
 
 ---
 
@@ -3172,7 +3172,7 @@ Every status change \= immutable audit record.
 
 * If valid → assigns to appropriate department head.
 
-* If incomplete → rejects or requests clarification from requester.
+* If incomplete → rejects or requests clarification from requestor.
 
 * All actions are logged in the audit trail.
 
@@ -3181,13 +3181,13 @@ Every status change \= immutable audit record.
 **![][image35]**
 
 `flowchart TD`  
-    `A[New Ticket Submitted by Requester] --> B[Moderator Review Queue]`  
+    `A[New Ticket Submitted by requestor] --> B[Moderator Review Queue]`  
     `B -->|Valid| C[Assign to Department Head]`  
-    `B -->|Incomplete| D[Request Clarification from Requester]`  
-    `D --> E[Requester Provides Update]`  
+    `B -->|Incomplete| D[Request Clarification from requestor]`  
+    `D --> E[requestor Provides Update]`  
     `E --> B`  
     `C --> F[Ticket Assigned]`  
-    `F --> G[Notify Department Head + Requester]`  
+    `F --> G[Notify Department Head + requestor]`  
     `G --> H[Move Ticket to 'In Progress']`  
     `H --> I[Audit Log Entry]`
 
@@ -3201,7 +3201,7 @@ Every status change \= immutable audit record.
 
 * Must provide a reason (optional if system-detected duplicates).
 
-* Requester is notified instantly.
+* requestor is notified instantly.
 
 * Ticket moves to *Rejected* state (locked from edits).
 
@@ -3213,7 +3213,7 @@ Every status change \= immutable audit record.
     `A[Ticket in Review Queue] --> B[Moderator Clicks 'Reject']`  
     `B --> C[Enter Reason (optional)]`  
     `C --> D[Ticket Status = Rejected]`  
-    `D --> E[Notify Requester]`  
+    `D --> E[Notify requestor]`  
     `E --> F[Audit Log Entry: 'Rejected']`  
     `F --> G[Ticket Locked from Edits]`
 
@@ -3338,7 +3338,7 @@ Every status change \= immutable audit record.
 `flowchart TD`  
     `A[Moderator Decides to Postpone Ticket] --> B[Enter Reason & Duration]`  
     `B --> C[Update Status = Postponed]`  
-    `C --> D[Notify Requester + Assignee]`  
+    `C --> D[Notify requestor + Assignee]`  
     `D --> E[Celery Schedules 3-Day Reminder]`  
     `E --> F[Moderator Receives Reminder: Restart or Resolve]`
 
@@ -3348,11 +3348,11 @@ Every status change \= immutable audit record.
 
 | Action | Requires Reason | Auto Notify | Audit | Undoable | Auto Reminders |
 | ----- | ----- | ----- | ----- | ----- | ----- |
-| Review & Assign | Optional | ✅ Dept Head \+ Requester | ✅ | ❌ | ✅ (SLA based) |
-| Reject | Optional | ✅ Requester | ✅ | ✅ | ❌ |
+| Review & Assign | Optional | ✅ Dept Head \+ requestor | ✅ | ❌ | ✅ (SLA based) |
+| Reject | Optional | ✅ requestor | ✅ | ✅ | ❌ |
 | Split Ticket | ✅ | ✅ All Departments | ✅ | ❌ | ✅ |
 | Reassign | ✅ | ✅ All Participants | ✅ | ✅ | ❌ |
-| Postpone | ✅ | ✅ Requester \+ Assignee | ✅ | ✅ | ✅ (Every 3 Days) |
+| Postpone | ✅ | ✅ requestor \+ Assignee | ✅ | ✅ | ✅ (Every 3 Days) |
 
 ---
 
@@ -3367,8 +3367,8 @@ Every status change \= immutable audit record.
  They can see all conversations, attachments, and history from the beginning.
 
 `flowchart TD`  
-    `A[Ticket Created by Requester] --> B[Chat Room Auto-Created]`  
-    `B --> C[Participants Added → Requester + Moderator]`  
+    `A[Ticket Created by requestor] --> B[Chat Room Auto-Created]`  
+    `B --> C[Participants Added → requestor + Moderator]`  
     `C --> D[Moderator Has Full Read/Write Access]`  
     `D --> E[Audit Entry: Chat Room Initialized]`
 
@@ -3472,7 +3472,7 @@ Every status change \= immutable audit record.
 
 * Moderator can view live typing indicators, read receipts, and message timestamps.
 
-* Every new message updates the unread count in Requester’s and Moderator’s notification panels instantly.
+* Every new message updates the unread count in requestor’s and Moderator’s notification panels instantly.
 
 * Moderator can also **mute or pause** a chat temporarily if spam detected.
 
@@ -3489,11 +3489,11 @@ Every status change \= immutable audit record.
 ### **Scenario B7 — Moderator Requests Clarification via Chat**
 
 **Description:**  
- Moderator can directly ask requester for missing details in chat before ticket assignment.  
- Requester’s reply gets logged and linked to ticket notes automatically.
+ Moderator can directly ask requestor for missing details in chat before ticket assignment.  
+ requestor’s reply gets logged and linked to ticket notes automatically.
 
 `flowchart TD`  
-    `A[Moderator Requests Info in Chat] --> B[Requester Replies]`  
+    `A[Moderator Requests Info in Chat] --> B[requestor Replies]`  
     `B --> C[Response Logged in Ticket Notes]`  
     `C --> D[Moderator Proceeds to Assignment]`
 
@@ -3587,7 +3587,7 @@ Every status change \= immutable audit record.
     `A[Ticket Closed Resolved and Verified] --> B[Moderator Chooses Reopen]`  
     `B --> C[System Creates New Version Ticket V2]`  
     `C --> D[Reassign to Relevant Department Head]`  
-    `D --> E[Notify Requester and Previous Participants]`  
+    `D --> E[Notify requestor and Previous Participants]`  
     `E --> F[Ticket Status Reopened Under Review]`  
     `F --> G[Audit Log Records Reason and DateTime]`  
 `![][image53]`
@@ -3598,11 +3598,11 @@ Every status change \= immutable audit record.
 ### **🧩 Scenario D1 — Standard Ticket Status Lifecycle**
 
 `flowchart TD`  
-    `A1[Ticket Created by Requester] --> B1[Moderator Reviews Ticket]`  
+    `A1[Ticket Created by requestor] --> B1[Moderator Reviews Ticket]`  
     `B1 --> C1[Ticket Assigned to Department Head]`  
     `C1 --> D1[Department Head Marks In Progress]`  
     `D1 --> E1[Department Head Marks Completed]`  
-    `E1 --> F1[Requester Marks as Resolved]`  
+    `E1 --> F1[requestor Marks as Resolved]`  
     `F1 --> G1[Moderator Verifies and Confirms Closure]`  
     `G1 --> H1[Ticket Status = Closed]`  
     `H1 --> I1[Audit Log Updated + Notifications Sent]`
@@ -3611,11 +3611,11 @@ Every status change \= immutable audit record.
 
 ---
 
-### **🧩 Scenario D2 — Auto-Closure When Requester Doesn’t Respond**
+### **🧩 Scenario D2 — Auto-Closure When requestor Doesn’t Respond**
 
 `flowchart TD`  
-    `A2[Ticket Completed by Assignee] --> B2[Moderator Requests Requester Confirmation]`  
-    `B2 --> C2[No Response from Requester for 3 Days]`  
+    `A2[Ticket Completed by Assignee] --> B2[Moderator Requests requestor Confirmation]`  
+    `B2 --> C2[No Response from requestor for 3 Days]`  
     `C2 --> D2[System Auto-Marks Ticket as 'Resolved']`  
     `D2 --> E2[Moderator Verifies Automatically]`  
     `E2 --> F2[Ticket Status = Closed]`  
@@ -3625,14 +3625,14 @@ Every status change \= immutable audit record.
 
 ---
 
-### **🧩 Scenario D3 — Ticket Reopen (Requester-Initiated)**
+### **🧩 Scenario D3 — Ticket Reopen (requestor-Initiated)**
 
 `flowchart TD`  
-    `A[Ticket Closed] --> B[Requester Clicks Reopen Request]`  
+    `A[Ticket Closed] --> B[requestor Clicks Reopen Request]`  
     `B --> C[Moderator Reviews Reopen Reason]`  
     `C -->|Approved| D[Ticket Restored to Previous State]`  
-    `C -->|Rejected| E[Requester Notified Reopen Denied]`  
-    `D --> F[Assignee & Requester Re-Added to Chat]`  
+    `C -->|Rejected| E[requestor Notified Reopen Denied]`  
+    `D --> F[Assignee & requestor Re-Added to Chat]`  
     `F --> G[Ticket Status = Reopened Under Review]`  
     `G --> H[Audit Log & Notifications Triggered]`
 
@@ -3647,7 +3647,7 @@ Every status change \= immutable audit record.
     `B4 --> C4[Ticket Version Created (V2) with Same ID]`  
     `C4 --> D4[Moderator Adds Reason & Timestamp]`  
     `D4 --> E4[Ticket Assigned Back to Department]`  
-    `E4 --> F4[Requester Notified Automatically]`  
+    `E4 --> F4[requestor Notified Automatically]`  
     `F4 --> G4[Ticket Reopens for Further Action]`
 
 `![][image57]`
@@ -3675,7 +3675,7 @@ Every status change \= immutable audit record.
     `B6 --> C6[Moderator Notifies Current Assignee]`  
     `C6 --> D6[Revoke Access + Remove from Chat]`  
     `D6 --> E6[Assign to New Department Head]`  
-    `E6 --> F6[New Assignee & Requester Notified]`  
+    `E6 --> F6[New Assignee & requestor Notified]`  
     `F6 --> G6[Ticket Continues from Last Status]`  
     `G6 --> H6[Audit Log Captures Reassignment Details]`
 
@@ -3720,7 +3720,7 @@ Every status change \= immutable audit record.
 
 * System verifies JWT or refreshes token.
 
-* Role decides the UI layout and route (e.g., Requester → `/requester/dashboard`).
+* Role decides the UI layout and route (e.g., requestor → `/requestor/dashboard`).
 
 `flowchart TD`  
     `A2[User Logs In] --> B2[Validate JWT Token / Credentials]`  
@@ -3787,7 +3787,7 @@ Every status change \= immutable audit record.
 
 **Description**  
  Whenever a ticket’s status changes (e.g., *Assigned → In Progress → Resolved*),  
- the system automatically pushes a notification to all **connected participants** of that ticket (Requester, Assignee, Moderator).
+ the system automatically pushes a notification to all **connected participants** of that ticket (requestor, Assignee, Moderator).
 
 `flowchart TD`  
     `A1[Ticket Status Updated by Moderator or Assignee] --> B1[Emit Real-Time Event via WebSocket]`  
@@ -3907,7 +3907,7 @@ Note: DB entity names used consistently: `User`, `Ticket`, `SubTicket`, `TicketP
 
 ## **1 — Receive Assignment (Assignment Accepted / Acknowledged)**
 
-**Actors:** Assignee (Department Head), Moderator, Requester  
+**Actors:** Assignee (Department Head), Moderator, requestor  
  **Trigger / Preconditions:** Moderator assigns a ticket to the department head (only head is notified).  
  **Step-by-step:**
 
@@ -3983,7 +3983,7 @@ sequenceDiagram
 
 ## **3 — Update Progress / Partial Completion**
 
-**Actors:** Assignee, Requester, Moderator  
+**Actors:** Assignee, requestor, Moderator  
  **Trigger / Preconditions:** Work ongoing; need to update status or steps done.  
  **Steps:**
 
@@ -3991,7 +3991,7 @@ sequenceDiagram
 
 2. Optionally attach files or interim deliverables (POST `/api/tickets/{id}/attachments`).
 
-3. System logs partial update; notifies Moderator and Requester.  
+3. System logs partial update; notifies Moderator and requestor.  
     **Events / Notifications:** `ticket:progress_update` to participants.  
     **DB touched:** `Ticket` (progress fields), `Attachment`, `Comment` if logged, `AuditLog`.  
     **WS events:** `ticket:progress_update`.  
@@ -4004,7 +4004,7 @@ sequenceDiagram
 
 ## **5 — Request Moderator to Create Sub-Ticket (via Chat)**
 
-**Actors:** Assignee, Moderator, Requester  
+**Actors:** Assignee, Moderator, requestor  
  **Trigger / Preconditions:** Assignee finds dependency on another department (financial approval, procurement, etc.). Assignee cannot create sub-ticket directly (business rule).  
  **Steps:**
 
@@ -4044,7 +4044,7 @@ sequenceDiagram
 
 ## **6 — Create Approval Request (Finance → CEO)**
 
-**Actors:** Assignee (usually Finance Head), CEO, Moderator, Requester  
+**Actors:** Assignee (usually Finance Head), CEO, Moderator, requestor  
  **Trigger / Preconditions:** Ticket requires high-level approval (payment, sensitive procurement).  
  **Steps:**
 
@@ -4110,23 +4110,23 @@ Only **Finance Assignee** can raise an approval request (e.g., cheque or payment
 
 ---
 
-## **7 — Mark Completed / Submit for Requester Verification**
+## **7 — Mark Completed / Submit for requestor Verification**
 
-**Actors:** Assignee, Requester, Moderator  
+**Actors:** Assignee, requestor, Moderator  
  **Trigger / Preconditions:** Assignee believes task is complete (work done).  
  **Steps:**
 
 1. Assignee sets `status = Completed` (PATCH `/api/tickets/{id}/status` `{completed}`) and adds completion notes \+ attachments.
 
-2. System notifies Requester to verify. `status` moves to `Pending Requester Confirmation`.
+2. System notifies requestor to verify. `status` moves to `Pending requestor Confirmation`.
 
-3. If Requester confirms (Resolve) → Moderator will verify and close. If Requester requests rework → reopened.  
-    **Events / Notifications:** `ticket:completed` → Requester, `ticket:pending_confirmation`.  
+3. If requestor confirms (Resolve) → Moderator will verify and close. If requestor requests rework → reopened.  
+    **Events / Notifications:** `ticket:completed` → requestor, `ticket:pending_confirmation`.  
     **DB touched:** `Ticket`, `Attachment`, `Comment`, `AuditLog`.  
     **WS events:** `ticket:completed`.  
     **Background tasks:** start 3-day auto-close countdown.  
     **Audit points:** completion mark, attachments.  
-    **Edge cases:** Requester silent → auto-close after 3 days.  
+    **Edge cases:** requestor silent → auto-close after 3 days.  
     **Diagram type:** Sequence.
 
 **![][image72]**
@@ -4136,7 +4136,7 @@ Only **Finance Assignee** can raise an approval request (e.g., cheque or payment
 sequenceDiagram  
   participant A as Assignee  
   participant API as /api/tickets  
-  participant R as Requester  
+  participant R as requestor  
   participant M as Moderator
 
   A-\>\>API: PATCH /api/tickets/{id}/status {status: Completed} \+ notes  
@@ -4146,13 +4146,13 @@ sequenceDiagram
 
 ---
 
-## **8 — Handle Reopen (Requester or Moderator triggered)**
+## **8 — Handle Reopen (requestor or Moderator triggered)**
 
-**Actors:** Requester, Assignee, Moderator  
- **Trigger / Preconditions:** Requester unhappy or moderator reopens for audit.  
+**Actors:** requestor, Assignee, Moderator  
+ **Trigger / Preconditions:** requestor unhappy or moderator reopens for audit.  
  **Steps:**
 
-1. Requester requests reopen → creates `ReopenRequest` (POST `/api/tickets/{id}/reopen`) or moderator triggers reopen.
+1. requestor requests reopen → creates `ReopenRequest` (POST `/api/tickets/{id}/reopen`) or moderator triggers reopen.
 
 2. Moderator reviews; if approved, Ticket transitions to `Reopened` and version increments (Ticket V2).
 
@@ -4180,7 +4180,7 @@ sequenceDiagram
 2. Moderator reviews and may apply postpone (Moderator action).
 
 3. If moderator applies postpone, Celery reminders start every 3 days.  
-    **Events / Notifications:** `postpone:requested` (to moderator), `postpone:applied` (to assignee \+ requester), periodic reminders.  
+    **Events / Notifications:** `postpone:requested` (to moderator), `postpone:applied` (to assignee \+ requestor), periodic reminders.  
     **DB touched:** `PostponeRequest`, `Ticket.postponed`, `Reminder`, `AuditLog`.  
     **WS events:** `ticket:postpone_requested`, `ticket:postponed`.  
     **Background tasks:** Celery reminders.  
@@ -4236,7 +4236,7 @@ Assignee can request to postpone a ticket if blocked by another task or dependen
 
 ## **11 — Attach Evidence / Deliverables**
 
-**Actors:** Assignee, Requester, Moderator  
+**Actors:** Assignee, requestor, Moderator  
  **Trigger / Preconditions:** Work produces files (screenshots, signed docs, invoices).  
  **Steps:**
 
@@ -4540,7 +4540,7 @@ Team member did not become the user or participant in ticket chat.
 
 # Sub-Ticket Lifecycle
 
-## **🟩 Sub-Ticket Lifecycle (Moderator as Requester)**
+## **🟩 Sub-Ticket Lifecycle (Moderator as requestor)**
 
 ### **🎯 Purpose**
 
@@ -4551,11 +4551,11 @@ To handle cross-departmental tasks by creating linked **sub-tickets** under a pa
 
 ### **🧩 Actors**
 
-* **Moderator** (creator/requester of sub-ticket)
+* **Moderator** (creator/requestor of sub-ticket)
 
 * **Assignee (Dept Head)** (receiver of sub-ticket)
 
-* **Requester** (from parent ticket, original request initiator)
+* **requestor** (from parent ticket, original request initiator)
 
 * **System (Backend \+ DB \+ WebSocket)**
 
@@ -4576,7 +4576,7 @@ System creates a **new ticket record** with:
  {  
   "type": "sub\_ticket",  
   "parent\_id": "\<main\_ticket\_id\>",  
-  "requester\_id": "\<moderator\_id\>",  
+  "requestor\_id": "\<moderator\_id\>",  
   "assignee\_id": "\<department\_head\_id\>"  
 }
 
@@ -4614,14 +4614,14 @@ System creates a **new ticket record** with:
 | ----- | ----- | ----- |
 | Sub-ticket created | Assignee | “New Sub-Ticket assigned by Moderator” |
 | Sub-ticket status update | Moderator | “Sub-Ticket \[ID\] status changed to X” |
-| Sub-ticket closed | Moderator \+ Parent Requester | “Sub-Ticket resolved” |
+| Sub-ticket closed | Moderator \+ Parent requestor | “Sub-Ticket resolved” |
 | Parent ticket closed | All sub-ticket users | “Parent Ticket closed; chat archived.” |
 
 ---
 
 ### **🧠 Database Entities Involved**
 
-* **Ticket** (`id`, `type`, `parent_id`, `status`, `priority`, `assignee_id`, `requester_id`, `created_by`)
+* **Ticket** (`id`, `type`, `parent_id`, `status`, `priority`, `assignee_id`, `requestor_id`, `created_by`)
 
 * **ChatMessage** (`ticket_id`, `sender_id`, `message`, `timestamp`)
 
@@ -4639,7 +4639,7 @@ System creates a **new ticket record** with:
 | ----- | ----- | ----- |
 | `sub_ticket_created` | `{parent_id, sub_ticket_id}` | Assignee, Moderator |
 | `chat_user_added` | `{user_id, ticket_id}` | All existing chat members |
-| `progress_updated` | `{parent_id, progress_percent}` | Moderator, Requester |
+| `progress_updated` | `{parent_id, progress_percent}` | Moderator, requestor |
 | `ticket_closed` | `{ticket_id, parent_id}` | All connected users |
 
 ---
@@ -4687,7 +4687,7 @@ flowchart TD
 
 | Aspect | Behavior |
 | ----- | ----- |
-| Requester of sub-ticket | Moderator |
+| requestor of sub-ticket | Moderator |
 | Chat visibility | Inside parent ticket chat |
 | Status linkage | Parent depends on all sub-tickets |
 | Closure | Parent closes when all sub-tickets closed |
@@ -4714,7 +4714,7 @@ flowchart TD
 
 3. If SMS returns valid user data, the backend creates a local `User` record (maps roles, dept).
 
-4. Admin sets initial Helpdesk role (Requester/Assignee/Moderator/Admin).
+4. Admin sets initial Helpdesk role (requestor/Assignee/Moderator/Admin).
 
 5. System sends welcome email \+ in-app notification.  
     **Events / Notifications:** Notify imported user \+ Admin.  
@@ -5212,7 +5212,7 @@ Which next step would you like?
 
 ## 2\. User Roles
 
-* **Requester** \-  End-user who submits and tracks requests.  
+* **requestor** \-  End-user who submits and tracks requests.  
 * **Moderator** \- Review, categorize, assign, and manage ticket flow  
 * **Assignee \-** Execute and resolve assigned tickets  
 * **Admin \-** Manages users, system settings, and overall operations.

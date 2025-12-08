@@ -10,9 +10,9 @@ import userService from '../../../../services/api/userService';
 import { Ticket } from '../../../../types';
 import { User } from '../../../../types';
 import { formatDate } from '../../../../lib/helpers';
-import { 
-  FileText, 
-  Download, 
+import {
+  FileText,
+  Download,
   Calendar,
   Filter,
   User as UserIcon,
@@ -36,8 +36,8 @@ const generateDemoTickets = (): Ticket[] => {
     department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     priority: ['low', 'medium', 'high', 'urgent'][i % 4] as any,
     status: ['assigned', 'in_progress', 'resolved', 'completed', 'pending'][i % 5] as any,
-    requesterId: `req-${i + 1}`,
-    requesterName: `User ${i + 1}`,
+    requestorId: `req-${i + 1}`,
+    requestorName: `User ${i + 1}`,
     submittedDate: new Date(now.getTime() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString(),
     assignedDate: new Date(now.getTime() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString(),
     ...(i % 3 === 0 && {
@@ -52,7 +52,7 @@ const generateDemoUsers = (): User[] => {
     id: `user-${i + 1}`,
     name: `User ${i + 1}`,
     email: `user${i + 1}@example.com`,
-    role: ['requester', 'assignee', 'moderator', 'admin'][i % 4] as any,
+    role: ['requestor', 'assignee', 'moderator', 'admin'][i % 4] as any,
     department: ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'][i % 7],
     status: 'active',
   }));
@@ -88,12 +88,12 @@ const AdminReportsPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch tickets
         try {
           const ticketsResponse = await ticketService.getTickets();
-          const ticketsList = Array.isArray(ticketsResponse) 
-            ? ticketsResponse 
+          const ticketsList = Array.isArray(ticketsResponse)
+            ? ticketsResponse
             : (ticketsResponse?.results || []);
           setTickets(ticketsList.length > 0 ? ticketsList : generateDemoTickets());
         } catch (error: any) {
@@ -146,7 +146,7 @@ const AdminReportsPage: React.FC = () => {
       endDate.setHours(23, 59, 59, 999);
 
       const matchesDate = ticketDate >= fromDate && ticketDate <= endDate;
-      const matchesUser = !filters.userId || t.requesterId === filters.userId;
+      const matchesUser = !filters.userId || t.requestorId === filters.userId;
       const matchesDepartment = !filters.department || t.department === filters.department;
       const matchesStatus = !filters.status || t.status === filters.status;
 
@@ -156,10 +156,10 @@ const AdminReportsPage: React.FC = () => {
 
   const handleGenerateReport = async () => {
     setGenerating(true);
-    
+
     // Simulate report generation
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // In real implementation, this would call an API to generate the report
     const reportData = {
       type: reportType,
@@ -184,14 +184,14 @@ const AdminReportsPage: React.FC = () => {
   };
 
   const exportToCSV = (data: any) => {
-    const headers = ['Ticket ID', 'Subject', 'Department', 'Priority', 'Status', 'Requester', 'Submitted Date', 'Resolved Date'];
+    const headers = ['Ticket ID', 'Subject', 'Department', 'Priority', 'Status', 'requestor', 'Submitted Date', 'Resolved Date'];
     const rows = filteredTickets.map(t => [
       t.ticketId || t.id,
       t.subject,
       t.department || 'N/A',
       t.priority,
       t.status,
-      t.requesterName || 'N/A',
+      t.requestorName || 'N/A',
       formatDate(t.submittedDate),
       t.resolvedDate ? formatDate(t.resolvedDate) : 'N/A',
     ]);
@@ -332,7 +332,7 @@ const AdminReportsPage: React.FC = () => {
                 <h3 className="text-sm font-semibold" style={{ color: THEME.colors.primary }}>
                   Filters
                 </h3>
-                
+
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -406,9 +406,8 @@ const AdminReportsPage: React.FC = () => {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => setExportFormat('csv')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-                    exportFormat === 'csv' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${exportFormat === 'csv' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   style={exportFormat === 'csv' ? { borderColor: THEME.colors.primary, backgroundColor: THEME.colors.background } : {}}
                 >
                   <FileSpreadsheet className="w-4 h-4" style={{ color: exportFormat === 'csv' ? THEME.colors.primary : THEME.colors.gray }} />
@@ -418,9 +417,8 @@ const AdminReportsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setExportFormat('json')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-                    exportFormat === 'json' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${exportFormat === 'json' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   style={exportFormat === 'json' ? { borderColor: THEME.colors.primary, backgroundColor: THEME.colors.background } : {}}
                 >
                   <FileJson className="w-4 h-4" style={{ color: exportFormat === 'json' ? THEME.colors.primary : THEME.colors.gray }} />
@@ -430,9 +428,8 @@ const AdminReportsPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setExportFormat('pdf')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${
-                    exportFormat === 'pdf' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${exportFormat === 'pdf' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'
+                    }`}
                   style={exportFormat === 'pdf' ? { borderColor: THEME.colors.primary, backgroundColor: THEME.colors.background } : {}}
                 >
                   <FileType className="w-4 h-4" style={{ color: exportFormat === 'pdf' ? THEME.colors.primary : THEME.colors.gray }} />
@@ -492,7 +489,7 @@ const AdminReportsPage: React.FC = () => {
                       <td className="py-3 px-4 text-sm" style={{ color: THEME.colors.gray }}>{ticket.subject}</td>
                       <td className="py-3 px-4 text-sm" style={{ color: THEME.colors.gray }}>{ticket.department || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm">
-                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{ 
+                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{
                           backgroundColor: ticket.priority === 'urgent' ? '#FEE2E2' : ticket.priority === 'high' ? '#FEF3C7' : ticket.priority === 'medium' ? '#DBEAFE' : '#D1FAE5',
                           color: ticket.priority === 'urgent' ? '#991B1B' : ticket.priority === 'high' ? '#92400E' : ticket.priority === 'medium' ? '#1E40AF' : '#065F46',
                         }}>
@@ -500,7 +497,7 @@ const AdminReportsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm">
-                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{ 
+                        <span className="px-2 py-1 rounded text-xs font-medium capitalize" style={{
                           backgroundColor: ticket.status === 'completed' || ticket.status === 'resolved' ? '#D1FAE5' : ticket.status === 'in_progress' ? '#DBEAFE' : '#FEF3C7',
                           color: ticket.status === 'completed' || ticket.status === 'resolved' ? '#065F46' : ticket.status === 'in_progress' ? '#1E40AF' : '#92400E',
                         }}>

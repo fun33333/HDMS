@@ -20,14 +20,14 @@ class TicketService:
     
     @staticmethod
     @db_transaction.atomic
-    def create_ticket(data: dict, requester_id: str) -> Ticket:
+    def create_ticket(data: dict, requestor_id: str) -> Ticket:
         """Create a new ticket."""
-        # Validate requester exists
-        if not UserClient.validate_user(requester_id):
-            raise ValueError("Requester does not exist")
+        # Validate requestor exists
+        if not UserClient.validate_user(requestor_id):
+            raise ValueError("requestor does not exist")
         
         ticket = Ticket.objects.create(
-            requester_id=requester_id,
+            requestor_id=requestor_id,
             **data
         )
         return ticket

@@ -4,24 +4,24 @@ import { User } from 'lucide-react';
 import { THEME } from '../../lib/theme';
 import { Ticket } from '../../types';
 
-interface RequesterDetailsCardProps {
+interface requestorDetailsCardProps {
   ticket: Ticket;
 }
 
-export const RequesterDetailsCard: React.FC<RequesterDetailsCardProps> = ({ ticket }) => {
+export const requestorDetailsCard: React.FC<requestorDetailsCardProps> = ({ ticket }) => {
   return (
     <Card className="mb-6">
       <CardHeader>
         <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: THEME.colors.primary }}>
           <User className="w-5 h-5" />
-          Requester Details
+          requestor Details
         </h3>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           <div>
             <span className="text-sm font-medium text-gray-600">Name:</span>
-            <span className="ml-2 text-gray-900">{ticket.requesterName}</span>
+            <span className="ml-2 text-gray-900">{ticket.requestorName}</span>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-600">Department:</span>

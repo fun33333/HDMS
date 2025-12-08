@@ -12,10 +12,10 @@ import { Select, SelectOption } from '../../../../components/ui/Select';
 import { PriorityBadge } from '../../../../components/common/PriorityBadge';
 import { FileUpload, FileWithStatus } from '../../../../components/common/FileUpload';
 import { THEME } from '../../../../lib/theme';
-import { 
-  validateTicketSubject, 
+import {
+  validateTicketSubject,
   validateTicketDescription,
-  validateRequired 
+  validateRequired
 } from '../../../../lib/validation';
 import { TICKET_PRIORITY, DEPARTMENTS } from '../../../../lib/constants';
 import { ticketService } from '../../../../services/api/ticketService';
@@ -83,13 +83,13 @@ export default function NewRequestPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { createTicket } = useTicketActions();
-  
+
   const [loading, setLoading] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [openTicketsCount, setOpenTicketsCount] = useState<number>(0);
-  
+
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
@@ -97,7 +97,7 @@ export default function NewRequestPage() {
     category: '',
     priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
   });
-  
+
   const [attachments, setAttachments] = useState<FileWithStatus[]>([]);
 
   // Department options
@@ -125,8 +125,8 @@ export default function NewRequestPage() {
     const checkOpenTickets = async () => {
       if (!user?.id) return;
       try {
-        const response = await ticketService.getTickets({ 
-          requesterId: user.id,
+        const response = await ticketService.getTickets({
+          requestorId: user.id,
           status: 'pending,assigned,in_progress'
         });
         const tickets = Array.isArray(response) ? response : (response?.results || []);
@@ -199,7 +199,7 @@ export default function NewRequestPage() {
   const handleSaveDraft = async () => {
     setSavingDraft(true);
     setFormError(null);
-    
+
     try {
       // Draft doesn't need full validation
       const ticket = await ticketService.createTicket({
@@ -213,7 +213,7 @@ export default function NewRequestPage() {
       });
 
       if (ticket) {
-        router.push(`/requester/request-detail/${ticket.id}`);
+        router.push(`/requestor/request-detail/${ticket.id}`);
       }
     } catch (error: any) {
       setFormError(error.message || 'Failed to save draft');
@@ -225,7 +225,7 @@ export default function NewRequestPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    
+
     if (!validateForm()) {
       setFormError('Please fix the errors below');
       return;
@@ -238,7 +238,7 @@ export default function NewRequestPage() {
     }
 
     setLoading(true);
-    
+
     try {
       const ticket = await createTicket({
         subject: formData.subject,
@@ -250,7 +250,7 @@ export default function NewRequestPage() {
       });
 
       if (ticket) {
-        router.push(`/requester/request-detail/${ticket.id}`);
+        router.push(`/requestor/request-detail/${ticket.id}`);
       }
     } catch (error: any) {
       setFormError(error.message || 'Failed to create ticket');
@@ -284,7 +284,7 @@ export default function NewRequestPage() {
                 You have {openTicketsCount} open tickets
               </p>
               <p className="text-xs text-yellow-700 mt-1">
-                {openTicketsCount >= 10 
+                {openTicketsCount >= 10
                   ? 'You have reached the maximum limit. Please resolve existing tickets before creating new ones.'
                   : 'You are approaching the limit of 10 open tickets.'}
               </p>

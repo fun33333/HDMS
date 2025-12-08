@@ -6,7 +6,7 @@
 import { ROLES } from './constants';
 import { hasPermission, hasAnyPermission, hasAllPermissions, canPerformAction } from '../config/permissions';
 
-export type UserRole = 'requester' | 'moderator' | 'assignee' | 'admin';
+export type UserRole = 'requestor' | 'moderator' | 'assignee' | 'admin';
 
 export interface User {
   id: string;
@@ -19,11 +19,11 @@ export interface User {
  */
 export const hasRole = (user: User | null, role: UserRole | UserRole[]): boolean => {
   if (!user) return false;
-  
+
   if (Array.isArray(role)) {
     return role.includes(user.role);
   }
-  
+
   return user.role === role;
 };
 
@@ -39,10 +39,10 @@ export const isAdmin = (user: User | null): boolean => {
  */
 export const canAccessRoute = (user: User | null, requiredRole: UserRole | UserRole[]): boolean => {
   if (!user) return false;
-  
+
   // Admin can access everything
   if (isAdmin(user)) return true;
-  
+
   return hasRole(user, requiredRole);
 };
 
@@ -51,12 +51,12 @@ export const canAccessRoute = (user: User | null, requiredRole: UserRole | UserR
  */
 export const getRoleDisplayName = (role: UserRole): string => {
   const roleNames: Record<UserRole, string> = {
-    requester: 'Requester',
+    requestor: 'Requestor',
     moderator: 'Moderator',
     assignee: 'Department Staff',
     admin: 'Administrator',
   };
-  
+
   return roleNames[role] || role;
 };
 
@@ -65,12 +65,12 @@ export const getRoleDisplayName = (role: UserRole): string => {
  */
 export const getRoleLevel = (role: UserRole): number => {
   const levels: Record<UserRole, number> = {
-    requester: 1,
+    requestor: 1,
     assignee: 2,
     moderator: 3,
     admin: 4,
   };
-  
+
   return levels[role] || 0;
 };
 
@@ -83,7 +83,7 @@ export const canPerformTicketAction = (
   action: string
 ): boolean => {
   if (!user) return false;
-  
+
   return canPerformAction(user.role, ticketStatus, action as any);
 };
 
@@ -95,7 +95,7 @@ export const filterByRole = <T extends { role?: UserRole }>(
   user: User | null
 ): T[] => {
   if (!user || isAdmin(user)) return items;
-  
+
   return items.filter(item => !item.role || item.role === user.role);
 };
 
@@ -104,14 +104,14 @@ export const filterByRole = <T extends { role?: UserRole }>(
  */
 export const getAccessibleRoutes = (user: User | null): string[] => {
   if (!user) return ['/login'];
-  
+
   const roleRoutes: Record<UserRole, string[]> = {
-    requester: [
-      '/requester/dashboard',
-      '/requester/requests',
-      '/requester/new-request',
-      '/requester/profile',
-      '/requester/notifications',
+    requestor: [
+      '/requestor/dashboard',
+      '/requestor/requests',
+      '/requestor/new-request',
+      '/requestor/profile',
+      '/requestor/notifications',
     ],
     moderator: [
       '/moderator/dashboard',
@@ -141,7 +141,7 @@ export const getAccessibleRoutes = (user: User | null): string[] => {
       '/admin/notifications',
     ],
   };
-  
+
   return roleRoutes[user.role] || [];
 };
 

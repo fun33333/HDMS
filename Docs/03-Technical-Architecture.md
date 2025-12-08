@@ -27,7 +27,7 @@ The Help Desk Management System (HDMS) aims to digitize and centralize the inter
 
 * Centralized **user authentication** integrated with the existing **School Management System (SMS)**.
 
-* Role-based dashboard and analytics for **Requester**, **Moderator**, **Assignee**, and **Admin** roles.
+* Role-based dashboard and analytics for **requestor**, **Moderator**, **Assignee**, and **Admin** roles.
 
 * **Real-time chat and notifications** for each ticket and sub-ticket.
 
@@ -186,7 +186,7 @@ For detailed microservices architecture, see [12-Microservices-Architecture.md](
 | Component | Purpose | Stack |
 | ----- | ----- | ----- |
 | **WebSocket Server** | Manages real-time communication between users, moderators, and assignees. | Django Channels + Redis |
-| **Client Integration** | Connects users (Requester, Moderator, Assignee) with live updates. | Django Channels WebSocket Client (Native WebSocket) |
+| **Client Integration** | Connects users (requestor, Moderator, Assignee) with live updates. | Django Channels WebSocket Client (Native WebSocket) |
 | **Use Cases** | Ticket chat, live status updates, typing indicators, sub-ticket creation events, notifications. |  |
 
 **Design Considerations:**
@@ -409,7 +409,7 @@ For detailed microservices architecture, see [12-Microservices-Architecture.md](
 | Endpoint | Role | Limit |
 | ----- | ----- | ----- |
 | `/api/v1/auth/login` | All Users | 10 requests/minute |
-| All Endpoints | Requester | 150 requests/minute |
+| All Endpoints | requestor | 150 requests/minute |
 | All Endpoints | Assignee | 250 requests/minute |
 | All Endpoints | Moderator | Unlimited |
 | All Endpoints | Admin | Unlimited |

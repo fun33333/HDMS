@@ -29,11 +29,11 @@ class ApiClient {
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         const token = this.getToken();
-        
+
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-        
+
         return config;
       },
       (error: AxiosError) => {
@@ -41,7 +41,7 @@ class ApiClient {
       }
     );
 
-    // Response interceptor - Handle errors
+    // Response interceptor - Handle errors with token refresh
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
@@ -54,11 +54,44 @@ class ApiClient {
           return Promise.reject(this.formatError(error));
         }
 
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - Try token refresh
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
-          
-          // Clear auth and redirect to login
+
+          const refreshToken = this.getRefreshToken();
+
+          if (refreshToken) {
+            try {
+              // Try to refresh the token
+              const refreshResponse = await fetch(`${ENV.AUTH_SERVICE_URL}/api/auth/refresh`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refresh_token: refreshToken }),
+              });
+
+              if (refreshResponse.ok) {
+                const data = await refreshResponse.json();
+                const newAccessToken = data.access_token;
+
+                // Store new token
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('token', newAccessToken);
+                }
+
+                // Retry original request with new token
+                if (originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                }
+                return this.client(originalRequest);
+              }
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+            }
+          }
+
+          // Refresh failed or no refresh token - clear auth and redirect
           this.clearAuth();
           if (typeof window !== 'undefined') {
             window.location.href = '/login';
@@ -86,9 +119,15 @@ class ApiClient {
     return localStorage.getItem('token');
   }
 
+  private getRefreshToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('refreshToken');
+  }
+
   private clearAuth(): void {
     if (typeof window === 'undefined') return;
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
   }
 
@@ -102,7 +141,7 @@ class ApiClient {
       (formattedError as any).response = error.response.data;
       return formattedError;
     }
-    
+
     // Handle network errors (no response received)
     if (error.request) {
       const networkError = new Error('Network error. Please check your connection.');
@@ -110,7 +149,7 @@ class ApiClient {
       (networkError as any).code = error.code;
       return networkError;
     }
-    
+
     // Handle other errors
     const otherError = new Error(error.message || 'An unexpected error occurred');
     (otherError as any).originalError = error;

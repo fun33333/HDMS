@@ -36,7 +36,7 @@ import {
 
 // Generate demo users
 const generateDemoUsers = (): User[] => {
-  const roles: Array<'requester' | 'moderator' | 'assignee' | 'admin'> = ['requester', 'moderator', 'assignee', 'admin'];
+  const roles: Array<'requestor' | 'moderator' | 'assignee' | 'admin'> = ['requestor', 'moderator', 'assignee', 'admin'];
   const departments = ['Development', 'Finance & Accounts', 'Procurement', 'Basic Maintenance', 'IT', 'Architecture', 'Administration'];
   const statuses: Array<'active' | 'inactive' | 'pending'> = ['active', 'inactive', 'pending'];
 
@@ -60,7 +60,7 @@ const RoleBadge: React.FC<{ role: string }> = ({ role }) => {
     admin: { bg: '#E9D5FF', text: '#7C3AED', border: '#C084FC' },
     moderator: { bg: '#DBEAFE', text: '#2563EB', border: '#60A5FA' },
     assignee: { bg: '#D1FAE5', text: '#059669', border: '#34D399' },
-    requester: { bg: '#FED7AA', text: '#EA580C', border: '#FB923C' },
+    requestor: { bg: '#FED7AA', text: '#EA580C', border: '#FB923C' },
   };
 
   const color = roleColors[role] || { bg: '#F3F4F6', text: '#6B7280', border: '#9CA3AF' };
@@ -104,7 +104,7 @@ const AdminUsersPage: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [employeeCode, setEmployeeCode] = useState('');
   const [importing, setImporting] = useState(false);
-  const [newRole, setNewRole] = useState<string>('requester');
+  const [newRole, setNewRole] = useState<string>('requestor');
   const [newDepartment, setNewDepartment] = useState<string>('');
 
   // Confirm modal
@@ -186,7 +186,7 @@ const AdminUsersPage: React.FC = () => {
         id: `user-${Date.now()}`,
         name: `Imported User ${employeeCode}`,
         email: `imported.${employeeCode}@example.com`,
-        role: 'requester',
+        role: 'requestor',
         department: 'IT',
         status: 'active',
         employeeCode: employeeCode,
@@ -544,7 +544,7 @@ const AdminUsersPage: React.FC = () => {
                     <option value="admin">Admin</option>
                     <option value="moderator">Moderator</option>
                     <option value="assignee">Assignee</option>
-                    <option value="requester">Requester</option>
+                    <option value="requestor">requestor</option>
                   </select>
                 </div>
 
@@ -1080,7 +1080,7 @@ const AdminUsersPage: React.FC = () => {
                       borderColor: THEME.colors.background,
                     }}
                   >
-                    <option value="requester">Requester</option>
+                    <option value="requestor">requestor</option>
                     <option value="assignee">Assignee</option>
                     <option value="moderator">Moderator</option>
                     <option value="admin">Admin</option>
@@ -1170,7 +1170,7 @@ const AdminUsersPage: React.FC = () => {
                     borderColor: THEME.colors.background,
                   }}
                 >
-                  <option value="requester">Requester</option>
+                  <option value="requestor">requestor</option>
                   <option value="assignee">Assignee</option>
                   <option value="moderator">Moderator</option>
                   <option value="admin">Admin</option>
