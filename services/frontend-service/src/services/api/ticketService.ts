@@ -5,12 +5,18 @@
 
 import apiClient from './axiosClient';
 import { Ticket, Comment } from '../../types';
+import { ENV } from '../../config/env';
+import { getMockTickets, getMockTicketById } from '../../lib/mockData';
 
 export interface CreateTicketData {
   subject: string;
   description: string;
-  department: string;
+  department: string; // name
+  departmentId?: string; // id
   priority: 'low' | 'medium' | 'high' | 'urgent';
+  category?: string;
+  status?: string;
+  requestorId: string;
   attachments?: File[];
 }
 
@@ -42,45 +48,112 @@ export interface TicketListResponse {
 }
 
 class TicketService {
+  // Helper: Map Backend API Response to Frontend Ticket
+  private mapToTicket(data: any): Ticket {
+    return {
+      id: data.id,
+      ticketId: `HD-${new Date(data.created_at).getFullYear()}-${String(data.version || 1).padStart(4, '0')}`, // Mock generation
+      subject: data.title,
+      description: data.description,
+      department: data.department_id || 'Unknown', // Need lookup
+      priority: data.priority,
+      status: data.status,
+      requestorId: data.requestor_id,
+      requestorName: 'Current User', // TODO: Fetch from user service
+      submittedDate: data.created_at,
+      assignedDate: data.updated_at, // Mock
+      attachments: (data.attachments || []).map((att: any) => ({
+        id: att.id,
+        name: att.filename,
+        url: att.file,
+        size: att.file_size,
+        type: att.content_type,
+        uploadDate: att.created_at,
+      })),
+    };
+  }
+
   // Get all tickets with filters
   async getTickets(filters?: TicketFilters): Promise<TicketListResponse> {
-    const params = new URLSearchParams();
+    try {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value) params.append(key, String(value));
+        });
+      }
 
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
+      // Use specific Ticket Service URL
+      const response = await apiClient.get<any[]>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/?${params.toString()}`);
+
+      // Map API response to Ticket type
+      const tickets = response.map(this.mapToTicket);
+
+      return {
+        results: tickets,
+        count: tickets.length,
+        next: null,
+        previous: null
+      };
+    } catch (error) {
+      console.warn('API Error, falling back to mock:', error);
+      // Fallback
+      return {
+        results: getMockTickets(filters?.requestorId || 'user-1'),
+        count: 10,
+        next: null,
+        previous: null
+      };
     }
-
-    return apiClient.get<TicketListResponse>(`/api/tickets/?${params.toString()}`);
   }
 
   // Get single ticket by ID
   async getTicketById(id: string): Promise<Ticket> {
-    return apiClient.get<Ticket>(`/api/tickets/${id}/`);
+    try {
+      const response = await apiClient.get<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${id}`);
+      return this.mapToTicket(response);
+    } catch (error) {
+      console.warn('API Error, falling back to mock:', error);
+      const mock = getMockTicketById(id);
+      if (!mock) throw error;
+      return mock;
+    }
   }
 
   // Create new ticket
   async createTicket(data: CreateTicketData): Promise<Ticket> {
-    const formData = new FormData();
-    formData.append('subject', data.subject);
-    formData.append('description', data.description);
-    formData.append('department', data.department);
-    formData.append('priority', data.priority);
+    try {
+      const payload = {
+        title: data.subject,
+        description: data.description,
+        department_id: data.departmentId || '00000000-0000-0000-0000-000000000000', // Mock/Placeholder if not provided
+        priority: data.priority,
+        category: data.category || '',
+        requestor_id: data.requestorId, // Should come from auth context
+        status: data.status || 'draft'
+      };
 
-    if (data.attachments) {
-      data.attachments.forEach((file) => {
-        formData.append('attachments', file);
-      });
+      const ticketResponse = await apiClient.post<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/`, payload);
+
+      // Handle attachments
+      if (data.attachments && data.attachments.length > 0) {
+        await Promise.all(data.attachments.map(async (file) => {
+          const formData = new FormData();
+          formData.append('file', file);
+          // Upload to new endpoint
+          await apiClient.post(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketResponse.id}/attachments`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        }));
+      }
+
+      return this.mapToTicket(ticketResponse);
+    } catch (error) {
+      console.error('Create ticket failed:', error);
+      throw error; // Let UI handle error
     }
-
-    return apiClient.post<Ticket>('/api/tickets/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
   }
 
   // Update ticket

@@ -19,42 +19,13 @@ import {
 } from '../../../../lib/validation';
 import { TICKET_PRIORITY, DEPARTMENTS } from '../../../../lib/constants';
 import { ticketService } from '../../../../services/api/ticketService';
+import { departmentService, Department } from '../../../../services/api/departmentService';
 import { AlertCircle, Save } from 'lucide-react';
 
 // Department categories mapping
+// Department categories mapping (keys match dept_sector from API)
 const DEPARTMENT_CATEGORIES: Record<string, SelectOption[]> = {
-  'Development': [
-    { value: 'feature', label: 'Feature Request' },
-    { value: 'bug', label: 'Bug Fix' },
-    { value: 'enhancement', label: 'Enhancement' },
-    { value: 'code_review', label: 'Code Review' },
-    { value: 'deployment', label: 'Deployment' },
-    { value: 'other', label: 'Other' },
-  ],
-  'Finance & Accounts': [
-    { value: 'payment', label: 'Payment Issue' },
-    { value: 'invoice', label: 'Invoice' },
-    { value: 'expense', label: 'Expense' },
-    { value: 'budget', label: 'Budget' },
-    { value: 'reports', label: 'Financial Reports' },
-    { value: 'other', label: 'Other' },
-  ],
-  'Procurement': [
-    { value: 'purchase', label: 'Purchase Request' },
-    { value: 'approval', label: 'Approval' },
-    { value: 'vendor', label: 'Vendor Management' },
-    { value: 'contract', label: 'Contract' },
-    { value: 'other', label: 'Other' },
-  ],
-  'Basic Maintenance': [
-    { value: 'repair', label: 'Repair' },
-    { value: 'installation', label: 'Installation' },
-    { value: 'general', label: 'General Maintenance' },
-    { value: 'urgent', label: 'Urgent Repair' },
-    { value: 'inspection', label: 'Inspection' },
-    { value: 'other', label: 'Other' },
-  ],
-  'IT': [
+  'it': [
     { value: 'hardware', label: 'Hardware Issue' },
     { value: 'software', label: 'Software Issue' },
     { value: 'network', label: 'Network Issue' },
@@ -63,20 +34,39 @@ const DEPARTMENT_CATEGORIES: Record<string, SelectOption[]> = {
     { value: 'security', label: 'Security' },
     { value: 'other', label: 'Other' },
   ],
-  'Architecture': [
-    { value: 'design', label: 'Design Request' },
-    { value: 'review', label: 'Design Review' },
-    { value: 'planning', label: 'Planning' },
-    { value: 'consultation', label: 'Consultation' },
+  'finance': [
+    { value: 'payment', label: 'Payment Issue' },
+    { value: 'invoice', label: 'Invoice' },
+    { value: 'expense', label: 'Expense' },
+    { value: 'budget', label: 'Budget' },
+    { value: 'reports', label: 'Financial Reports' },
     { value: 'other', label: 'Other' },
   ],
-  'Administration': [
+  'hr': [
+    { value: 'leave', label: 'Leave' },
+    { value: 'payroll', label: 'Payroll' },
+    { value: 'policy', label: 'Policy' },
+    { value: 'hiring', label: 'Hiring' },
+    { value: 'other', label: 'Other' },
+  ],
+  'admin': [
+    { value: 'facility', label: 'Facility' },
     { value: 'documentation', label: 'Documentation' },
-    { value: 'policy', label: 'Policy Query' },
-    { value: 'compliance', label: 'Compliance' },
-    { value: 'general', label: 'General Inquiry' },
+    { value: 'access', label: 'Access' },
     { value: 'other', label: 'Other' },
   ],
+  'academic': [
+    { value: 'course', label: 'Course Query' },
+    { value: 'exam', label: 'Examination' },
+    { value: 'result', label: 'Result' },
+    { value: 'other', label: 'Other' },
+  ],
+  'default': [
+    { value: 'general', label: 'General Inquiry' },
+    { value: 'support', label: 'Support Request' },
+    { value: 'feedback', label: 'Feedback' },
+    { value: 'other', label: 'Other' },
+  ]
 };
 
 export default function NewRequestPage() {
@@ -99,18 +89,41 @@ export default function NewRequestPage() {
   });
 
   const [attachments, setAttachments] = useState<FileWithStatus[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoadingDepts, setIsLoadingDepts] = useState(false);
+
+
+  // Fetch departments on mount
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setIsLoadingDepts(true);
+      try {
+        const data = await departmentService.getDepartments();
+        setDepartments(data);
+      } catch (error) {
+        console.error('Error loading departments', error);
+      } finally {
+        setIsLoadingDepts(false);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   // Department options
-  const departmentOptions: SelectOption[] = DEPARTMENTS.map(dept => ({
-    value: dept,
-    label: `${dept} Department`,
+  const departmentOptions: SelectOption[] = departments.map(dept => ({
+    value: dept.id, // Use UUID as value
+    label: dept.dept_name,
   }));
 
-  // Category options (depends on department)
+  // Category options (depends on department sector)
   const categoryOptions = useMemo<SelectOption[]>(() => {
     if (!formData.department) return [];
-    return DEPARTMENT_CATEGORIES[formData.department] || [];
-  }, [formData.department]);
+
+    const selectedDept = departments.find(d => d.id === formData.department);
+    const sector = selectedDept?.dept_sector?.toLowerCase() || 'default';
+
+    return DEPARTMENT_CATEGORIES[sector] || DEPARTMENT_CATEGORIES['default'];
+  }, [formData.department, departments]);
 
   // Priority options with preview
   const priorityOptions: SelectOption[] = [
@@ -144,6 +157,7 @@ export default function NewRequestPage() {
       // Reset category when department changes
       if (field === 'department') {
         newData.category = '';
+        // Find selected department name for UI logic if needed, but value is now ID
       }
       return newData;
     });
@@ -205,11 +219,13 @@ export default function NewRequestPage() {
       const ticket = await ticketService.createTicket({
         subject: formData.subject || 'Draft',
         description: formData.description || '',
-        department: formData.department || 'IT',
+        departmentId: formData.department, // Using ID now
+        department: departments.find(d => d.id === formData.department)?.dept_name || 'Unknown', // Send name for fallback/display
         priority: formData.priority,
         category: formData.category,
-        attachments: attachments.map(f => f.file),
-        isDraft: true,
+        // attachments: attachments.map(f => f.file),
+        status: 'draft',
+        requestorId: user?.id || '',
       });
 
       if (ticket) {
@@ -243,9 +259,12 @@ export default function NewRequestPage() {
       const ticket = await createTicket({
         subject: formData.subject,
         description: formData.description,
-        department: formData.department,
+        departmentId: formData.department, // Using ID now
+        department: departments.find(d => d.id === formData.department)?.dept_name || 'Unknown',
         priority: formData.priority,
         category: formData.category,
+        requestorId: user?.id || '',
+        status: 'submitted',
         attachments: attachments.filter(f => f.status === 'ready' || f.status === 'pending').map(f => f.file),
       });
 
@@ -309,10 +328,10 @@ export default function NewRequestPage() {
                   Basic Information
                 </h2>
 
-                {/* Title */}
+                {/* Subject */}
                 <div className="space-y-2">
                   <Input
-                    label="Title"
+                    label="Subject"
                     type="text"
                     placeholder="Brief description of your request"
                     value={formData.subject}

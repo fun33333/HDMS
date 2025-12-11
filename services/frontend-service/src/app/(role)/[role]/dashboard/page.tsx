@@ -7,7 +7,7 @@ import { SkeletonLoader } from '../../../../components/ui/SkeletonLoader';
 import AdminDashboard from '../../../../components/dashboards/AdminDashboard';
 import AssigneeDashboard from '../../../../components/dashboards/AssigneeDashboard';
 import ModeratorDashboard from '../../../../components/dashboards/ModeratorDashboard';
-import RequestorDashboard from '../../../../components/dashboards/RequestorDashboard';
+import RequestorDashboard from '../../../../components/dashboards/requestorDashboard';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();

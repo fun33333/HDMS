@@ -1,11 +1,13 @@
 """
 Ticket Service API endpoints.
 """
-from ninja import Router
+from ninja import Router, File, UploadedFile
+from ninja.errors import HttpError
 from typing import List, Optional
-from apps.tickets.schemas import TicketOut, TicketIn, TicketUpdateIn, StatusUpdateIn
+from apps.tickets.schemas import TicketOut, TicketIn, TicketUpdateIn, StatusUpdateIn, AttachmentOut
 from apps.tickets.models.ticket import Ticket
 from apps.tickets.models.sub_ticket import SubTicket
+from apps.tickets.models.attachment import Attachment
 from core.clients.user_client import UserClient
 from apps.tickets.services.ticket_service import TicketService
 
@@ -15,10 +17,10 @@ router = Router(tags=["tickets"])
 @router.post("/", response=TicketOut)
 def create_ticket(request, payload: TicketIn):
     """Create a new ticket."""
-    # Validate user exists
-    user_client = UserClient()
-    if not user_client.validate_user_exists(payload.requestor_id):
-        return {"error": "requestor not found"}, 404
+    # TODO: Re-enable user validation when auth-service is integrated
+    # user_client = UserClient()
+    # if not user_client.validate_user_exists(payload.requestor_id):
+    #     raise HttpError(404, "Requestor not found")
     
     ticket = Ticket.objects.create(
         title=payload.title,
@@ -29,7 +31,7 @@ def create_ticket(request, payload: TicketIn):
         category=payload.category,
         status=payload.status or 'draft',
     )
-    return TicketOut.from_orm(ticket)
+    return ticket
 
 
 @router.get("/", response=List[TicketOut])
@@ -93,3 +95,19 @@ def list_sub_tickets(request, ticket_id: str):
     sub_tickets = SubTicket.objects.filter(parent_ticket_id=ticket_id, is_deleted=False)
     return [TicketOut.from_orm(st) for st in sub_tickets]
 
+@router.post("/{ticket_id}/attachments", response=AttachmentOut)
+def upload_attachment(request, ticket_id: str, file: UploadedFile = File(...)):
+    """Upload an attachment for a ticket."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+
+    attachment = Attachment.objects.create(
+        ticket=ticket,
+        file=file,
+        filename=file.name,
+        file_size=file.size,
+        content_type=file.content_type
+    )
+    return attachment

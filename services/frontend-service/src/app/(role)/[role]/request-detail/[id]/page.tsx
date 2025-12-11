@@ -15,11 +15,11 @@ import { SLACard } from '../../../../../components/common/SLACard';
 import TicketChat from '../../../../../components/common/TicketChat';
 import { Button } from '../../../../../components/ui/Button';
 import { ResolveModal, ReopenModal } from '../../../../../components/modals/TicketActionModals';
-import { 
-  ArrowLeft, 
-  Edit, 
-  CheckCircle, 
-  XCircle, 
+import {
+  ArrowLeft,
+  Edit,
+  CheckCircle,
+  XCircle,
   RefreshCw,
   Building2,
   Tag,
@@ -42,7 +42,7 @@ export default function RequestDetailPage() {
   const { user } = useAuth();
   const { setActiveTicket, changeStatus } = useTicketActions();
   const ticketId = params?.id as string;
-  
+
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,16 +73,18 @@ export default function RequestDetailPage() {
           // Get reopen count from ticket metadata or API
           setReopenCount((data as any).reopenCount || 0);
         } catch (apiError: any) {
-          console.warn('API not available, using mock data');
+          console.warn('API not available, attempting fallback to mock data');
+          // If API fails, try mock data specifically for this ID
           const mockTicket = getMockTicketById(ticketId, user?.id);
           if (mockTicket) {
+            console.log('Using mock data for ticket:', mockTicket.id);
             setTicket(mockTicket);
             setActiveTicket(mockTicket);
             setError(null);
             setReopenCount(0);
           } else {
-            setError('Ticket not found');
-            setTicket(null);
+            // If neither API nor mock has it, show error
+            throw apiError;
           }
         }
       } catch (err: any) {
@@ -130,17 +132,17 @@ export default function RequestDetailPage() {
   // Calculate auto-close countdown
   const autoCloseCountdown = useMemo(() => {
     if (ticket?.status !== 'resolved' || !ticket?.resolvedDate) return null;
-    
+
     const resolvedDate = new Date(ticket.resolvedDate);
     const autoCloseDate = new Date(resolvedDate.getTime() + 2 * 24 * 60 * 60 * 1000); // 2 days
     const now = new Date();
     const diffMs = autoCloseDate.getTime() - now.getTime();
-    
+
     if (diffMs <= 0) return null;
-    
+
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     return { days: diffDays, hours: diffHours };
   }, [ticket?.status, ticket?.resolvedDate]);
 
@@ -232,8 +234,8 @@ export default function RequestDetailPage() {
 
   const descriptionWords = ticket.description.split(' ');
   const isLongDescription = descriptionWords.length > 100;
-  const displayDescription = descriptionExpanded || !isLongDescription 
-    ? ticket.description 
+  const displayDescription = descriptionExpanded || !isLongDescription
+    ? ticket.description
     : descriptionWords.slice(0, 100).join(' ') + '...';
 
   return (
@@ -361,38 +363,38 @@ export default function RequestDetailPage() {
             <ParticipantsCard ticket={ticket} />
           </div>
 
-            {/* Description Card */}
-            <Card>
-              <CardHeader>
-                <h3 className="text-lg font-semibold" style={{ color: THEME.colors.primary }}>
-                  Description
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                  {displayDescription}
-                </p>
-                {isLongDescription && (
-                  <button
-                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    className="mt-3 flex items-center gap-1 text-sm font-medium"
-                    style={{ color: THEME.colors.primary }}
-                  >
-                    {descriptionExpanded ? (
-                      <>
-                        <ChevronUp className="w-4 h-4" />
-                        Show Less
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-4 h-4" />
-                        Show More
-                      </>
-                    )}
-                  </button>
-                )}
-              </CardContent>
-            </Card>
+          {/* Description Card */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold" style={{ color: THEME.colors.primary }}>
+                Description
+              </h3>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {displayDescription}
+              </p>
+              {isLongDescription && (
+                <button
+                  onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                  className="mt-3 flex items-center gap-1 text-sm font-medium"
+                  style={{ color: THEME.colors.primary }}
+                >
+                  {descriptionExpanded ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Show More
+                    </>
+                  )}
+                </button>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Attachments Card */}
           {ticket.attachments && ticket.attachments.length > 0 && (

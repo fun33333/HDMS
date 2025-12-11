@@ -1,8 +1,4 @@
-"""
-Ticket models package.
-"""
-from .ticket import Ticket, TicketStatus, Priority
+from .ticket import Ticket
 from .sub_ticket import SubTicket
 from .sla_template import SLATemplate
-
-__all__ = ['Ticket', 'TicketStatus', 'Priority', 'SubTicket', 'SLATemplate']
+from .attachment import Attachment

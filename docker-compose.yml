@@ -15,7 +15,7 @@ services:
     networks:
       - hdms_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hdms_user} -d ${POSTGRES_DB:-hdms_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hdms_user} -d ${POSTGRES_DB:-hdms_db}" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -26,20 +26,21 @@ services:
     image: pgbouncer/pgbouncer:latest
     container_name: hdms_pgbouncer
     environment:
-      PGBOUNCER_POOL_SIZE: ${PGBOUNCER_POOL_SIZE:-25}
-      # No DATABASES_* variables needed - using custom config
+      - POSTGRES_DB=${POSTGRES_DB:-hdms_db}
+      - POSTGRES_USER=${POSTGRES_USER:-hdms_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-hdms_pwd}
+      - DB_HOST=postgres
+      - PGBOUNCER_POOL_SIZE=${PGBOUNCER_POOL_SIZE:-25}
     volumes:
-      - ./config/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-      - ./config/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
-    entrypoint: ["/opt/pgbouncer/pgbouncer"]
-    command: ["/etc/pgbouncer/pgbouncer.ini"]
+      - ./config/pgbouncer/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: [ "/entrypoint.sh" ]
     ports:
       - "6432:6432"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 6432 || exit 1"]
+      test: [ "CMD-SHELL", "nc -z localhost 6432 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -52,13 +53,11 @@ services:
     image: redis:7
     container_name: hdms_redis
     command: >
-      sh -c "
-      if [ -n \"$$REDIS_PASSWORD\" ]; then
+      sh -c " if [ -n \"$$REDIS_PASSWORD\" ]; then
         redis-server --requirepass $$REDIS_PASSWORD --appendonly yes
       else
         redis-server --appendonly yes
-      fi
-      "
+      fi "
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
@@ -69,13 +68,11 @@ services:
       - hdms_network
     healthcheck:
       test: >
-        sh -c "
-        if [ -n \"$$REDIS_PASSWORD\" ]; then
+        sh -c " if [ -n \"$$REDIS_PASSWORD\" ]; then
           redis-cli -a \"$$REDIS_PASSWORD\" ping
         else
           redis-cli ping
-        fi
-        "
+        fi "
       interval: 30s
       timeout: 10s
       retries: 3
@@ -101,7 +98,7 @@ services:
     ports:
       - "8001:8001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health/" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -114,8 +111,7 @@ services:
     networks:
       - backend-network
       - hdms_network
-    restart: unless-stopped
-      # Ticket Service
+    restart: unless-stopped # Ticket Service
   ticket-service:
     build:
       context: ./services/ticket-service
@@ -135,7 +131,7 @@ services:
     ports:
       - "8002:8002"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8002/health/" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -146,7 +142,7 @@ services:
       redis:
         condition: service_healthy
       user-service:
-        condition: service_healthy  # Changed from service_started
+        condition: service_healthy # Changed from service_started
     networks:
       - backend-network
       - hdms_network
@@ -173,7 +169,7 @@ services:
       - "8003:8003"
       - "8004:8004"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8003/health/" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -184,9 +180,9 @@ services:
       redis:
         condition: service_healthy
       user-service:
-        condition: service_healthy  # Changed from service_started
+        condition: service_healthy # Changed from service_started
       ticket-service:
-        condition: service_healthy  # Changed from service_started
+        condition: service_healthy # Changed from service_started
     networks:
       - backend-network
       - hdms_network
@@ -212,7 +208,7 @@ services:
     ports:
       - "8005:8005"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8005/health/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8005/health/" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -223,9 +219,9 @@ services:
       redis:
         condition: service_healthy
       user-service:
-        condition: service_healthy  # Changed from service_started
+        condition: service_healthy # Changed from service_started
       ticket-service:
-        condition: service_healthy  # Changed from service_started
+        condition: service_healthy # Changed from service_started
     networks:
       - backend-network
       - hdms_network
@@ -295,7 +291,7 @@ services:
       - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost/api/v1
       - NEXT_PUBLIC_WS_URL=ws://localhost/ws
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       user-service:
         condition: service_healthy
@@ -347,4 +343,5 @@ volumes:
   pgbouncer_data:
   redis_data:
   file_storage:
+
 

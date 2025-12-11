@@ -22,8 +22,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Ticket } from '../../types';
+import ticketService from '../../services/api/ticketService';
 import {
-  getMockTickets,
   calculateTicketStats,
   getPriorityDistribution,
   getStatusDistribution
@@ -34,22 +34,21 @@ const requestorDashboard: React.FC = () => {
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'open' | 'resolved' | 'drafts'>('all');
 
-  // Fetch tickets (hard-coded for now)
+  // Fetch tickets
   useEffect(() => {
     const fetchTickets = async () => {
       setLoading(true);
+      setError(null);
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Use hard-coded data
-        const mockTickets = getMockTickets(user?.id || '1');
-        setTickets(mockTickets);
+        const response = await ticketService.getTickets({ requestorId: user?.id });
+        setTickets(response.results);
       } catch (error) {
         console.error('Error fetching tickets:', error);
-        setTickets([]);
+        setError('Failed to load tickets. Please try again later.');
+        // Service handles fallback, so if we reach here it's a critical failure or service didn't return mock
       } finally {
         setLoading(false);
       }
@@ -58,7 +57,8 @@ const requestorDashboard: React.FC = () => {
     if (user?.id) {
       fetchTickets();
     } else {
-      setLoading(false);
+      // Wait for user to be loaded
+      if (!user && !loading) setLoading(false);
     }
   }, [user?.id]);
 
@@ -122,7 +122,7 @@ const requestorDashboard: React.FC = () => {
     },
     {
       key: 'subject',
-      header: 'Title',
+      header: 'Subject',
       accessor: (ticket) => (
         <div className="max-w-xs">
           <p className="font-medium text-sm truncate" style={{ color: '#111827' }}>
@@ -206,6 +206,14 @@ const requestorDashboard: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6" style={{ backgroundColor: '#e7ecef', minHeight: '100vh' }}>
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          {error}
+        </div>
+      )}
+
       {/* Shared Dashboard Header */}
       <DashboardHeader
         title={`Welcome, ${user?.name || 'User'}! 👋`}

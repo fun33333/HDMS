@@ -37,8 +37,14 @@ export interface Ticket {
   completedDate?: string;
   resolvedDate?: string;
   completionNote?: string;
-  completionImage?: string;
-  attachments?: string[];
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    type: string;
+    uploadDate: string;
+  }[];
   comments?: Comment[];
   rejectionReason?: string;
   isApproved?: boolean;
