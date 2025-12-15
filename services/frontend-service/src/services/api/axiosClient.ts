@@ -106,7 +106,9 @@ class ApiClient {
 
         // Handle 500 Server Error
         if (error.response?.status === 500) {
-          console.error('Server error occurred');
+          console.error('Server error occurred:', error.response.statusText);
+          console.error('Response Data:', error.response.data);
+          console.error('Request URL:', error.config?.url);
         }
 
         return Promise.reject(this.formatError(error));

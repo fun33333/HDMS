@@ -19,6 +19,7 @@ def list_messages(request, ticket_id: str):
 @router.post("/messages", response=ChatMessageOut)
 def create_message(request, payload: ChatMessageIn):
     """Create a chat message."""
+    print(f"DEBUG: create_message payload: {payload.dict()}", flush=True)
     message = ChatMessage.objects.create(
         ticket_id=payload.ticket_id,
         sender_id=payload.sender_id,

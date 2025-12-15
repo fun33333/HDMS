@@ -10,6 +10,8 @@ from apps.tickets.models.sub_ticket import SubTicket
 from apps.tickets.models.attachment import Attachment
 from core.clients.user_client import UserClient
 from apps.tickets.services.ticket_service import TicketService
+from apps.tickets.schemas import AssignTicketIn, RejectTicketIn, PostponeTicketIn
+   
 
 router = Router(tags=["tickets"])
 
@@ -35,9 +37,19 @@ def create_ticket(request, payload: TicketIn):
 
 
 @router.get("/", response=List[TicketOut])
-def list_tickets(request, status: Optional[str] = None, requestor_id: Optional[str] = None):
-    """List tickets with optional filters."""
+def list_tickets(request, status: Optional[str] = None, requestor_id: Optional[str] = None, exclude_drafts: bool = True):
+    """List tickets with optional filters.
+    
+    Args:
+        status: Filter by specific status
+        requestor_id: Filter by requestor (if provided, shows drafts)
+        exclude_drafts: Exclude draft tickets (default True for moderator view)
+    """
     queryset = Ticket.objects.all()
+    
+    # Exclude drafts unless viewing own tickets
+    if exclude_drafts and not requestor_id:
+        queryset = queryset.exclude(status='draft')
     
     if status:
         queryset = queryset.filter(status=status)
@@ -45,6 +57,7 @@ def list_tickets(request, status: Optional[str] = None, requestor_id: Optional[s
         queryset = queryset.filter(requestor_id=requestor_id)
     
     return [TicketOut.from_orm(ticket) for ticket in queryset]
+
 
 
 @router.get("/{ticket_id}", response=TicketOut)
@@ -84,6 +97,14 @@ def update_status(request, ticket_id: str, payload: StatusUpdateIn):
             transition_method()
         ticket.save()
     except Exception as e:
+        # Idempotency check: if action matches current state, consider it a success
+        if payload.action == 'submit' and ticket.status == 'submitted':
+            return TicketOut.from_orm(ticket)
+        if payload.action == 'postpone' and ticket.status == 'postponed':
+            return TicketOut.from_orm(ticket)
+        if payload.action == 'reject' and ticket.status == 'rejected':
+            return TicketOut.from_orm(ticket)
+            
         return {"error": str(e)}, 400
     
     return TicketOut.from_orm(ticket)
@@ -111,3 +132,65 @@ def upload_attachment(request, ticket_id: str, file: UploadedFile = File(...)):
         content_type=file.content_type
     )
     return attachment
+
+@router.post("/{ticket_id}/assign", response=TicketOut)
+def assign_ticket(request, ticket_id: str, payload: AssignTicketIn):
+    """Assign ticket to an assignee."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+    
+    # Set assignee
+    ticket.assignee_id = payload.assignee_id
+    if payload.department_id:
+        ticket.department_id = payload.department_id
+    
+    # Handle FSM transitions based on current status
+    try:
+        if ticket.status == 'draft':
+            ticket.submit()  # draft -> submitted
+            ticket.review()  # submitted -> under_review
+            ticket.assign()  # under_review -> assigned
+        elif ticket.status == 'submitted':
+            ticket.review()
+            ticket.assign()
+        elif ticket.status in ['pending', 'under_review']:
+            ticket.assign()
+        # If already assigned or in_progress, just update assignee without transition
+    except Exception as e:
+        raise HttpError(400, f"Cannot assign ticket: {str(e)}")
+    
+    ticket.save()
+    return ticket
+
+    
+@router.post("/{ticket_id}/reject", response=TicketOut)
+def reject_ticket(request, ticket_id: str, payload: RejectTicketIn):
+    """Reject a ticket with reason."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+    
+    # Use FSM transition
+    try:
+        ticket.reject(payload.reason)
+        ticket.save()
+    except Exception as e:
+        raise HttpError(400, f"Cannot reject ticket: {str(e)}")
+    
+    return ticket
+
+
+@router.post("/{ticket_id}/postpone", response=TicketOut)
+def postpone_ticket(request, ticket_id: str, payload: PostponeTicketIn):
+    """Postpone a ticket with reason."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+    
+    ticket.postpone(payload.reason)
+    ticket.save()
+    return ticket

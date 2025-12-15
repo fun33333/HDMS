@@ -83,8 +83,7 @@ const requestorDashboard: React.FC = () => {
         t.status === 'resolved' || t.status === 'completed'
       ).slice(0, 10);
     } else if (activeFilter === 'drafts') {
-      // Drafts are not tickets, so return empty array
-      return [];
+      return sorted.filter(t => t.status === 'draft').slice(0, 10);
     }
 
     return sorted.slice(0, 10);

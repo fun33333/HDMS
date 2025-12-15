@@ -9,6 +9,18 @@ import { Ticket } from '../types';
 export const getMockTickets = (requestorId: string): Ticket[] => {
   return [
     {
+      id: 'mock-draft-1',
+      ticketId: 'D-001',
+      subject: 'Draft Request',
+      description: 'This is a draft request that has not been submitted yet.',
+      department: 'IT',
+      priority: 'low',
+      status: 'draft',
+      requestorId: requestorId,
+      requestorName: 'John Requestor',
+      submittedDate: new Date().toISOString(),
+    },
+    {
       id: '1',
       ticketId: 'HD-001',
       subject: 'Laptop not turning on',

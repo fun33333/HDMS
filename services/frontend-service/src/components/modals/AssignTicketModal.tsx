@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, UserPlus, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, UserPlus, Check, Loader } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { departmentService, Department } from '../../services/api/departmentService';
 import { DEPARTMENTS } from '../../lib/constants';
 
 interface User {
@@ -16,10 +17,11 @@ interface User {
 interface AssignTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAssign: (assigneeId: string) => void;
+  onAssign: (assigneeId: string, departmentId?: string) => void;
   assignees: User[];
   ticketSubject: string;
   ticketDepartment: string;
+  loading?: boolean;
 }
 
 const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
@@ -28,10 +30,32 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
   onAssign,
   assignees,
   ticketSubject,
-  ticketDepartment
+  ticketDepartment,
+  loading = false
 }) => {
   const [selectedAssignee, setSelectedAssignee] = useState<string>('');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>(ticketDepartment);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loadingDepts, setLoadingDepts] = useState(false);
+
+  // Fetch departments from auth-service
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchDepartments = async () => {
+      setLoadingDepts(true);
+      try {
+        const data = await departmentService.getDepartments();
+        setDepartments(data);
+      } catch (error) {
+        console.warn('Failed to fetch departments, using fallback');
+        // Fallback to hardcoded departments if API fails
+      } finally {
+        setLoadingDepts(false);
+      }
+    };
+    fetchDepartments();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -45,13 +69,17 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
     return 'IT Support';
   };
 
-  const filteredAssignees = assignees.filter(assignee =>
-    !selectedDepartment || selectedDepartment === 'all' || assignee.department === selectedDepartment
-  );
+  const filteredAssignees = assignees.filter(assignee => {
+    if (!selectedDepartment || selectedDepartment === 'all') return true;
+    // Match by department name or ID
+    const selectedDept = departments.find(d => d.id === selectedDepartment);
+    return assignee.department === selectedDept?.dept_name || assignee.department === selectedDepartment;
+  });
 
   const handleAssign = () => {
     if (selectedAssignee) {
-      onAssign(selectedAssignee);
+      const selectedDeptId = selectedDepartment !== 'all' ? selectedDepartment : undefined;
+      onAssign(selectedAssignee, selectedDeptId);
       setSelectedAssignee('');
     }
   };
@@ -100,11 +128,18 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loadingDepts}
               >
                 <option value="all">All Departments</option>
-                {DEPARTMENTS.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
+                {departments.length > 0 ? (
+                  departments.map(dept => (
+                    <option key={dept.id} value={dept.id}>{dept.dept_name}</option>
+                  ))
+                ) : (
+                  DEPARTMENTS.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -122,16 +157,15 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
                     const isSelected = selectedAssignee === assignee.id;
                     const availability = assigneeAvailability[assignee.id] || 'available';
                     const isAvailable = availability === 'available';
-                    
+
                     return (
                       <div
                         key={assignee.id}
                         onClick={() => setSelectedAssignee(assignee.id)}
-                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                          isSelected
+                        className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${isSelected
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -176,14 +210,20 @@ const AssignTicketModal: React.FC<AssignTicketModalProps> = ({
           </Button>
           <Button
             onClick={handleAssign}
-            disabled={!selectedAssignee}
-            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-              selectedAssignee
+            disabled={!selectedAssignee || loading}
+            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${selectedAssignee && !loading
                 ? 'bg-green-600 text-white hover:bg-green-700'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+              }`}
           >
-            Assign Ticket
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader className="w-4 h-4 animate-spin" />
+                Assigning...
+              </span>
+            ) : (
+              'Assign Ticket'
+            )}
           </Button>
         </div>
       </div>

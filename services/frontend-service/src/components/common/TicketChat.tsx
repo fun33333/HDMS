@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../lib/auth';
+import { ticketService } from '../../services/api/ticketService';
+import { Comment } from '../../types';
 import { Card, CardContent } from '../ui/card';
 import { THEME } from '../../lib/theme';
 import { Send, MessageSquare, Plus, Mic, Paperclip, X, Download, Eye, File, Image as ImageIcon } from 'lucide-react';
@@ -44,9 +46,12 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load messages from localStorage
+  // Load messages from backend
   useEffect(() => {
     loadMessages();
+    // Poll for new messages every 10 seconds? Or just rely on reloads/actions for now
+    const interval = setInterval(loadMessages, 10000);
+    return () => clearInterval(interval);
   }, [ticketId]);
 
   // Auto-scroll to bottom when new messages arrive
@@ -54,22 +59,30 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
     scrollToBottom();
   }, [messages]);
 
-  const loadMessages = () => {
+  const loadMessages = async () => {
     try {
-      const storedMessages = localStorage.getItem(`chat_${ticketId}`);
-      if (storedMessages) {
-        setMessages(JSON.parse(storedMessages));
-      }
+      const comments = await ticketService.getComments(ticketId);
+      const mappedMessages: Message[] = comments.map(c => ({
+        id: c.id,
+        ticketId: c.ticketId,
+        userId: c.userId,
+        userName: c.userName,
+        userRole: c.userRole || 'user',
+        employeeCode: c.employeeCode,
+        message: c.content,
+        timestamp: c.timestamp,
+        attachments: c.attachments?.map(att => ({
+          id: att.id,
+          name: att.name,
+          type: att.type,
+          size: att.size,
+          data: att.url, // URL mapping
+          thumbnail: att.thumbnailUrl
+        }))
+      }));
+      setMessages(mappedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
-    }
-  };
-
-  const saveMessages = (updatedMessages: Message[]) => {
-    try {
-      localStorage.setItem(`chat_${ticketId}`, JSON.stringify(updatedMessages));
-    } catch (error) {
-      console.error('Error saving messages:', error);
     }
   };
 
@@ -165,28 +178,33 @@ const TicketChat: React.FC<TicketChatProps> = ({ ticketId }) => {
     setPreviewFile(attachment);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if ((!newMessage.trim() && selectedFiles.length === 0) || !user) return;
 
     setLoading(true);
-    const message: Message = {
-      id: Date.now().toString(),
-      ticketId,
-      userId: user.id,
-      userName: user.name,
-      userRole: user.role,
-      employeeCode: user.employeeCode,
-      message: newMessage.trim(),
-      timestamp: new Date().toISOString(),
-      attachments: selectedFiles.length > 0 ? [...selectedFiles] : undefined
-    };
+    try {
+      // Send message via API
+      if (newMessage.trim()) {
+        const comment = await ticketService.addComment(ticketId, newMessage.trim());
 
-    const updatedMessages = [...messages, message];
-    setMessages(updatedMessages);
-    saveMessages(updatedMessages);
-    setNewMessage('');
-    setSelectedFiles([]);
-    setLoading(false);
+        // Optimistic update or wait for reload?
+        // Let's reload to be safe and ensure consistent ID/timestamp
+        await loadMessages();
+      }
+
+      // TODO: Handle file attachments upload separately if needed
+      if (selectedFiles.length > 0) {
+        console.warn('File attachments not yet supported in backend chat API');
+      }
+
+      setNewMessage('');
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Maybe show toast error
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

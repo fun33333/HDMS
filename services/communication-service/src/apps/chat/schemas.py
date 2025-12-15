@@ -6,11 +6,13 @@ from typing import List
 from datetime import datetime
 
 
+from uuid import UUID
+
 class ChatMessageOut(Schema):
     """Chat message output schema."""
-    id: str
-    ticket_id: str
-    sender_id: str
+    id: UUID
+    ticket_id: UUID
+    sender_id: UUID
     message: str
     mentions: List[str]
     created_at: datetime

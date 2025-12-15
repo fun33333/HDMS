@@ -123,8 +123,11 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - USER_SERVICE_URL=http://user-service:8001
       - TICKET_SERVICE_URL=http://ticket-service:8002
+      - TICKET_SERVICE_URL=http://ticket-service:8002
       - COMMUNICATION_SERVICE_URL=http://communication-service:8003
       - FILE_SERVICE_URL=http://file-service:8005
+      - DB_HOST=pgbouncer
+      - DB_PORT=6432
     volumes:
       - ./services/ticket-service/src:/app
       - ./services/shared:/shared
@@ -160,8 +163,11 @@ services:
       - CHANNEL_LAYER_REDIS=redis://redis:6379/1
       - USER_SERVICE_URL=http://user-service:8001
       - TICKET_SERVICE_URL=http://ticket-service:8002
+      - TICKET_SERVICE_URL=http://ticket-service:8002
       - COMMUNICATION_SERVICE_URL=http://communication-service:8003
       - FILE_SERVICE_URL=http://file-service:8005
+      - DB_HOST=pgbouncer
+      - DB_PORT=6432
     volumes:
       - ./services/communication-service/src:/app
       - ./services/shared:/shared

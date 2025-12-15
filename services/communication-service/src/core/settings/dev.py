@@ -7,4 +7,3 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 LOGGING['loggers']['apps']['level'] = 'DEBUG'
 
-

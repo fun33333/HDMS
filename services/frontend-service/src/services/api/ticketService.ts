@@ -4,7 +4,7 @@
  */
 
 import apiClient from './axiosClient';
-import { Ticket, Comment } from '../../types';
+import { Ticket, Comment, ChatMessage } from '../../types';
 import { ENV } from '../../config/env';
 import { getMockTickets, getMockTicketById } from '../../lib/mockData';
 
@@ -48,20 +48,77 @@ export interface TicketListResponse {
 }
 
 class TicketService {
+  private departmentCache: Map<string, string> = new Map();
+  private employeeCache: Map<string, { name: string; code: string }> = new Map();
+
   // Helper: Map Backend API Response to Frontend Ticket
-  private mapToTicket(data: any): Ticket {
+  private async mapToTicket(data: any): Promise<Ticket> {
+    // Get department name if not cached
+    let deptDisplay = data.department_id || 'Unknown';
+    if (data.department_id && !this.departmentCache.has(data.department_id)) {
+      try {
+        const deptService = (await import('./departmentService')).default;
+        const depts = await deptService.getDepartments();
+        depts.forEach(d => {
+          this.departmentCache.set(d.id, `${d.dept_code} | ${d.dept_name}`);
+        });
+      } catch (error) {
+        console.warn('Failed to fetch departments', error);
+      }
+    }
+    deptDisplay = this.departmentCache.get(data.department_id) || deptDisplay;
+
+    // Get requestor name + employee code if not cached
+    let requestorName = 'Unknown User';
+    if (data.requestor_id) {
+      if (!this.employeeCache.has(data.requestor_id)) {
+        try {
+          const response = await apiClient.get<any>(`${ENV.AUTH_SERVICE_URL}/api/employees?employee_id=${data.requestor_id}`);
+          if (response && response.employees && response.employees.length > 0) {
+            const employee = response.employees[0];
+            this.employeeCache.set(data.requestor_id, {
+              name: employee.full_name,
+              code: employee.employee_code || employee.employee_id || 'N/A'
+            });
+          } else {
+            // Fallback if not found
+            this.employeeCache.set(data.requestor_id, {
+              name: 'User',
+              code: data.requestor_id.slice(0, 8).toUpperCase()
+            });
+          }
+        } catch (error) {
+          // Silently fail and use fallback
+          console.warn('Failed to fetch requestor info for', data.requestor_id);
+          this.employeeCache.set(data.requestor_id, {
+            name: 'User',
+            code: data.requestor_id.slice(0, 8).toUpperCase()
+          });
+        }
+      }
+      const requestorInfo = this.employeeCache.get(data.requestor_id);
+      if (requestorInfo) {
+        requestorName = `${requestorInfo.name}\n${requestorInfo.code}`;
+      }
+    }
+
     return {
       id: data.id,
-      ticketId: `HD-${new Date(data.created_at).getFullYear()}-${String(data.version || 1).padStart(4, '0')}`, // Mock generation
+      // Only use D-X for drafts, use ticket_id for non-drafts, fallback to short UUID
+      ticketId: data.ticket_id
+        ? data.ticket_id
+        : (data.status === 'draft'
+          ? `D-${data.version || 1}`
+          : `#${data.id.slice(0, 8).toUpperCase()}`),
       subject: data.title,
       description: data.description,
-      department: data.department_id || 'Unknown', // Need lookup
+      department: deptDisplay,
       priority: data.priority,
       status: data.status,
       requestorId: data.requestor_id,
-      requestorName: 'Current User', // TODO: Fetch from user service
+      requestorName: requestorName,
       submittedDate: data.created_at,
-      assignedDate: data.updated_at, // Mock
+      assignedDate: data.updated_at,
       attachments: (data.attachments || []).map((att: any) => ({
         id: att.id,
         name: att.filename,
@@ -78,16 +135,20 @@ class TicketService {
     try {
       const params = new URLSearchParams();
       if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value) params.append(key, String(value));
-        });
+        if (filters.status) params.append('status', filters.status);
+        if (filters.priority) params.append('priority', filters.priority);
+        // Map requestorId to requestor_id (snake_case for Python)
+        if (filters.requestorId) params.append('requestor_id', filters.requestorId);
+        if (filters.assigneeId) params.append('assignee_id', filters.assigneeId);
+        if (filters.search) params.append('search', filters.search);
+        // Pass other filters if needed
       }
 
       // Use specific Ticket Service URL
       const response = await apiClient.get<any[]>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/?${params.toString()}`);
 
       // Map API response to Ticket type
-      const tickets = response.map(this.mapToTicket);
+      const tickets = await Promise.all(response.map(data => this.mapToTicket(data)));
 
       return {
         results: tickets,
@@ -111,7 +172,7 @@ class TicketService {
   async getTicketById(id: string): Promise<Ticket> {
     try {
       const response = await apiClient.get<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${id}`);
-      return this.mapToTicket(response);
+      return await this.mapToTicket(response);
     } catch (error) {
       console.warn('API Error, falling back to mock:', error);
       const mock = getMockTicketById(id);
@@ -166,17 +227,24 @@ class TicketService {
     return apiClient.delete(`/api/tickets/${id}/`);
   }
 
-  // Assign ticket
-  async assignTicket(ticketId: string, assigneeId: string): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/assign/`, { assigneeId });
+  // Assign ticket to an assignee
+  async assignTicket(ticketId: string, assigneeId: string, departmentId?: string): Promise<Ticket> {
+    try {
+      const response = await apiClient.post<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/assign`,
+        { assignee_id: assigneeId, department_id: departmentId }
+      );
+      return this.mapToTicket(response);
+    } catch (error) {
+      console.error('Assign ticket failed:', error);
+      throw error;
+    }
   }
 
   // Reassign ticket
   async reassignTicket(ticketId: string, assigneeId: string, reason: string): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/reassign/`, {
-      assigneeId,
-      reason,
-    });
+    // Use assign endpoint with new assignee
+    return this.assignTicket(ticketId, assigneeId);
   }
 
   // Change ticket status
@@ -194,16 +262,93 @@ class TicketService {
     });
   }
 
-  // Add comment
+  // Add comment / chat message
   async addComment(ticketId: string, content: string): Promise<Comment> {
-    return apiClient.post<Comment>(`/api/tickets/${ticketId}/comments/`, {
-      content,
-    });
+    try {
+      // Get current user for sender_id
+      const userStr = localStorage.getItem('user');
+      let senderId = '00000000-0000-0000-0000-000000000000'; // System/Default
+      let senderName = 'System';
+
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          senderId = user.id;
+          senderName = user.name;
+        } catch (e) {
+          console.warn('Failed to parse user from localStorage');
+        }
+      }
+
+      // If content starts with [System], it might be a system message
+      // The backend doesn't distinguishing yet, but we can treat all as chat messages
+
+      const response = await apiClient.post<any>(`${ENV.COMMUNICATION_SERVICE_URL}/api/v1/chat/messages`, {
+        ticket_id: ticketId,
+        sender_id: senderId,
+        message: content,
+        mentions: []
+      });
+
+      // Map response to Comment/ChatMessage
+      return {
+        id: response.id,
+        ticketId: response.ticket_id,
+        userId: response.sender_id,
+        userName: senderName, // We use the name we have, as backend doesn't return it yet
+        userRole: 'system', // TODO: Determine role
+        content: response.message,
+        timestamp: response.created_at,
+        type: 'comment',
+      };
+    } catch (error) {
+      console.error('Add comment failed:', error);
+      throw error;
+    }
   }
 
-  // Get comments
+  // Get comments / chat messages
   async getComments(ticketId: string): Promise<Comment[]> {
-    return apiClient.get<Comment[]>(`/api/tickets/${ticketId}/comments/`);
+    try {
+      const response = await apiClient.get<any[]>(`${ENV.COMMUNICATION_SERVICE_URL}/api/v1/chat/messages/ticket/${ticketId}`);
+
+      // Map response to Comment[]
+      // We need to fetch user names if not in cache
+      // For now, we'll try to resolve from cache or use placeholders
+
+      const comments = await Promise.all(response.map(async (msg) => {
+        let userName = 'User';
+        let userRole = 'user';
+
+        // Try to resolve user
+        if (msg.sender_id === '00000000-0000-0000-0000-000000000000') {
+          userName = 'System';
+          userRole = 'system';
+        } else if (this.employeeCache.has(msg.sender_id)) {
+          userName = this.employeeCache.get(msg.sender_id)?.name || 'User';
+        } else {
+          // Should ideally fetch user info here if critical
+          // For now, let's defer or batch fetch? 
+          // We can mock or lazily fetch
+        }
+
+        return {
+          id: msg.id,
+          ticketId: msg.ticket_id,
+          userId: msg.sender_id,
+          userName: userName,
+          userRole: userRole, // TODO: Improve role mapping
+          content: msg.message,
+          timestamp: msg.created_at,
+          type: 'comment' as const,
+        };
+      }));
+
+      return comments;
+    } catch (error) {
+      console.warn('Get comments failed, falling back to empty:', error);
+      return [];
+    }
   }
 
   // Approve ticket
@@ -211,11 +356,46 @@ class TicketService {
     return apiClient.post<Ticket>(`/api/tickets/${ticketId}/approve/`);
   }
 
-  // Reject ticket
+  // Reject ticket with reason
   async rejectTicket(ticketId: string, reason: string): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/reject/`, {
-      reason,
-    });
+    try {
+      const response = await apiClient.post<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/reject`,
+        { reason }
+      );
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Reject ticket failed:', error);
+      throw error;
+    }
+  }
+
+  // Postpone ticket with reason
+  async postponeTicket(ticketId: string, reason: string): Promise<Ticket> {
+    try {
+      const response = await apiClient.post<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/postpone`,
+        { reason }
+      );
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Postpone ticket failed:', error);
+      throw error;
+    }
+  }
+
+  // Submit draft ticket
+  async submitTicket(ticketId: string): Promise<Ticket> {
+    try {
+      // Using status endpoint with action='submit'
+      const response = await apiClient.post<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/status`, {
+        action: 'submit'
+      });
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Submit ticket failed:', error);
+      throw error;
+    }
   }
 
   // Complete ticket

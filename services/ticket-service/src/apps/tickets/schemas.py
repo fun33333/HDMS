@@ -18,6 +18,7 @@ class AttachmentOut(Schema):
 class TicketOut(Schema):
     """Ticket output schema."""
     id: UUID
+    ticket_id: Optional[str] = None  
     title: str
     description: str
     status: str
@@ -34,7 +35,6 @@ class TicketOut(Schema):
     created_at: datetime
     updated_at: datetime
     attachments: List[AttachmentOut] = []
-
 
 
 class TicketIn(Schema):
@@ -65,3 +65,15 @@ class StatusUpdateIn(Schema):
     reason: Optional[str] = None
 
 
+class AssignTicketIn(Schema):
+    """Schema for assigning a ticket."""
+    assignee_id: str
+    department_id: Optional[str] = None
+
+class RejectTicketIn(Schema):
+    """Schema for rejecting a ticket."""
+    reason: str
+
+class PostponeTicketIn(Schema):
+    """Schema for postponing a ticket."""
+    reason: str

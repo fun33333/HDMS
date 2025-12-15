@@ -48,6 +48,28 @@ class Ticket(BaseModel):
     """
     title = models.CharField(max_length=500)
     description = models.TextField()
+        # Human-readable ticket ID (HD-YYYY-NNNN)
+    ticket_id = models.CharField(max_length=20, unique=True, blank=True, null=True, db_index=True)
+    
+    def save(self, *args, **kwargs):
+        # Only generate ticket_id when status is not 'draft' AND ticket_id is empty
+        if not self.ticket_id and self.status != 'draft':
+            # Generate ticket_id on first non-draft save
+            year = timezone.now().year
+            # Get the last ticket number for this year
+            last_ticket = Ticket.objects.filter(
+                ticket_id__startswith=f'HD-{year}-'
+            ).order_by('-ticket_id').first()
+            
+            if last_ticket and last_ticket.ticket_id:
+                last_num = int(last_ticket.ticket_id.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+            
+            self.ticket_id = f'HD-{year}-{str(new_num).zfill(4)}'
+        
+        super().save(*args, **kwargs)
     
     # Status with FSM
     status = FSMField(default=TicketStatus.DRAFT, protected=True, db_index=True)
@@ -137,7 +159,13 @@ class Ticket(BaseModel):
         self.reopen_count += 1
         self.increment_version()
     
+    @transition(field=status, source=[TicketStatus.SUBMITTED, TicketStatus.PENDING, TicketStatus.UNDER_REVIEW, TicketStatus.POSTPONED], target=TicketStatus.REJECTED)
+    def reject(self, reason: str):
+        """Reject ticket."""
+        self.postponement_reason = reason # Reusing postponement_reason field for rejection reason as well to keep it simple, or add a rejection_reason field in migration
+
     @transition(field=status, source=[TicketStatus.ASSIGNED, TicketStatus.IN_PROGRESS], target=TicketStatus.POSTPONED)
+
     def postpone(self, reason: str = ""):
         """Postpone ticket."""
         self.postponement_reason = reason

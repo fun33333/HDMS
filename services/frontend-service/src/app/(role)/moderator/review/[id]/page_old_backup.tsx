@@ -37,16 +37,9 @@ export default function ReviewTicketPage() {
         details: '',
     });
 
-    // Role-based permissions
-    const canModerate = user?.role === 'moderator' || user?.role === 'admin';
-    const canAssign = user?.role === 'assignee' || user?.role === 'admin';
-    const isRequestor = ticket?.requestorId === user?.id;
-
     useEffect(() => {
         fetchTicket();
-        if (canModerate) {
-            fetchAssignees();
-        }
+        fetchAssignees();
     }, [ticketId]);
 
     const fetchTicket = async () => {
@@ -64,7 +57,7 @@ export default function ReviewTicketPage() {
     const fetchAssignees = async () => {
         try {
             const response = await userService.getUsers({ role: 'assignee' });
-            setAssignees(response.results);
+            setAssignees(response.results); // Extract results array
         } catch (error) {
             console.error('Failed to fetch assignees:', error);
         }
@@ -86,54 +79,33 @@ export default function ReviewTicketPage() {
     const handleAssign = async (assigneeId: string, departmentId?: string) => {
         try {
             await ticketService.assignTicket(ticketId, assigneeId, departmentId);
-
-            // Add timeline entry and participant
-            await Promise.all([
-                ticketService.addComment(ticketId, `[System] Ticket assigned by ${user?.name}`),
-                // Participant will be added by backend when ticket is assigned
-            ]);
-
             showAlert('success', 'Success', 'Ticket assigned successfully');
             setActiveModal(null);
             fetchTicket();
         } catch (error: any) {
-            const errorMsg = error?.response?.data?.detail || error?.message || 'Failed to assign ticket';
-            showAlert('error', 'Error', 'Failed to assign ticket', errorMsg);
-            console.error('Assignment error:', error);
+            showAlert('error', 'Error', 'Failed to assign ticket', error.message);
         }
     };
 
     const handleReject = async (reason: string) => {
         try {
             await ticketService.rejectTicket(ticketId, reason);
-
-            // Add timeline entry
-            await ticketService.addComment(ticketId, `[System] Ticket rejected by ${user?.name}: ${reason}`);
-
             showAlert('success', 'Success', 'Ticket rejected');
             setActiveModal(null);
             setTimeout(() => router.push('/moderator/ticket-pool'), 2000);
         } catch (error: any) {
-            const errorMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Unknown error occurred';
-            showAlert('error', 'Rejection Failed', errorMsg);
-            console.error('Rejection error:', error);
+            showAlert('error', 'Error', 'Failed to reject ticket', error.message);
         }
     };
 
     const handlePostpone = async (reason: string) => {
         try {
             await ticketService.postponeTicket(ticketId, reason);
-
-            // Add timeline entry
-            await ticketService.addComment(ticketId, `[System] Ticket postponed by ${user?.name}: ${reason}`);
-
             showAlert('success', 'Success', 'Ticket postponed');
             setActiveModal(null);
             fetchTicket();
         } catch (error: any) {
-            const errorMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Unknown error occurred';
-            showAlert('error', 'Postpone Failed', errorMsg);
-            console.error('Postpone error:', error);
+            showAlert('error', 'Error', 'Failed to postpone ticket', error.message);
         }
     };
 
@@ -143,9 +115,7 @@ export default function ReviewTicketPage() {
             showAlert('success', 'Success', 'Clarification request sent');
             setActiveModal(null);
         } catch (error: any) {
-            const errorMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Unknown error occurred';
-            showAlert('error', 'Request Failed', errorMsg);
-            console.error('Clarification error:', error);
+            showAlert('error', 'Error', 'Failed to send request', error.message);
         }
     };
 
@@ -178,14 +148,7 @@ export default function ReviewTicketPage() {
                 {/* Left: Ticket Details (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
                     <TicketDetailsPanel ticket={ticket} />
-
-                    {/* Conditionally show actions based on role */}
-                    {canModerate && (
-                        <ModeratorActionsPanel
-                            onActionSelect={handleActionSelect}
-                            disabled={ticket.status === 'rejected' || ticket.status === 'closed'}
-                        />
-                    )}
+                    <ModeratorActionsPanel onActionSelect={handleActionSelect} />
                 </div>
 
                 {/* Right: Chat (1/3) */}
@@ -199,48 +162,44 @@ export default function ReviewTicketPage() {
                 <TicketChatPanel ticketId={ticket.id} />
             </div>
 
-            {/* Modals - Only show for moderators */}
-            {canModerate && (
-                <>
-                    {activeModal === 'assign' && (
-                        <AssignTicketModal
-                            isOpen={true}
-                            onClose={() => setActiveModal(null)}
-                            onAssign={handleAssign}
-                            assignees={assignees}
-                            ticketSubject={ticket.subject}
-                            ticketDepartment={ticket.department}
-                        />
-                    )}
+            {/* Modals */}
+            {activeModal === 'assign' && (
+                <AssignTicketModal
+                    isOpen={true}
+                    onClose={() => setActiveModal(null)}
+                    onAssign={handleAssign}
+                    assignees={assignees}
+                    ticketSubject={ticket.subject}
+                    ticketDepartment={ticket.department}
+                />
+            )}
 
-                    {activeModal === 'reject' && (
-                        <RejectTicketModal
-                            isOpen={true}
-                            onClose={() => setActiveModal(null)}
-                            onConfirm={handleReject}
-                            ticketId={ticket.ticketId}
-                            ticketSubject={ticket.subject}
-                        />
-                    )}
+            {activeModal === 'reject' && (
+                <RejectTicketModal
+                    isOpen={true}
+                    onClose={() => setActiveModal(null)}
+                    onConfirm={handleReject}
+                    ticketId={ticket.ticketId}
+                    ticketSubject={ticket.subject}
+                />
+            )}
 
-                    {activeModal === 'postpone' && (
-                        <PostponeModal
-                            isOpen={true}
-                            onClose={() => setActiveModal(null)}
-                            onConfirm={handlePostpone}
-                            ticketId={ticket.ticketId}
-                        />
-                    )}
+            {activeModal === 'postpone' && (
+                <PostponeModal
+                    isOpen={true}
+                    onClose={() => setActiveModal(null)}
+                    onConfirm={handlePostpone}
+                    ticketId={ticket.ticketId}
+                />
+            )}
 
-                    {activeModal === 'clarify' && (
-                        <ClarificationModal
-                            isOpen={true}
-                            onClose={() => setActiveModal(null)}
-                            onConfirm={handleClarify}
-                            ticketId={ticket.ticketId}
-                        />
-                    )}
-                </>
+            {activeModal === 'clarify' && (
+                <ClarificationModal
+                    isOpen={true}
+                    onClose={() => setActiveModal(null)}
+                    onConfirm={handleClarify}
+                    ticketId={ticket.ticketId}
+                />
             )}
 
             <AlertModal

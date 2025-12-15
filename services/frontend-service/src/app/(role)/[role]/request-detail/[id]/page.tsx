@@ -176,10 +176,29 @@ export default function RequestDetailPage() {
   };
 
   const handleCancel = async () => {
-    if (!ticket || !confirm('Are you sure you want to cancel this ticket? This action cannot be undone.')) return;
-    // Implement cancel/delete logic
-    await ticketService.deleteTicket(ticket.id);
-    router.push('/requestor/requests');
+    if (!ticket || !confirm('Are you sure you want to delete this draft? This action cannot be undone.')) return;
+    try {
+      await ticketService.deleteTicket(ticket.id);
+      router.push('/requestor/requests');
+    } catch (error) {
+      console.error('Failed to delete draft:', error);
+      alert('Failed to delete draft');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!ticket) return;
+    try {
+      setLoading(true);
+      await ticketService.submitTicket(ticket.id);
+      // Wait a bit then refresh or redirect
+      alert('Ticket submitted successfully!');
+      router.push('/requestor/requests');
+    } catch (error) {
+      console.error('Failed to submit ticket:', error);
+      alert('Failed to submit ticket');
+      setLoading(false);
+    }
   };
 
   const canEdit = ticket?.status === ('draft' as any) || ticket?.status === 'pending';
@@ -431,6 +450,19 @@ export default function RequestDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Submit Draft Button */}
+                  {ticket.status === ('draft' as any) && (
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      leftIcon={<CheckCircle className="w-4 h-4" />}
+                      onClick={handleSubmit}
+                      disabled={loading}
+                    >
+                      {loading ? 'Submitting...' : 'Submit Ticket'}
+                    </Button>
+                  )}
+
                   {canEdit && (
                     <Button
                       variant="outline"
@@ -473,7 +505,7 @@ export default function RequestDetailPage() {
                       onClick={handleCancel}
                       style={{ color: THEME.colors.error }}
                     >
-                      Cancel
+                      Delete Draft
                     </Button>
                   )}
                 </div>

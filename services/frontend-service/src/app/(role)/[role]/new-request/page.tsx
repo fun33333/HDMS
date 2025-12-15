@@ -463,7 +463,7 @@ export default function NewRequestPage() {
                   size="lg"
                   onClick={handleSaveDraft}
                   loading={savingDraft}
-                  disabled={loading}
+                  disabled={loading || savingDraft}
                   leftIcon={<Save className="w-4 h-4" />}
                   className="sm:flex-1"
                 >
@@ -474,7 +474,7 @@ export default function NewRequestPage() {
                   variant="primary"
                   size="lg"
                   loading={loading}
-                  disabled={savingDraft}
+                  disabled={loading || savingDraft}
                   className="sm:flex-1"
                 >
                   {loading ? 'Submitting...' : 'Submit Request'}

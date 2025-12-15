@@ -8,6 +8,7 @@ export const ENV = {
   API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
   AUTH_SERVICE_URL: process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:8000',
   TICKET_SERVICE_URL: process.env.NEXT_PUBLIC_TICKET_SERVICE_URL || 'http://localhost:8002',
+  COMMUNICATION_SERVICE_URL: process.env.NEXT_PUBLIC_COMMUNICATION_SERVICE_URL || 'http://localhost:8003',
   WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000',
 
   // App Configuration

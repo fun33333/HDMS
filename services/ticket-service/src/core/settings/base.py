@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Add shared directory to Python path for importing shared code
 # Try Docker mount path first, then fallback to relative path
 docker_shared_path = Path('/shared/core')
-local_shared_path = BASE_DIR.parent.parent.parent / 'shared' / 'core'
+local_shared_path = BASE_DIR.parent.parent / 'shared' / 'core'
 SHARED_PATH = docker_shared_path if docker_shared_path.exists() else local_shared_path
 if str(SHARED_PATH) not in sys.path:
     sys.path.insert(0, str(SHARED_PATH))
@@ -185,7 +185,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Use shared User model - users app is in shared directory
 # In Docker: /shared/apps/users, Locally: ../../shared/apps
 docker_shared_apps = Path('/shared/apps')
-local_shared_apps = BASE_DIR.parent.parent.parent / 'shared' / 'apps'
+local_shared_apps = BASE_DIR.parent.parent / 'shared' / 'apps'
 shared_apps_path = docker_shared_apps if docker_shared_apps.exists() else local_shared_apps
 
 if str(shared_apps_path) not in sys.path:
