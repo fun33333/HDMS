@@ -88,6 +88,9 @@ class Ticket(BaseModel):
     version = models.IntegerField(default=1)
     reopen_count = models.IntegerField(default=0)
     
+    # Acknowledgment
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    
     # Approval
     requires_approval = models.BooleanField(default=False)
     postponement_reason = models.TextField(blank=True)
@@ -135,6 +138,12 @@ class Ticket(BaseModel):
     def assign(self):
         """Assign ticket."""
         pass
+    
+    @transition(field=status, source=TicketStatus.ASSIGNED, target=TicketStatus.ASSIGNED)
+    def acknowledge(self):
+        """Acknowledge ticket assignment."""
+        self.acknowledged_at = timezone.now()
+
     
     @transition(field=status, source=TicketStatus.ASSIGNED, target=TicketStatus.IN_PROGRESS)
     def start_progress(self):

@@ -8,6 +8,20 @@ import { Ticket, Comment, ChatMessage } from '../../types';
 import { ENV } from '../../config/env';
 import { getMockTickets, getMockTicketById } from '../../lib/mockData';
 
+export interface AuditLogEntry {
+  id: string;
+  action_type: string;
+  category: string;
+  model_name: string;
+  object_id: string;
+  performed_by_id: string | null;
+  old_state: any;
+  new_state: any;
+  changes: any;
+  reason: string;
+  timestamp: string;
+}
+
 export interface CreateTicketData {
   subject: string;
   description: string;
@@ -127,6 +141,7 @@ class TicketService {
         type: att.content_type,
         uploadDate: att.created_at,
       })),
+      acknowledgedAt: data.acknowledged_at,
     };
   }
 
@@ -248,11 +263,26 @@ class TicketService {
   }
 
   // Change ticket status
-  async changeStatus(ticketId: string, status: string, note?: string): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/status/`, {
-      status,
-      note,
+  async changeStatus(ticketId: string, status: string, reason?: string): Promise<Ticket> {
+    // Map frontend status to backend FSM action names
+    const actionMap: Record<string, string> = {
+      'in_progress': 'start_progress',
+      'resolved': 'resolve',
+      'completed': 'resolve',  // 'completed' also maps to resolve
+      'closed': 'close',
+      'submitted': 'submit',
+      'assigned': 'assign',
+      'rejected': 'reject',
+      'waiting_approval': 'review',
+    };
+
+    const action = actionMap[status] || status;
+
+    const data = await apiClient.post(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/status`, {
+      action,
+      reason,
     });
+    return this.mapToTicket(data);
   }
 
   // Change ticket priority
@@ -384,33 +414,90 @@ class TicketService {
     }
   }
 
-  // Submit draft ticket
-  async submitTicket(ticketId: string): Promise<Ticket> {
+  // Join Sub-Ticket
+  async joinSubTicket(ticketId: string): Promise<Ticket> {
+    // TODO: Implement
+    return this.getTicketById(ticketId);
+  }
+
+  // Acknowledge ticket
+  async acknowledgeTicket(ticketId: string, notes?: string): Promise<Ticket> {
     try {
-      // Using status endpoint with action='submit'
-      const response = await apiClient.post<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/status`, {
-        action: 'submit'
-      });
+      const response = await apiClient.patch<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/acknowledge`,
+        { notes }
+      );
       return await this.mapToTicket(response);
     } catch (error) {
-      console.error('Submit ticket failed:', error);
+      console.error('Acknowledge ticket failed:', error);
       throw error;
+    }
+  }
+
+  // Update progress
+  async updateProgress(ticketId: string, progressPercentage: number): Promise<Ticket> {
+    try {
+      const response = await apiClient.patch<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/progress`,
+        { progress_percent: progressPercentage }
+      );
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Update progress failed:', error);
+      throw error;
+    }
+  }
+
+  // Update SLA
+  async updateSLA(ticketId: string, dueAt: string, reason: string): Promise<Ticket> {
+    try {
+      const response = await apiClient.patch<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/sla`,
+        { due_at: dueAt, reason }
+      );
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Update SLA failed:', error);
+      throw error;
+    }
+  }
+
+  // Get Ticket History (Audit Log)
+  async getHistory(ticketId: string): Promise<AuditLogEntry[]> {
+    try {
+      return await apiClient.get<AuditLogEntry[]>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/history`
+      );
+    } catch (error) {
+      console.error('Get history failed:', error);
+      return [];
     }
   }
 
   // Complete ticket
   async completeTicket(ticketId: string, note: string, image?: File): Promise<Ticket> {
-    const formData = new FormData();
-    formData.append('note', note);
+    // 1. Upload image if exists (TODO: Implement generic attachment upload first if needed, or separate call)
     if (image) {
-      formData.append('image', image);
+      const formData = new FormData();
+      formData.append('file', image);
+      await apiClient.post(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/attachments`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
     }
 
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/complete/`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // 2. Call status update to 'resolve'
+    try {
+      const response = await apiClient.post<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/status`, {
+        action: 'resolve',
+        reason: note
+      });
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Complete ticket failed:', error);
+      throw error;
+    }
   }
 
   // Split ticket into subtickets

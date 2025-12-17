@@ -32,6 +32,7 @@ class TicketOut(Schema):
     reopen_count: int
     requires_approval: bool
     progress_percent: int
+    acknowledged_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     attachments: List[AttachmentOut] = []
@@ -76,4 +77,39 @@ class RejectTicketIn(Schema):
 
 class PostponeTicketIn(Schema):
     """Schema for postponing a ticket."""
+    reason: str
+
+class AuditLogOut(Schema):
+    """Schema for audit log output."""
+    id: UUID
+    action_type: str
+    category: str
+    model_name: str
+    object_id: UUID
+    old_state: dict
+    new_state: dict
+    changes: dict
+    performed_by_id: Optional[UUID]
+    reason: str
+    timestamp: datetime
+    
+    @staticmethod
+    def resolve_action_type(obj):
+        return obj.action_type
+        
+    @staticmethod
+    def resolve_timestamp(obj):
+        return obj.timestamp
+
+class TicketProgressIn(Schema):
+    """Schema for updating ticket progress."""
+    progress_percent: int
+
+class TicketAcknowledgeIn(Schema):
+    """Schema for acknowledging a ticket."""
+    notes: Optional[str] = None
+
+class SLAUpdateIn(Schema):
+    """Schema for updating ticket SLA."""
+    due_at: datetime
     reason: str

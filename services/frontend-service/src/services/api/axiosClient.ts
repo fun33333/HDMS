@@ -137,7 +137,10 @@ class ApiClient {
     // Handle response errors (API returned an error)
     if (error.response?.data) {
       const data = error.response.data as any;
-      const message = data.message || data.detail || data.error || 'An error occurred';
+      let message = data.message || data.detail || data.error || 'An error occurred';
+      if (typeof message === 'object') {
+        message = JSON.stringify(message);
+      }
       const formattedError = new Error(message);
       (formattedError as any).status = error.response.status;
       (formattedError as any).response = error.response.data;

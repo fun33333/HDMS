@@ -14,6 +14,7 @@ export type TicketStatus =
   | 'rejected'
   | 'resolved'
   | 'closed'
+  | 'postponed'
   | 'waiting_approval';
 
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -34,6 +35,7 @@ export interface Ticket {
   moderatorName?: string;
   submittedDate: string;
   assignedDate?: string;
+  acknowledgedAt?: string; // Mapped from backend acknowledged_at
   completedDate?: string;
   resolvedDate?: string;
   completionNote?: string;

@@ -11,6 +11,11 @@ from apps.tickets.models.attachment import Attachment
 from core.clients.user_client import UserClient
 from apps.tickets.services.ticket_service import TicketService
 from apps.tickets.schemas import AssignTicketIn, RejectTicketIn, PostponeTicketIn
+from apps.tickets.services.ticket_service import TicketService
+from apps.tickets.schemas import AssignTicketIn, RejectTicketIn, PostponeTicketIn
+from apps.audit.models import AuditLog, ActionType, AuditCategory
+from apps.tickets.schemas import AuditLogOut, TicketProgressIn, TicketAcknowledgeIn, SLAUpdateIn
+from django.utils import timezone
    
 
 router = Router(tags=["tickets"])
@@ -87,15 +92,31 @@ def update_status(request, ticket_id: str, payload: StatusUpdateIn):
     # Get transition method
     transition_method = getattr(ticket, payload.action, None)
     if not transition_method:
-        return {"error": f"Invalid action: {payload.action}"}, 400
+        raise HttpError(400, f"Invalid action: {payload.action}")
     
     # Execute transition
     try:
-        if payload.reason:
+        old_status = ticket.status
+        # Only reject and postpone accept a reason parameter
+        if payload.action in ['reject', 'postpone'] and payload.reason:
             transition_method(payload.reason)
         else:
             transition_method()
         ticket.save()
+        
+        # Log action
+        AuditLog.objects.create(
+            action_type=ActionType.UPDATE,
+            category=AuditCategory.TICKET,
+            model_name='Ticket',
+            object_id=ticket.id,
+            performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+            old_state={'status': old_status},
+            new_state={'status': ticket.status},
+            changes={'status': {'old': old_status, 'new': ticket.status}},
+            reason=f"Status change: {payload.action.upper()} - {payload.reason or ''}"
+        )
+        
     except Exception as e:
         # Idempotency check: if action matches current state, consider it a success
         if payload.action == 'submit' and ticket.status == 'submitted':
@@ -105,7 +126,7 @@ def update_status(request, ticket_id: str, payload: StatusUpdateIn):
         if payload.action == 'reject' and ticket.status == 'rejected':
             return TicketOut.from_orm(ticket)
             
-        return {"error": str(e)}, 400
+        raise HttpError(400, str(e))
     
     return TicketOut.from_orm(ticket)
 
@@ -162,6 +183,19 @@ def assign_ticket(request, ticket_id: str, payload: AssignTicketIn):
         raise HttpError(400, f"Cannot assign ticket: {str(e)}")
     
     ticket.save()
+    
+    # Log assignment
+    AuditLog.objects.create(
+        action_type=ActionType.UPDATE,
+        category=AuditCategory.TICKET,
+        model_name='Ticket',
+        object_id=ticket.id,
+        performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+        new_state={'assignee_id': str(payload.assignee_id), 'department_id': str(payload.department_id) if payload.department_id else None},
+        changes={'assignee_id': str(payload.assignee_id)},
+        reason="Ticket assigned via API"
+    )
+    
     return ticket
 
     
@@ -193,4 +227,118 @@ def postpone_ticket(request, ticket_id: str, payload: PostponeTicketIn):
     
     ticket.postpone(payload.reason)
     ticket.save()
+    
+    # Log postponement
+    AuditLog.objects.create(
+        action_type=ActionType.UPDATE,
+        category=AuditCategory.TICKET,
+        model_name='Ticket',
+        object_id=ticket.id,
+        performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+        changes={'status': 'postponed'},
+        reason=f"Postponed: {payload.reason}"
+    )
+    
     return ticket
+
+@router.patch("/{ticket_id}/acknowledge", response=TicketOut)
+def acknowledge_ticket(request, ticket_id: str, payload: TicketAcknowledgeIn):
+    """Acknowledge ticket assignment."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+        
+    if ticket.acknowledged_at:
+        # Idempotency: return existing ticket if already acknowledged
+        return ticket
+
+    try:
+        # Capture old state for logging
+        old_state = {
+            'acknowledged_at': str(ticket.acknowledged_at),
+            'status': ticket.status
+        }
+        
+        ticket.acknowledge()
+        ticket.save()
+        
+        # Capture new state
+        new_state = {
+            'acknowledged_at': str(ticket.acknowledged_at),
+            'status': ticket.status
+        }
+        
+        AuditLog.objects.create(
+            action_type=ActionType.UPDATE,
+            category=AuditCategory.TICKET,
+            model_name='Ticket',
+            object_id=ticket.id,
+            performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+            old_state=old_state,
+            new_state=new_state,
+            changes={'acknowledged_at': {'old': None, 'new': str(ticket.acknowledged_at)}},
+            reason=f"Ticket acknowledged: {payload.notes or ''}"
+        )
+    except Exception as e:
+        raise HttpError(400, f"Cannot acknowledge ticket: {str(e)}")
+        
+    return ticket
+
+@router.patch("/{ticket_id}/progress", response=TicketOut)
+def update_progress(request, ticket_id: str, payload: TicketProgressIn):
+    """Update ticket progress."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+        
+    old_progress = ticket.progress_percent
+    ticket.progress_percent = payload.progress_percent
+    ticket.save()
+    
+    AuditLog.objects.create(
+        action_type=ActionType.UPDATE,
+        category=AuditCategory.TICKET,
+        model_name='Ticket',
+        object_id=ticket.id,
+        performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+        old_state={'progress_percent': old_progress},
+        new_state={'progress_percent': payload.progress_percent},
+        changes={'progress_percent': {'old': old_progress, 'new': payload.progress_percent}},
+        reason="Progress update"
+    )
+    return ticket
+
+@router.patch("/{ticket_id}/sla", response=TicketOut)
+def update_sla(request, ticket_id: str, payload: SLAUpdateIn):
+    """Update ticket SLA (Due Date)."""
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+        
+    old_due_at = ticket.due_at
+    ticket.due_at = payload.due_at
+    ticket.save()
+    
+    AuditLog.objects.create(
+        action_type=ActionType.UPDATE,
+        category=AuditCategory.TICKET,
+        model_name='Ticket',
+        object_id=ticket.id,
+        performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+        old_state={'due_at': str(old_due_at) if old_due_at else None},
+        new_state={'due_at': str(payload.due_at)},
+        changes={'due_at': {'old': str(old_due_at) if old_due_at else None, 'new': str(payload.due_at)}},
+        reason=f"SLA Change: {payload.reason}"
+    )
+    return ticket
+
+@router.get("/{ticket_id}/history", response=List[AuditLogOut])
+def get_ticket_history(request, ticket_id: str):
+    """Get ticket audit log history."""
+    return AuditLog.objects.filter(
+        model_name='Ticket', 
+        object_id=ticket_id
+    ).order_by('-timestamp')
