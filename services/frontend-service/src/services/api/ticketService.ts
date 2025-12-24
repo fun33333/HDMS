@@ -336,36 +336,17 @@ class TicketService {
     try {
       const response = await apiClient.get<any[]>(`${ENV.COMMUNICATION_SERVICE_URL}/api/v1/chat/messages/ticket/${ticketId}`);
 
-      // Map response to Comment[]
-      // We need to fetch user names if not in cache
-      // For now, we'll try to resolve from cache or use placeholders
-
-      const comments = await Promise.all(response.map(async (msg) => {
-        let userName = 'User';
-        let userRole = 'user';
-
-        // Try to resolve user
-        if (msg.sender_id === '00000000-0000-0000-0000-000000000000') {
-          userName = 'System';
-          userRole = 'system';
-        } else if (this.employeeCache.has(msg.sender_id)) {
-          userName = this.employeeCache.get(msg.sender_id)?.name || 'User';
-        } else {
-          // Should ideally fetch user info here if critical
-          // For now, let's defer or batch fetch? 
-          // We can mock or lazily fetch
-        }
-
-        return {
-          id: msg.id,
-          ticketId: msg.ticket_id,
-          userId: msg.sender_id,
-          userName: userName,
-          userRole: userRole, // TODO: Improve role mapping
-          content: msg.message,
-          timestamp: msg.created_at,
-          type: 'comment' as const,
-        };
+      // Map response to Comment[] - API now includes sender_name, sender_role, employee_code
+      const comments = response.map((msg) => ({
+        id: msg.id,
+        ticketId: msg.ticket_id,
+        userId: msg.sender_id,
+        userName: msg.sender_name || 'Unknown',
+        userRole: msg.sender_role || 'user',
+        employeeCode: msg.employee_code,
+        content: msg.message,
+        timestamp: msg.created_at,
+        type: 'comment' as const,
       }));
 
       return comments;

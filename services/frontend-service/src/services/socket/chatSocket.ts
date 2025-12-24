@@ -13,6 +13,7 @@ export interface WebSocketMessage {
         sender_id?: string;
         sender_name?: string;
         sender_role?: string;
+        employee_code?: string;
         message?: string;
         mentions?: string[];
         created_at?: string;
@@ -124,7 +125,14 @@ class ChatSocketClient {
     }
 
     private handleError(error: Event): void {
-        console.error('WebSocket error:', error);
+        // Suppress empty WebSocket errors that don't affect functionality
+        if (error && Object.keys(error).length > 0) {
+            console.warn('⚠️ WebSocket error:', {
+                type: error.type,
+                target: (error.target as WebSocket)?.url,
+                readyState: (error.target as WebSocket)?.readyState
+            });
+        }
         this.isConnecting = false;
         this.options?.onError?.(error);
     }

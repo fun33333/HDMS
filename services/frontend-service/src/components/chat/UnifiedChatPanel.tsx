@@ -92,6 +92,18 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
         }
     }, [messages.length]); // Only trigger when message count changes
 
+    // Handle escape key to close expanded view
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && isExpanded) {
+                setIsExpanded(false);
+            }
+        };
+
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isExpanded]);
+
     const loadMessages = async () => {
         setIsLoading(true);
         try {
@@ -124,6 +136,7 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
                 senderId: wsMessage.data.sender_id || '',
                 senderName: wsMessage.data.sender_name || 'Unknown',
                 senderRole: wsMessage.data.sender_role || 'user',
+                employeeCode: wsMessage.data.employee_code,
                 content: wsMessage.data.message || '',
                 timestamp: wsMessage.data.created_at || new Date().toISOString(),
                 isOwn: wsMessage.data.sender_id === user?.id,
@@ -131,9 +144,33 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
             };
 
             setMessages(prev => {
-                // Avoid duplicates
+                // If this is from current user, check for optimistic message to replace
+                if (newMsg.isOwn) {
+                    const now = new Date(newMsg.timestamp).getTime();
+
+                    // Find matching optimistic message (same content, sent within last 5 seconds)
+                    const tempMsgIndex = prev.findIndex(m => {
+                        if (!m.isOwn || m.status === 'delivered') return false;
+
+                        const msgTime = new Date(m.timestamp).getTime();
+                        const timeDiff = Math.abs(now - msgTime);
+
+                        // Match if: same content AND within 5-second window
+                        return m.content.trim() === newMsg.content.trim() && timeDiff < 5000;
+                    });
+
+                    if (tempMsgIndex !== -1) {
+                        // Replace the temporary optimistic message with the real one
+                        const updated = [...prev];
+                        updated[tempMsgIndex] = newMsg;
+                        return updated;
+                    }
+                }
+
+                // Check for exact duplicate by ID (for messages from others)
                 const exists = prev.some(m => m.id === newMsg.id);
                 if (exists) return prev;
+
                 return [...prev, newMsg];
             });
 
@@ -223,7 +260,7 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
             if (chatSocket.isConnected()) {
                 const sent = chatSocket.sendMessage(trimmedMessage);
                 if (sent) {
-                    // Update status to sent
+                    // Mark as sent, WebSocket broadcast will replace it with real message
                     setMessages(prev =>
                         prev.map(m => m.id === tempId ? { ...m, status: 'sent' as const } : m)
                     );
@@ -483,12 +520,19 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
                                     <div className={`flex flex-col max-w-[75%] ${msg.isOwn ? 'items-end' : 'items-start'}`}>
                                         {/* Sender name (for others' messages) */}
                                         {!msg.isOwn && (
-                                            <span
-                                                className="text-xs font-semibold mb-1 px-1"
-                                                style={{ color: getAvatarColor(msg.senderName, msg.senderRole) }}
-                                            >
-                                                {msg.employeeCode || msg.senderName}
-                                            </span>
+                                            <div className="flex flex-col mb-1 px-1">
+                                                <span
+                                                    className="text-sm font-semibold"
+                                                    style={{ color: getAvatarColor(msg.senderName, msg.senderRole) }}
+                                                >
+                                                    {msg.senderName}
+                                                </span>
+                                                {msg.employeeCode && (
+                                                    <span className="text-[10px] text-gray-500">
+                                                        {msg.employeeCode}
+                                                    </span>
+                                                )}
+                                            </div>
                                         )}
 
                                         {/* Message Bubble */}
@@ -614,7 +658,9 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
         <>
             {/* Desktop: Side Panel */}
             <div
-                className={`hidden lg:flex flex-col bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 ${className} ${isExpanded ? 'fixed inset-4 z-50' : 'sticky top-24 h-[calc(100vh-7rem)]'
+                className={`hidden lg:flex flex-col bg-white shadow-2xl overflow-hidden transition-all duration-300 ease-in-out ${isExpanded
+                        ? 'fixed top-16 left-4 right-4 bottom-4 z-[100] rounded-lg' // Higher z-index, rounded corners
+                        : `sticky top-24 h-[calc(100vh-7rem)] rounded-xl ${className}`
                     }`}
             >
                 {renderChatContent()}
@@ -623,8 +669,9 @@ const UnifiedChatPanel: React.FC<UnifiedChatPanelProps> = ({ ticketId, className
             {/* Desktop Expanded Overlay */}
             {isExpanded && (
                 <div
-                    className="hidden lg:block fixed inset-0 bg-black/50 z-40"
+                    className="hidden lg:block fixed inset-0 bg-black/40 backdrop-blur-sm z-[99]"
                     onClick={() => setIsExpanded(false)}
+                    aria-label="Close expanded chat"
                 />
             )}
 
