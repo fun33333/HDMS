@@ -1,70 +1,45 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService, LoginResult } from '../../../services/api/authService';
 import { useAuthStore } from '../../../store/authStore';
-import { BadgeCheck, Lock, User, Shield, Wrench, Settings, ChevronDown } from 'lucide-react';
-import { THEME } from '../../../lib/theme';
+import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import { Logo } from '../../../components/ui/logo';
+import { THEME } from '../../../lib/theme';
 
 const LoginPage: React.FC = () => {
-  const [selectedRole, setSelectedRole] = useState<string>('requestor');
   const [employeeCode, setEmployeeCode] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login: storeLogin, loading, setLoading } = useAuthStore();
   const router = useRouter();
 
-  const roles = [
-    { id: 'requestor', name: 'Requestor', icon: User },
-    { id: 'moderator', name: 'Moderator', icon: Shield },
-    { id: 'assignee', name: 'Department Staff', icon: Wrench },
-    { id: 'admin', name: 'Admin', icon: Settings }
-  ];
-
-  const selectedRoleData = roles.find(role => role.id === selectedRole);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDropdownOpen]);
+  const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Force uppercase
+    const val = e.target.value.toUpperCase();
+    setEmployeeCode(val);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRole) {
-      setError('Please select a role');
-      return;
-    }
-
     if (!employeeCode.trim()) {
       setError('Please enter your employee code');
       return;
     }
+    if (!password) {
+      setError('Please enter your password');
+      return;
+    }
 
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
       const result: LoginResult = await authService.login({
         employeeCode: employeeCode.trim(),
         password,
-        role: selectedRole as 'admin' | 'moderator' | 'assignee' | 'requestor',
       });
 
       if (result.success && result.user && result.accessToken) {
@@ -75,7 +50,7 @@ const LoginPage: React.FC = () => {
         localStorage.setItem('refreshToken', result.refreshToken || '');
         localStorage.setItem('user', JSON.stringify(result.user));
 
-        // Update auth store with user in expected format
+        // Update auth store
         storeLogin({
           id: result.user.id,
           name: result.user.name,
@@ -85,35 +60,16 @@ const LoginPage: React.FC = () => {
           employeeCode: result.user.employeeCode,
         } as any, result.accessToken);
 
-        // Set cookies for Middleware (Auth Guard)
+        // Set cookies for Middleware
         document.cookie = `auth_token=${result.accessToken}; path=/; max-age=3600; SameSite=Strict`;
         document.cookie = `user_role=${lowerRole}; path=/; max-age=3600; SameSite=Strict`;
 
-        // Navigate to role-specific dashboard - Use window.location to ensure fresh state for Middleware
+        // Redirect
         window.location.href = `/${lowerRole}/dashboard`;
       } else {
-        // Handle specific error types
         const errorData = result.error;
         if (errorData) {
-          switch (errorData.error) {
-            case 'role_mismatch':
-              setError(`You are assigned as ${errorData.assigned_role?.replace('requestor', 'Requestor').replace('moderator', 'Moderator').replace('assignee', 'Assignee').replace('admin', 'Admin')}. Please select the correct role.`);
-              break;
-            case 'no_hdms_access':
-              setError('You don\'t have HDMS access. Contact your administrator.');
-              break;
-            case 'no_hdms_role':
-              setError('No role assigned. Contact your administrator.');
-              break;
-            case 'account_locked':
-              setError('Account locked due to too many failed attempts. Please try again later.');
-              break;
-            case 'invalid_credentials':
-              setError(errorData.detail || 'Invalid employee code or password');
-              break;
-            default:
-              setError(errorData.detail || 'Login failed. Please try again.');
-          }
+          setError(errorData.detail || 'Login failed. Please try again.');
         } else {
           setError('Login failed. Please try again.');
         }
@@ -127,205 +83,170 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div
-      key="login-page-wrapper"
-      className="login-page-wrapper min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in"
-      style={{
-        backgroundColor: THEME.colors.background,
-        position: 'relative',
-        zIndex: 1
-      }}
-    >
-      <div className="max-w-md w-full space-y-8">
-        {/* Icon and Title - Single Header - Render Once - No Background */}
-        <div
-          key="login-header"
-          className="login-header text-center animate-slide-in"
-          style={{
-            position: 'relative',
-            zIndex: 2,
-            backgroundColor: 'transparent',
-            background: 'none'
-          }}
-        >
-          <div className="mx-auto mb-6 flex justify-center">
-            <Logo size="lg" showText={true} showSubtitle={true} />
-          </div>
-          <p className="text-base" style={{ color: THEME.colors.gray, backgroundColor: 'transparent' }}>
-            Sign in to your account
-          </p>
-        </div>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden min-h-[600px] flex flex-col lg:flex-row border-2 border-gray-200">
 
-        {/* Login Card */}
-        <div
-          className="rounded-2xl p-8 shadow-xl animate-scale-in"
-          style={{
-            backgroundColor: THEME.colors.light,
-            borderRadius: '16px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-          }}
-        >
-          {/* Role Selection Dropdown */}
-          <div className="mb-6">
-            <label
-              className="block mb-3 font-semibold"
-              style={{ color: THEME.colors.primary }}
-            >
-              Select your Role
-            </label>
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between p-4 border rounded-lg bg-white focus:outline-none transition-all"
-                style={{
-                  borderColor: '#D1D5DB',
-                  borderWidth: '1px'
-                }}
-              >
-                <div className="flex items-center">
-                  {selectedRoleData && (
-                    <>
-                      <selectedRoleData.icon
-                        className="w-5 h-5 mr-3"
-                        style={{ color: THEME.colors.gray }}
-                      />
-                      <span
-                        className="font-medium text-base"
-                        style={{ color: THEME.colors.primary }}
-                      >
-                        {selectedRoleData.name}
-                      </span>
-                    </>
-                  )}
+          {/* Left Side - Login Form */}
+          <div className="w-full lg:w-1/2 p-6 sm:p-8 lg:p-12 flex flex-col justify-center relative">
+            {/* Logo Section */}
+            <div className="flex items-center justify-center mb-8">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center">
+                  <Logo size="lg" showText={false} />
                 </div>
-                <ChevronDown
-                  className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                  style={{ color: THEME.colors.gray }}
-                />
+                <div className="text-left">
+                  <h1 className="text-xl sm:text-2xl font-bold text-[#274c77]">Help Desk</h1>
+                  <p className="text-sm text-[#6096ba]">Management System</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Header */}
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-black mb-2">
+                Login
+              </h2>
+              <p className="text-[#6096ba] text-sm sm:text-base">
+                Sign in to access your dashboard
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-6">
+
+              {/* Employee Code Input */}
+              <div className="space-y-2">
+                <label htmlFor="login-email" className="block text-sm font-semibold text-[#274c77]">
+                  Employee Code
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="login-email"
+                    required
+                    value={employeeCode}
+                    onChange={handleIdChange}
+                    className="w-full h-12 sm:h-14 border-2 border-[#a3cef1] rounded-xl pl-12 pr-4 text-[#274c77] text-base font-medium focus:outline-none focus:ring-2 focus:ring-[#6096ba] shadow-sm transition-all duration-200 placeholder:text-[#6096ba]"
+                    placeholder="C01-M-25-T-0000"
+                  />
+                  <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#6096ba] w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-2">
+                <label htmlFor="login-password" className="block text-sm font-semibold text-[#274c77]">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="login-password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full h-12 sm:h-14 border-2 border-[#a3cef1] rounded-xl pl-12 pr-12 text-[#274c77] text-base font-medium focus:outline-none focus:ring-2 focus:ring-[#6096ba] shadow-sm transition-all duration-200 placeholder:text-[#6096ba]"
+                    placeholder="Enter your password"
+                  />
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#6096ba] w-5 h-5" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#6096ba] hover:text-[#274c77] transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                className="w-full h-12 sm:h-14 bg-[#a3cef1] hover:bg-[#87b9e3] text-black font-semibold rounded-xl shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Logging in...
+                  </div>
+                ) : (
+                  "Login"
+                )}
               </button>
 
-              {isDropdownOpen && (
-                <div
-                  className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-lg overflow-hidden"
-                  style={{
-                    borderColor: '#D1D5DB',
-                    borderWidth: '1px'
-                  }}
-                >
-                  {roles.map((role) => {
-                    const IconComponent = role.icon;
-                    return (
-                      <button
-                        key={role.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedRole(role.id);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center p-4 hover:bg-gray-50 transition-colors"
-                      >
-                        <IconComponent
-                          className="w-5 h-5 mr-3"
-                          style={{ color: THEME.colors.gray }}
-                        />
-                        <span
-                          className="font-medium text-base"
-                          style={{ color: THEME.colors.primary }}
-                        >
-                          {role.name}
-                        </span>
-                      </button>
-                    );
-                  })}
+              {/* Error Display */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex-shrink-0 mt-0.5"></div>
+                  <div className="flex-1">
+                    <p className="text-red-800 font-medium text-sm">{error}</p>
+                  </div>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-red-400 hover:text-red-600 transition-colors"
+                    aria-label="Dismiss error"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               )}
-            </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-center">
+                <a
+                  href="/forgot-password"
+                  className="text-[#6096ba] hover:text-[#274c77] font-medium text-sm transition-colors"
+                >
+                  Forgot your password?
+                </a>
+              </div>
+
+            </form>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Employee Code Field */}
-            <div className="relative">
-              <BadgeCheck
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10"
-                style={{ color: THEME.colors.gray }}
-              />
-              <input
-                type="text"
-                placeholder="Employee Code (e.g., C06-M-24-T-0001)"
-                value={employeeCode}
-                onChange={(e) => setEmployeeCode(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all shadow-sm hover:shadow-md"
-                style={{
-                  borderColor: '#D1D5DB',
-                  backgroundColor: 'white',
-                  color: '#111827',
-                  borderWidth: '1px'
-                }}
-                required
-              />
+          {/* Right Side - Welcome Section */}
+          <div className="w-full lg:w-1/2 bg-gradient-to-br from-[#6096ba] to-[#a3cef1] relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full transform translate-x-48 -translate-y-48"></div>
+              <div className="absolute bottom-0 left-0 w-80 h-80 bg-white rounded-full transform -translate-x-40 translate-y-40"></div>
+              <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white rounded-full transform -translate-x-32 -translate-y-32"></div>
             </div>
 
-            {/* Password Field */}
-            <div className="relative">
-              <Lock
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 z-10"
-                style={{ color: THEME.colors.gray }}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all shadow-sm hover:shadow-md"
-                style={{
-                  borderColor: '#D1D5DB',
-                  backgroundColor: 'white',
-                  color: '#111827',
-                  borderWidth: '1px'
-                }}
-                required
-              />
-            </div>
+            {/* Content */}
+            <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-8 lg:p-12">
+              <div className="max-w-md">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl text-white font-bold mb-6 leading-tight">
+                  WELCOME BACK
+                </h2>
+                <p className="text-white text-lg sm:text-xl leading-relaxed mb-8">
+                  Access your HDMS portal to manage tickets, requests, and workflows all in one place.
+                </p>
 
-            {error && (
-              <div className="text-center p-3 rounded-lg border" style={{ backgroundColor: THEME.colors.background, borderColor: THEME.colors.gray, color: THEME.colors.primary }}>
-                {error}
+                {/* Features List */}
+                <div className="space-y-4 text-left">
+                  <div className="flex items-center text-white">
+                    <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+                    <span>Ticket Management</span>
+                  </div>
+                  <div className="flex items-center text-white">
+                    <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+                    <span>Workflow Tracking</span>
+                  </div>
+                  <div className="flex items-center text-white">
+                    <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+                    <span>Department Requests</span>
+                  </div>
+                  <div className="flex items-center text-white">
+                    <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+                    <span>Real-time Updates</span>
+                  </div>
+                </div>
               </div>
-            )}
-
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 text-base shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: THEME.colors.primary,
-                borderRadius: '10px'
-              }}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Logging in...
-                </span>
-              ) : 'Login'}
-            </button>
-          </form>
-
-          {/* Forgot Password Link */}
-          <div className="text-center mt-6">
-            <a
-              href="/forgot-password"
-              className="text-base underline font-medium hover:opacity-80 transition-opacity"
-              style={{ color: THEME.colors.primary }}
-            >
-              Forgot Password?
-            </a>
+            </div>
           </div>
         </div>
       </div>

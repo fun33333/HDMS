@@ -10,7 +10,6 @@ import { ENV } from '../../config/env';
 export interface LoginCredentials {
     employeeCode: string;
     password: string;
-    role: 'admin' | 'moderator' | 'assignee' | 'requestor';
 }
 
 export interface UserPermissions {
@@ -94,7 +93,6 @@ class AuthService {
                 body: JSON.stringify({
                     employee_code: credentials.employeeCode,
                     password: credentials.password,
-                    role: credentials.role,
                 }),
             });
 
@@ -127,9 +125,18 @@ class AuthService {
                 };
             } else {
                 // Handle error response
+                const errorData = data as any;
+                let normalizedError: LoginError = {
+                    error: errorData.error || 'invalid_credentials',
+                    detail: typeof errorData.detail === 'string'
+                        ? errorData.detail
+                        : (errorData.detail ? JSON.stringify(errorData.detail) : 'Login failed'),
+                    assigned_role: errorData.assigned_role
+                };
+
                 return {
                     success: false,
-                    error: data as LoginError,
+                    error: normalizedError,
                 };
             }
         } catch (error) {

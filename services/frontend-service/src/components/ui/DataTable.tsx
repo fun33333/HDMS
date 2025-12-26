@@ -13,13 +13,14 @@ export interface Column<T> {
   width?: string;
 }
 function DataTable<T>({
-  data, columns, initialSort, pageSize = 10, showSearch = true
+  data, columns, initialSort, pageSize = 10, showSearch = true, onRowClick
 }: {
   data: T[];
   columns: Column<T>[];
   initialSort?: { key: string; dir: 'asc' | 'desc' };
   pageSize?: number;
   showSearch?: boolean;
+  onRowClick?: (row: T) => void;
 }) {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -82,7 +83,11 @@ function DataTable<T>({
                 <EmptyState title="No results" description="Try changing your search or filters." />
               </td></tr>
             ) : current.map((row, i) => (
-              <tr key={i} className="border-t hover:bg-gray-50">
+              <tr
+                key={i}
+                className={`border-t hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                onClick={() => onRowClick?.(row)}
+              >
                 {columns.map(col => (
                   <td key={col.key} className="px-4 py-3 text-gray-900">{col.accessor(row)}</td>
                 ))}

@@ -79,24 +79,27 @@ def create_ticket(request, payload: TicketIn):
 
 
 @router.get("/", response=List[TicketOut])
-def list_tickets(request, status: Optional[str] = None, requestor_id: Optional[str] = None, exclude_drafts: bool = True):
+def list_tickets(request, status: Optional[str] = None, requestor_id: Optional[str] = None, assignee_id: Optional[str] = None, exclude_drafts: bool = True):
     """List tickets with optional filters.
     
     Args:
         status: Filter by specific status
         requestor_id: Filter by requestor (if provided, shows drafts)
+        assignee_id: Filter by assignee
         exclude_drafts: Exclude draft tickets (default True for moderator view)
     """
     queryset = Ticket.objects.all()
     
-    # Exclude drafts unless viewing own tickets
-    if exclude_drafts and not requestor_id:
+    # Exclude drafts unless viewing own tickets (requestor or assignee)
+    if exclude_drafts and not requestor_id and not assignee_id:
         queryset = queryset.exclude(status='draft')
     
     if status:
         queryset = queryset.filter(status=status)
     if requestor_id:
         queryset = queryset.filter(requestor_id=requestor_id)
+    if assignee_id:
+        queryset = queryset.filter(assignee_id=assignee_id)
     
     return [TicketOut.from_orm(ticket) for ticket in queryset]
 

@@ -145,7 +145,7 @@ class TicketService {
       requestorId: data.requestor_id,
       requestorName: requestorName,
       submittedDate: data.created_at,
-      assignedDate: data.updated_at,
+      assignedDate: null, // Fixed: Do not use updated_at as assignedDate. Timeline will use AuditLog.
       attachments: mappedAttachments,
       acknowledgedAt: data.acknowledged_at,
     };
