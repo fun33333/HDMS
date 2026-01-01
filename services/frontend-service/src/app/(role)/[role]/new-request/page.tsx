@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../lib/auth';
 import { useTicketActions } from '../../../../hooks/useTicketActions';
@@ -19,8 +19,9 @@ import {
 } from '../../../../lib/validation';
 import { TICKET_PRIORITY, DEPARTMENTS } from '../../../../lib/constants';
 import { ticketService } from '../../../../services/api/ticketService';
+import { fileService } from '../../../../services/api/fileService';
 import { departmentService, Department } from '../../../../services/api/departmentService';
-import { AlertCircle, Save } from 'lucide-react';
+import { AlertCircle, Save, CheckCircle } from 'lucide-react';
 
 // Department categories mapping
 // Department categories mapping (keys match dept_sector from API)
@@ -167,9 +168,15 @@ export default function NewRequestPage() {
     setFormError(null);
   };
 
-  const handleAttachmentsChange = (newAttachments: FileWithStatus[]) => {
+  const handleAttachmentsChange = useCallback(async (newAttachments: FileWithStatus[]) => {
+    // Determine which files are new and need uploading
+    const currentAttachmentIds = new Set(attachments.map(a => a.id));
+    const newlyAdded = newAttachments.filter(a => !currentAttachmentIds.has(a.id));
+
+    // Update state with new files initially (set to pending)
     setAttachments(newAttachments);
-    // Clear attachment error when files are added
+
+    // Filter out attachment error if we have files now
     if (newAttachments.length > 0 && errors.attachments) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -177,7 +184,42 @@ export default function NewRequestPage() {
         return newErrors;
       });
     }
-  };
+
+    // Start uploads for newly added files
+    newlyAdded.forEach(async (fileWithStatus) => {
+      // Set to uploading
+      setAttachments(prev => prev.map(a =>
+        a.id === fileWithStatus.id ? { ...a, status: 'uploading', progress: 0 } : a
+      ));
+
+      try {
+        await fileService.uploadFile(
+          fileWithStatus.file,
+          'ticket_attachment',
+          undefined, // No ticket ID yet
+          (progress) => {
+            setAttachments(prev => prev.map(a =>
+              a.id === fileWithStatus.id ? { ...a, progress } : a
+            ));
+          }
+        );
+
+        // Success - Set to ready
+        setAttachments(prev => prev.map(a =>
+          a.id === fileWithStatus.id ? { ...a, status: 'ready', progress: 100 } : a
+        ));
+      } catch (error: any) {
+        console.error(`Upload failed for ${fileWithStatus.file.name}:`, error);
+        setAttachments(prev => prev.map(a =>
+          a.id === fileWithStatus.id ? {
+            ...a,
+            status: 'error',
+            error: error.message || 'Network Error. Please try again.'
+          } : a
+        ));
+      }
+    });
+  }, [attachments, errors.attachments]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -200,10 +242,10 @@ export default function NewRequestPage() {
       newErrors.priority = 'Priority is required';
     }
 
-    // Validate attachments - at least one file is required
-    const readyAttachments = attachments.filter(f => f.status === 'ready' || f.status === 'pending');
-    if (readyAttachments.length === 0) {
-      newErrors.attachments = 'At least one file attachment is required';
+    // Validation for attachments - now optional, but must be 'ready' if present
+    const hasErrorAttachments = attachments.some(a => a.status === 'error');
+    if (hasErrorAttachments) {
+      newErrors.attachments = 'Please remove failed attachments before submitting';
     }
 
     setErrors(newErrors);
@@ -280,6 +322,13 @@ export default function NewRequestPage() {
 
   const subjectCharCount = formData.subject.length;
   const descriptionCharCount = formData.description.length;
+
+  // New Safety Logic check
+  const isAttachmentsReady = attachments.every(a => a.status === 'ready');
+  const isUploading = attachments.some(a => a.status === 'uploading');
+  const hasUploadErrors = attachments.some(a => a.status === 'error');
+
+  const isSubmitDisabled = loading || savingDraft || isUploading || (attachments.length > 0 && !isAttachmentsReady && !hasUploadErrors);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8" style={{ backgroundColor: '#e7ecef', minHeight: '100vh' }}>
@@ -426,10 +475,10 @@ export default function NewRequestPage() {
               <div className="space-y-4 pt-6 border-t" style={{ borderColor: THEME.colors.light + '40' }}>
                 <div>
                   <h2 className="text-lg font-semibold mb-2" style={{ color: THEME.colors.primary }}>
-                    Attachments <span className="text-red-500">*</span>
+                    Attachments <span className="text-gray-400 text-sm font-normal">(Optional)</span>
                   </h2>
                   <p className="text-sm text-gray-600 mb-4">
-                    Upload files to support your request. Max 250MB per file, 100MB total. <span className="text-red-500 font-medium">At least one file is required.</span>
+                    Upload files to support your request. Max 250MB per file, 100MB total.
                   </p>
                 </div>
                 <FileUpload
@@ -474,10 +523,10 @@ export default function NewRequestPage() {
                   variant="primary"
                   size="lg"
                   loading={loading}
-                  disabled={loading || savingDraft}
+                  disabled={isSubmitDisabled}
                   className="sm:flex-1"
                 >
-                  {loading ? 'Submitting...' : 'Submit Request'}
+                  {isUploading ? 'Uploading Files...' : (loading ? 'Submitting...' : 'Submit Request')}
                 </Button>
               </div>
             </form>

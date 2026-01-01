@@ -26,6 +26,7 @@ export interface Ticket {
   description: string;
   department: string;
   priority: TicketPriority;
+  category?: string;
   status: TicketStatus;
   requestorId: string;
   requestorName: string;

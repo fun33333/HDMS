@@ -67,6 +67,15 @@ class TicketUpdateIn(Schema):
     department_id: Optional[str] = None
     progress_percent: Optional[int] = None
 
+class TicketConfirmReviewIn(Schema):
+    """Schema for the initial moderator review & confirmation."""
+    title: str
+    description: str
+    priority: str
+    category: str
+    department_id: Optional[str] = None
+    assignee_id: str
+
 
 class StatusUpdateIn(Schema):
     """Status update schema."""

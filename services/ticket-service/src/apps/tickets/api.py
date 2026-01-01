@@ -2,24 +2,23 @@
 Ticket Service API endpoints.
 """
 from ninja import Router, File, UploadedFile
+from ninja.security import HttpBearer
 from ninja.errors import HttpError
 from typing import List, Optional
-from apps.tickets.schemas import TicketOut, TicketIn, TicketUpdateIn, StatusUpdateIn, AttachmentOut, AttachmentCreateIn
+from django.utils import timezone
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from apps.tickets.schemas import (
+    TicketOut, TicketIn, TicketUpdateIn, StatusUpdateIn, 
+    AttachmentOut, AttachmentCreateIn, TicketConfirmReviewIn,
+    AssignTicketIn, RejectTicketIn, PostponeTicketIn,
+    AuditLogOut, TicketProgressIn, TicketAcknowledgeIn, SLAUpdateIn
+)
 from apps.tickets.models.ticket import Ticket
 from apps.tickets.models.sub_ticket import SubTicket
 from apps.tickets.models.attachment import Attachment
-from core.clients.user_client import UserClient
-from apps.tickets.services.ticket_service import TicketService
-from apps.tickets.schemas import AssignTicketIn, RejectTicketIn, PostponeTicketIn
-from apps.tickets.services.ticket_service import TicketService
-from apps.tickets.schemas import AssignTicketIn, RejectTicketIn, PostponeTicketIn
 from apps.audit.models import AuditLog, ActionType, AuditCategory
-from apps.tickets.schemas import AuditLogOut, TicketProgressIn, TicketAcknowledgeIn, SLAUpdateIn
-from django.utils import timezone
-   
-
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from ninja.security import HttpBearer
+from core.clients.user_client import UserClient
 
 class JWTAuth(HttpBearer):
     def authenticate(self, request, token):
@@ -382,3 +381,78 @@ def get_ticket_history(request, ticket_id: str):
         model_name='Ticket', 
         object_id=ticket_id
     ).order_by('-timestamp')
+
+@router.post("/{ticket_id}/confirm-review", response=TicketOut)
+def confirm_review_ticket(request, ticket_id: str, payload: TicketConfirmReviewIn):
+    """Initial moderator review: update fields and assign."""
+    from datetime import timedelta
+    try:
+        ticket = Ticket.objects.get(id=ticket_id, is_deleted=False)
+    except Ticket.DoesNotExist:
+        raise HttpError(404, "Ticket not found")
+        
+    old_status = ticket.status
+    old_values = {
+        'title': ticket.title,
+        'description': ticket.description,
+        'priority': ticket.priority,
+        'category': ticket.category,
+        'department_id': str(ticket.department_id) if ticket.department_id else None,
+        'assignee_id': str(ticket.assignee_id) if ticket.assignee_id else None
+    }
+    
+    # 1. Update fields
+    ticket.title = payload.title
+    ticket.description = payload.description
+    ticket.priority = payload.priority
+    ticket.category = payload.category
+    if payload.department_id:
+        ticket.department_id = payload.department_id
+    ticket.assignee_id = payload.assignee_id
+    
+    # 2. Transitions: submitted -> under_review -> assigned
+    try:
+        if ticket.status == 'submitted':
+            ticket.review()
+            ticket.assign()
+        elif ticket.status == 'under_review':
+            ticket.assign()
+        # if already assigned, status stays assigned
+    except Exception as e:
+        raise HttpError(400, f"Status transition failed: {str(e)}")
+        
+    # 3. Calculate SLA (Due Date)
+    sla_hours = {
+        'urgent': 8,
+        'high': 24,
+        'medium': 48,
+        'low': 72
+    }.get(payload.priority.lower(), 48)
+    
+    ticket.due_at = timezone.now() + timedelta(hours=sla_hours)
+    
+    ticket.save()
+    
+    # 4. Log changes
+    changes = {}
+    for key, val in old_values.items():
+        new_val = str(getattr(ticket, key)) if getattr(ticket, key) else None
+        if new_val != val:
+            changes[key] = {'old': val, 'new': new_val}
+            
+    if ticket.status != old_status:
+        changes['status'] = {'old': old_status, 'new': ticket.status}
+
+    AuditLog.objects.create(
+        action_type=ActionType.UPDATE,
+        category=AuditCategory.TICKET,
+        model_name='Ticket',
+        object_id=ticket.id,
+        performed_by_id=request.user.id if hasattr(request, 'user') else ticket.requestor_id,
+        old_state=old_values,
+        new_state={k: str(getattr(ticket, k)) for k in old_values.keys()},
+        changes=changes,
+        reason="Moderator confirmed review and assigned ticket"
+    )
+    
+    return ticket

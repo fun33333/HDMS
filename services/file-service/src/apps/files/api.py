@@ -1,7 +1,5 @@
-"""
-File Service API endpoints.
-"""
 from ninja import Router
+from ninja.errors import HttpError
 from typing import List, Optional
 from django.core.files.uploadedfile import UploadedFile
 from apps.files.schemas import AttachmentOut, FileUploadResponse
@@ -55,7 +53,7 @@ def upload_file(request, ticket_id: Optional[str] = None, chat_message_id: Optio
     """Upload a file."""
     # Get file from request.FILES
     if 'file' not in request.FILES:
-        return {"error": "No file provided"}, 400
+        raise HttpError(400, "No file provided")
     
     file = request.FILES['file']
     
@@ -63,7 +61,7 @@ def upload_file(request, ticket_id: Optional[str] = None, chat_message_id: Optio
     if ticket_id:
         ticket_client = TicketClient()
         if not ticket_client.validate_ticket(ticket_id):
-            return {"error": "Ticket not found"}, 404
+            raise HttpError(404, "Ticket not found")
     
     # Validate user exists
     user_client = UserClient()
@@ -71,7 +69,7 @@ def upload_file(request, ticket_id: Optional[str] = None, chat_message_id: Optio
     user_id = request.user.id if hasattr(request, 'user') else None
     
     if not user_id:
-        return {"error": "User not authenticated"}, 401
+        raise HttpError(401, "User not authenticated")
     
     # Upload file
     upload_service = UploadService()
@@ -106,7 +104,8 @@ def download_file(request, file_key: str):
     attachment = Attachment.objects.get(file_key=file_key, is_deleted=False)
     
     if attachment.scan_status != 'clean':
-        return {"error": "File not available for download"}, 400
+        raise HttpError(400, "File not available for download")
+
     
     return FileResponse(
         open(attachment.file_path, 'rb'),

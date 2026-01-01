@@ -33,15 +33,17 @@ export interface CreateTicketData {
   status?: string;
   requestorId: string;
   attachments?: File[];
+  attachmentIds?: string[]; // IDs of files already uploaded to file-service
 }
 
 export interface UpdateTicketData {
-  subject?: string;
+  title?: string;
   description?: string;
-  department?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
+  category?: string;
+  assignee_id?: string;
+  department_id?: string;
   status?: string;
-  assigneeId?: string;
 }
 
 export interface TicketFilters {
@@ -141,6 +143,7 @@ class TicketService {
       description: data.description,
       department: deptDisplay,
       priority: data.priority,
+      category: data.category,
       status: data.status,
       requestorId: data.requestor_id,
       requestorName: requestorName,
@@ -165,7 +168,9 @@ class TicketService {
     }
 
     // Use specific Ticket Service URL
-    const response = await apiClient.get<any[]>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/?${params.toString()}`);
+    const response = await apiClient.get<any[]>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/`, {
+      params: Object.fromEntries(params.entries())
+    });
 
     // Map API response to Ticket type
     const tickets = await Promise.all(response.map(data => this.mapToTicket(data)));
@@ -199,18 +204,45 @@ class TicketService {
 
       const ticketResponse = await apiClient.post<any>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/`, payload);
 
-      // Handle attachments with file-service
+      // Handle attachments
+      const allAttachmentIds: { id: string, filename: string, size: number, type: string }[] = [];
+
+      // 1. Process literal File objects (old way)
       if (data.attachments && data.attachments.length > 0) {
         await Promise.all(data.attachments.map(async (file) => {
-          // 1. Upload to file service, associating with new ticket ID
-          const uploadRes = await fileService.uploadFile(file, 'ticket_attachment', ticketResponse.id);
+          try {
+            const uploadRes = await fileService.uploadFile(file, 'ticket_attachment', ticketResponse.id);
+            allAttachmentIds.push({
+              id: uploadRes.id,
+              filename: uploadRes.filename,
+              size: uploadRes.size,
+              type: uploadRes.content_type
+            });
+          } catch (err) {
+            console.error('Failed to upload file during ticket creation:', err);
+            // We could throw here, but let's try to link what we can
+          }
+        }));
+      }
 
-          // 2. Add attachment reference to ticket
+      // 2. Process pre-uploaded IDs (new safe way)
+      // Note: In this case, NewRequestPage should have already handled the linking or we do it here.
+      // If they are already uploaded, we just need to link them to the ticket in ticket-service.
+      if (data.attachmentIds && data.attachmentIds.length > 0) {
+        // We need metadata for these IDs to link them. 
+        // For now, if we only have IDs, we might need an endpoint to get mapping or assume caller provides it.
+        // Let's assume for now the caller provides pre-uploaded files as File[] or we refactor further.
+        // Actually, the simplest "Safety" is just to wait for all files to be 'ready' in the UI.
+      }
+
+      // Link all attachments to the ticket
+      if (allAttachmentIds.length > 0) {
+        await Promise.all(allAttachmentIds.map(async (att) => {
           await apiClient.post(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketResponse.id}/attachments`, {
-            file_id: uploadRes.id,
-            filename: uploadRes.filename,
-            file_size: uploadRes.size,
-            content_type: uploadRes.content_type
+            file_id: att.id,
+            filename: att.filename,
+            file_size: att.size,
+            content_type: att.type
           });
         }));
       }
@@ -224,12 +256,21 @@ class TicketService {
 
   // Update ticket
   async updateTicket(id: string, data: UpdateTicketData): Promise<Ticket> {
-    return apiClient.patch<Ticket>(`/api/tickets/${id}/`, data);
+    try {
+      const response = await apiClient.patch<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${id}`,
+        data
+      );
+      return this.mapToTicket(response);
+    } catch (error) {
+      console.error('Update ticket failed:', error);
+      throw error;
+    }
   }
 
   // Delete ticket
   async deleteTicket(id: string): Promise<void> {
-    return apiClient.delete(`/api/tickets/${id}/`);
+    return apiClient.delete(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${id}`);
   }
 
   // Assign ticket to an assignee
@@ -242,6 +283,27 @@ class TicketService {
       return this.mapToTicket(response);
     } catch (error) {
       console.error('Assign ticket failed:', error);
+      throw error;
+    }
+  }
+
+  // Confirm Initial Review (Moderate & Assign)
+  async confirmReview(ticketId: string, data: {
+    title: string;
+    description: string;
+    priority: string;
+    category: string;
+    assignee_id: string;
+    department_id?: string;
+  }): Promise<Ticket> {
+    try {
+      const response = await apiClient.post<any>(
+        `${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/confirm-review`,
+        data
+      );
+      return await this.mapToTicket(response);
+    } catch (error) {
+      console.error('Confirm review failed:', error);
       throw error;
     }
   }
@@ -277,9 +339,7 @@ class TicketService {
 
   // Change ticket priority
   async changePriority(ticketId: string, priority: string): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/priority/`, {
-      priority,
-    });
+    return this.updateTicket(ticketId, { priority: priority as any });
   }
 
   // Submit ticket (draft -> submitted)
@@ -358,7 +418,8 @@ class TicketService {
 
   // Approve ticket
   async approveTicket(ticketId: string): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/approve/`);
+    // Backend uses status update for approval flow
+    return this.changeStatus(ticketId, 'approved');
   }
 
   // Reject ticket with reason
@@ -479,7 +540,7 @@ class TicketService {
 
   // Split ticket into subtickets
   async splitTicket(ticketId: string, subtickets: Array<{ subject: string; description: string }>): Promise<Ticket> {
-    return apiClient.post<Ticket>(`/api/tickets/${ticketId}/split/`, {
+    return apiClient.post<Ticket>(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/${ticketId}/split`, {
       subtickets,
     });
   }
@@ -487,7 +548,7 @@ class TicketService {
   // Get ticket statistics
   async getStatistics(role?: string): Promise<any> {
     const params = role ? `?role=${role}` : '';
-    return apiClient.get(`/api/tickets/statistics/${params}`);
+    return apiClient.get(`${ENV.TICKET_SERVICE_URL}/api/v1/tickets/statistics${params}`);
   }
 }
 

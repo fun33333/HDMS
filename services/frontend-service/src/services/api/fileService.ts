@@ -2,7 +2,7 @@
  * File Service API Client
  * Handles file uploads and downloads via file-service
  */
-import axios from 'axios';
+import { apiClient } from './axiosClient';
 import { ENV } from '../../config/env';
 
 export interface UploadResponse {
@@ -15,16 +15,6 @@ export interface UploadResponse {
 }
 
 class FileService {
-    private client = axios.create({
-        baseURL: ENV.FILE_SERVICE_URL,
-        timeout: 60000, // 60s for large files
-    });
-
-    private getToken(): string | null {
-        if (typeof window === 'undefined') return null;
-        return localStorage.getItem('token');
-    }
-
     /**
      * Upload a file
      * @param file File object
@@ -46,39 +36,44 @@ class FileService {
             formData.append('ticket_id', ticketId);
         }
 
-        const token = this.getToken();
-        const headers: Record<string, string> = {
-            'Content-Type': 'multipart/form-data',
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
         try {
-            const response = await this.client.post<UploadResponse>('/api/files/upload/', formData, {
+            // Using absolute URL to bypass apiClient.baseURL if it's different
+            const url = `${ENV.FILE_SERVICE_URL}/api/v1/files/upload`;
+
+            // Explicitly get token to ensure it's sent with the request
+            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+            const headers: Record<string, string> = {
+                'Content-Type': 'multipart/form-data',
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await apiClient.post<UploadResponse>(url, formData, {
                 headers,
-                onUploadProgress: (progressEvent) => {
+                onUploadProgress: (progressEvent: any) => {
                     if (onProgress && progressEvent.total) {
                         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                         onProgress(percentCompleted);
                     }
                 },
             });
-            return response.data;
+            return response;
         } catch (error) {
             console.error('File upload failed:', error);
             throw error;
         }
+
     }
 
     /**
      * Get file URL (if private/signed URL needed)
      */
     getFileUrl(fileId: string): string {
-        return `${ENV.FILE_SERVICE_URL}/api/files/${fileId}/download/`;
+        return `${ENV.FILE_SERVICE_URL}/api/v1/files/${fileId}/download`;
     }
 }
 
 export const fileService = new FileService();
 export default fileService;
+

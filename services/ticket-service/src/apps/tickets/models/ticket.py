@@ -37,6 +37,7 @@ class TicketStatus(models.TextChoices):
 
 class Priority(models.TextChoices):
     """Priority choices."""
+    URGENT = 'urgent', 'Urgent'
     HIGH = 'high', 'High'
     MEDIUM = 'medium', 'Medium'
     LOW = 'low', 'Low'

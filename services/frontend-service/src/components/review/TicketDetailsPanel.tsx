@@ -15,11 +15,15 @@ import { THEME } from '../../lib/theme';
 interface TicketDetailsPanelProps {
     ticket: Ticket;
     slaDueDate?: string;
+    canEdit?: boolean;
+    onEdit?: () => void;
 }
 
 export const TicketDetailsPanel: React.FC<TicketDetailsPanelProps> = ({
     ticket,
     slaDueDate,
+    canEdit,
+    onEdit,
 }) => {
     return (
         <div className="space-y-4">
@@ -29,7 +33,20 @@ export const TicketDetailsPanel: React.FC<TicketDetailsPanelProps> = ({
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex-1">
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">{ticket.subject}</h2>
+                            <div className="flex items-center gap-2 mb-2">
+                                <h2 className="text-xl font-bold text-gray-900">{ticket.subject}</h2>
+                                {canEdit && (
+                                    <button
+                                        onClick={onEdit}
+                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                        title="Edit Ticket Details"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
                             <p className="text-sm text-gray-600 whitespace-pre-wrap">{ticket.description}</p>
                         </div>
                         <div className="flex flex-wrap gap-2">

@@ -15,6 +15,8 @@ import RejectTicketModal from '../../../../../components/modals/RejectTicketModa
 import PostponeModal from '../../../../../components/modals/PostponeModal';
 import ClarificationModal from '../../../../../components/modals/ClarificationModal';
 import AlertModal from '../../../../../components/modals/AlertModal';
+import InitialReviewModal from '../../../../../components/modals/InitialReviewModal';
+import EditTicketModal from '../../../../../components/modals/EditTicketModal';
 import { THEME } from '../../../../../lib/theme';
 
 export default function ReviewTicketPage() {
@@ -26,6 +28,8 @@ export default function ReviewTicketPage() {
     const [ticket, setTicket] = useState<Ticket | null>(null);
     const [loading, setLoading] = useState(true);
     const [assignees, setAssignees] = useState<any[]>([]);
+    const [showInitialReview, setShowInitialReview] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     // Modal states
     const [activeModal, setActiveModal] = useState<'assign' | 'reject' | 'postpone' | 'clarify' | null>(null);
@@ -53,6 +57,11 @@ export default function ReviewTicketPage() {
         try {
             const data = await ticketService.getTicketById(ticketId);
             setTicket(data);
+
+            // Show initial review modal for 'submitted' tickets when a moderator opens them
+            if (canModerate && data.status === 'submitted') {
+                setShowInitialReview(true);
+            }
         } catch (error) {
             console.error('Failed to fetch ticket:', error);
             showAlert('error', 'Error', 'Failed to load ticket');
@@ -81,6 +90,36 @@ export default function ReviewTicketPage() {
 
     const handleActionSelect = (action: 'assign' | 'reject' | 'postpone' | 'clarify') => {
         setActiveModal(action);
+    };
+
+    const handleConfirmReview = async (data: any) => {
+        try {
+            setLoading(true);
+            await ticketService.confirmReview(ticketId, data);
+            showAlert('success', 'Review Confirmed', 'Ticket details updated and assignment confirmed.');
+            setShowInitialReview(false);
+            await fetchTicket();
+        } catch (error: any) {
+            const errorMsg = error?.response?.data?.detail || error?.message || 'Failed to confirm review';
+            showAlert('error', 'Review Failed', errorMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdateTicket = async (data: any) => {
+        try {
+            setLoading(true);
+            await ticketService.updateTicket(ticketId, data);
+            showAlert('success', 'Success', 'Ticket details updated');
+            setShowEditModal(false);
+            await fetchTicket();
+        } catch (error: any) {
+            const errorMsg = error?.response?.data?.detail || error?.message || 'Failed to update ticket';
+            showAlert('error', 'Update Failed', errorMsg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleAssign = async (assigneeId: string, departmentId?: string) => {
@@ -112,6 +151,7 @@ export default function ReviewTicketPage() {
 
             showAlert('success', 'Success', 'Ticket rejected');
             setActiveModal(null);
+            setShowInitialReview(false);
             setTimeout(() => router.push('/moderator/ticket-pool'), 2000);
         } catch (error: any) {
             const errorMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Unknown error occurred';
@@ -129,6 +169,7 @@ export default function ReviewTicketPage() {
 
             showAlert('success', 'Success', 'Ticket postponed');
             setActiveModal(null);
+            setShowInitialReview(false);
             fetchTicket();
         } catch (error: any) {
             const errorMsg = error?.response?.data?.detail || error?.response?.data?.message || error?.message || 'Unknown error occurred';
@@ -177,7 +218,11 @@ export default function ReviewTicketPage() {
             <div className="container mx-auto px-4 py-6 lg:grid lg:grid-cols-3 lg:gap-6">
                 {/* Left: Ticket Details (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
-                    <TicketDetailsPanel ticket={ticket} />
+                    <TicketDetailsPanel
+                        ticket={ticket}
+                        canEdit={canModerate}
+                        onEdit={() => setShowEditModal(true)}
+                    />
 
                     {/* Conditionally show actions based on role */}
                     {canModerate && (
@@ -198,6 +243,27 @@ export default function ReviewTicketPage() {
             {/* Modals - Only show for moderators */}
             {canModerate && (
                 <>
+                    {/* Initial Review Modal */}
+                    <InitialReviewModal
+                        isOpen={showInitialReview}
+                        onClose={() => setShowInitialReview(false)}
+                        onConfirm={handleConfirmReview}
+                        onReject={handleReject}
+                        onPostpone={handlePostpone}
+                        ticket={ticket}
+                        assignees={assignees}
+                        loading={loading}
+                    />
+
+                    {/* General Edit Modal */}
+                    <EditTicketModal
+                        isOpen={showEditModal}
+                        onClose={() => setShowEditModal(false)}
+                        onSave={handleUpdateTicket}
+                        ticket={ticket}
+                        loading={loading}
+                    />
+
                     {activeModal === 'assign' && (
                         <AssignTicketModal
                             isOpen={true}
